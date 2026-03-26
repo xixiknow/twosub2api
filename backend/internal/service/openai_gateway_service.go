@@ -1529,6 +1529,103 @@ func (s *OpenAIGatewayService) listSchedulableAccounts(ctx context.Context, grou
 	return accounts, nil
 }
 
+// listSchedulableAnthropicAccounts returns all schedulable Anthropic platform accounts.
+func (s *OpenAIGatewayService) listSchedulableAnthropicAccounts(ctx context.Context, groupID *int64) ([]Account, error) {
+	if s.schedulerSnapshot != nil {
+		accounts, _, err := s.schedulerSnapshot.ListSchedulableAccounts(ctx, groupID, PlatformAnthropic, false)
+		return accounts, err
+	}
+	var accounts []Account
+	var err error
+	if s.cfg != nil && s.cfg.RunMode == config.RunModeSimple {
+		accounts, err = s.accountRepo.ListSchedulableByPlatform(ctx, PlatformAnthropic)
+	} else if groupID != nil {
+		accounts, err = s.accountRepo.ListSchedulableByGroupIDAndPlatform(ctx, *groupID, PlatformAnthropic)
+	} else {
+		accounts, err = s.accountRepo.ListSchedulableUngroupedByPlatform(ctx, PlatformAnthropic)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query anthropic accounts failed: %w", err)
+	}
+	return accounts, nil
+}
+
+// SelectAnthropicAccountForChatCompletions selects an Anthropic platform account
+// that supports the requested model, with simple load-balanced selection.
+func (s *OpenAIGatewayService) SelectAnthropicAccountForChatCompletions(
+	ctx context.Context,
+	groupID *int64,
+	requestedModel string,
+	excludedIDs map[int64]struct{},
+) (*AccountSelectionResult, error) {
+	accounts, err := s.listSchedulableAnthropicAccounts(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	if len(accounts) == 0 {
+		return nil, errors.New("no available anthropic accounts")
+	}
+
+	// Filter by model support and exclusions
+	var candidates []Account
+	for _, a := range accounts {
+		if excludedIDs != nil {
+			if _, excluded := excludedIDs[a.ID]; excluded {
+				continue
+			}
+		}
+		// Only support API Key type for CC→Anthropic path
+		if a.Type != AccountTypeAPIKey {
+			continue
+		}
+		if requestedModel != "" && !a.IsModelSupported(requestedModel) {
+			continue
+		}
+		candidates = append(candidates, a)
+	}
+
+	if len(candidates) == 0 {
+		return nil, errors.New("no available anthropic accounts for model")
+	}
+
+	// Simple load-balanced selection: pick a random candidate weighted by priority
+	selected := &candidates[rand.Intn(len(candidates))]
+	if len(candidates) > 1 {
+		// Prefer higher priority (lower number = higher priority)
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].Priority < candidates[j].Priority
+		})
+		// Pick from top candidates
+		topN := len(candidates)
+		if topN > 3 {
+			topN = 3
+		}
+		selected = &candidates[rand.Intn(topN)]
+	}
+
+	// Try to acquire concurrency slot
+	result, err := s.tryAcquireAccountSlot(ctx, selected.ID, selected.Concurrency)
+	if err == nil && result.Acquired {
+		return &AccountSelectionResult{
+			Account:     selected,
+			Acquired:    true,
+			ReleaseFunc: result.ReleaseFunc,
+		}, nil
+	}
+
+	// Return with wait plan if slot not immediately available
+	cfg := s.schedulingConfig()
+	return &AccountSelectionResult{
+		Account: selected,
+		WaitPlan: &AccountWaitPlan{
+			AccountID:      selected.ID,
+			MaxConcurrency: selected.Concurrency,
+			Timeout:        cfg.FallbackWaitTimeout,
+			MaxWaiting:     cfg.FallbackMaxWaiting,
+		},
+	}, nil
+}
+
 func (s *OpenAIGatewayService) tryAcquireAccountSlot(ctx context.Context, accountID int64, maxConcurrency int) (*AcquireResult, error) {
 	if s.concurrencyService == nil {
 		return &AcquireResult{Acquired: true, ReleaseFunc: func() {}}, nil
@@ -4259,9 +4356,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		billingModel = result.BillingModel
 	}
 
-	// 按次计费判断
+	// 按次计费判断：请求必须有实际输出（OutputTokens > 0）才扣费，失败请求不计费
 	var cost *CostBreakdown
-	if apiKey.Group != nil {
+	if apiKey.Group != nil && result.Usage.OutputTokens > 0 {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(billingModel); ok {
 			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
 		}

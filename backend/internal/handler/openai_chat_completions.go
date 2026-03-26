@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	pkghttputil "github.com/Wei-Shaw/sub2api/internal/pkg/httputil"
@@ -105,6 +106,9 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 	sessionHash := h.gatewayService.GenerateSessionHash(c, body)
 	promptCacheKey := h.gatewayService.ExtractSessionID(c, body)
 
+	// Detect if request is for a Claude model → route to Anthropic accounts
+	isClaudeRequest := strings.HasPrefix(strings.ToLower(reqModel), "claude")
+
 	maxAccountSwitches := h.maxAccountSwitches
 	switchCount := 0
 	failedAccountIDs := make(map[int64]struct{})
@@ -113,16 +117,35 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 
 	for {
 		c.Set("openai_chat_completions_fallback_model", "")
-		reqLog.Debug("openai_chat_completions.account_selecting", zap.Int("excluded_account_count", len(failedAccountIDs)))
-		selection, scheduleDecision, err := h.gatewayService.SelectAccountWithScheduler(
-			c.Request.Context(),
-			apiKey.GroupID,
-			"",
-			sessionHash,
-			reqModel,
-			failedAccountIDs,
-			service.OpenAIUpstreamTransportAny,
+		reqLog.Debug("openai_chat_completions.account_selecting",
+			zap.Int("excluded_account_count", len(failedAccountIDs)),
+			zap.Bool("is_claude_request", isClaudeRequest),
 		)
+
+		var selection *service.AccountSelectionResult
+		var scheduleDecision service.OpenAIAccountScheduleDecision
+		var err error
+
+		if isClaudeRequest {
+			// Claude model → select Anthropic account
+			selection, err = h.gatewayService.SelectAnthropicAccountForChatCompletions(
+				c.Request.Context(),
+				apiKey.GroupID,
+				reqModel,
+				failedAccountIDs,
+			)
+		} else {
+			// OpenAI model → original path
+			selection, scheduleDecision, err = h.gatewayService.SelectAccountWithScheduler(
+				c.Request.Context(),
+				apiKey.GroupID,
+				"",
+				sessionHash,
+				reqModel,
+				failedAccountIDs,
+				service.OpenAIUpstreamTransportAny,
+			)
+		}
 		if err != nil {
 			reqLog.Warn("openai_chat_completions.account_select_failed",
 				zap.Error(err),
@@ -137,15 +160,24 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 					reqLog.Info("openai_chat_completions.fallback_to_default_model",
 						zap.String("default_mapped_model", defaultModel),
 					)
-					selection, scheduleDecision, err = h.gatewayService.SelectAccountWithScheduler(
-						c.Request.Context(),
-						apiKey.GroupID,
-						"",
-						sessionHash,
-						defaultModel,
-						failedAccountIDs,
-						service.OpenAIUpstreamTransportAny,
-					)
+					if isClaudeRequest {
+						selection, err = h.gatewayService.SelectAnthropicAccountForChatCompletions(
+							c.Request.Context(),
+							apiKey.GroupID,
+							defaultModel,
+							failedAccountIDs,
+						)
+					} else {
+						selection, scheduleDecision, err = h.gatewayService.SelectAccountWithScheduler(
+							c.Request.Context(),
+							apiKey.GroupID,
+							"",
+							sessionHash,
+							defaultModel,
+							failedAccountIDs,
+							service.OpenAIUpstreamTransportAny,
+						)
+					}
 					if err == nil && selection != nil {
 						c.Set("openai_chat_completions_fallback_model", defaultModel)
 					}
@@ -169,7 +201,11 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		}
 		account := selection.Account
 		sessionHash = ensureOpenAIPoolModeSessionHash(sessionHash, account)
-		reqLog.Debug("openai_chat_completions.account_selected", zap.Int64("account_id", account.ID), zap.String("account_name", account.Name))
+		reqLog.Debug("openai_chat_completions.account_selected",
+			zap.Int64("account_id", account.ID),
+			zap.String("account_name", account.Name),
+			zap.String("platform", account.Platform),
+		)
 		_ = scheduleDecision
 		setOpsSelectedAccount(c, account.ID, account.Platform)
 
@@ -182,7 +218,14 @@ func (h *OpenAIGatewayHandler) ChatCompletions(c *gin.Context) {
 		forwardStart := time.Now()
 
 		defaultMappedModel := c.GetString("openai_chat_completions_fallback_model")
-		result, err := h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, body, promptCacheKey, defaultMappedModel)
+
+		// Route forwarding based on account platform
+		var result *service.OpenAIForwardResult
+		if account.IsAnthropic() {
+			result, err = h.gatewayService.ForwardChatCompletionsViaAnthropic(c.Request.Context(), c, account, body, promptCacheKey, defaultMappedModel)
+		} else {
+			result, err = h.gatewayService.ForwardAsChatCompletions(c.Request.Context(), c, account, body, promptCacheKey, defaultMappedModel)
+		}
 
 		forwardDurationMs := time.Since(forwardStart).Milliseconds()
 		if accountReleaseFunc != nil {
