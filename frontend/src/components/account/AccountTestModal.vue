@@ -99,14 +99,14 @@
       <!-- Enhanced Terminal -->
       <div class="group relative">
         <!-- Terminal Header Bar -->
-        <div class="flex items-center justify-between rounded-t-xl border border-b-0 border-gray-700 bg-gray-800 px-4 py-2 dark:border-gray-700 dark:bg-gray-900">
+        <div class="flex items-center justify-between rounded-t-xl border border-b-0 border-gray-200 bg-gray-100 px-4 py-2 dark:border-dark-700/50 dark:bg-dark-800">
           <div class="flex items-center gap-2">
             <div class="flex gap-1.5">
               <span class="h-3 w-3 rounded-full" :class="status === 'error' ? 'bg-red-500' : 'bg-red-400/60'" />
               <span class="h-3 w-3 rounded-full" :class="status === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-yellow-400/60'" />
               <span class="h-3 w-3 rounded-full" :class="status === 'success' ? 'bg-green-500' : 'bg-green-400/60'" />
             </div>
-            <span class="ml-2 text-xs font-medium text-gray-400">
+            <span class="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400">
               {{ isSoraAccount ? 'sora-test' : selectedModelId || 'terminal' }}
             </span>
           </div>
@@ -114,7 +114,7 @@
           <button
             v-if="outputLines.length > 0"
             @click="copyOutput"
-            class="rounded-md p-1 text-gray-500 transition-all hover:bg-gray-700 hover:text-gray-300"
+            class="rounded-md p-1 text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-dark-700 dark:hover:text-gray-300"
             :title="t('admin.accounts.copyOutput')"
           >
             <Icon name="copy" size="sm" :stroke-width="2" />
@@ -124,18 +124,18 @@
         <!-- Terminal Body -->
         <div
           ref="terminalRef"
-          class="max-h-[280px] min-h-[140px] overflow-y-auto rounded-b-xl border border-t-0 border-gray-700 bg-[#0d1117] p-4 font-mono text-[13px] leading-relaxed dark:border-gray-700"
+          class="max-h-[280px] min-h-[140px] overflow-y-auto rounded-b-xl border border-t-0 border-gray-200 bg-gray-50 p-4 font-mono text-[13px] leading-relaxed dark:border-dark-700/50 dark:bg-dark-900/60"
         >
           <!-- Idle State with animated cursor -->
-          <div v-if="status === 'idle'" class="flex items-center gap-2 text-gray-500">
-            <span class="text-emerald-500">$</span>
+          <div v-if="status === 'idle'" class="flex items-center gap-2 text-gray-400 dark:text-gray-500">
+            <span class="text-primary-500 dark:text-emerald-500">$</span>
             <span>{{ t('admin.accounts.readyToTest') }}</span>
-            <span class="inline-block h-4 w-2 animate-pulse bg-emerald-500/70" />
+            <span class="inline-block h-4 w-2 animate-pulse bg-primary-500/50 dark:bg-emerald-500/70" />
           </div>
 
           <!-- Connecting State -->
           <div v-else-if="status === 'connecting' && outputLines.length === 0" class="space-y-2">
-            <div class="flex items-center gap-2 text-yellow-400">
+            <div class="flex items-center gap-2 text-amber-600 dark:text-yellow-400">
               <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -159,29 +159,29 @@
 
           <!-- Streaming Content with glow effect -->
           <div v-if="streamingContent" class="relative mt-1">
-            <span class="text-emerald-400">{{ streamingContent }}</span>
-            <span class="inline-block h-4 w-[2px] animate-pulse bg-emerald-400" />
+            <span class="text-emerald-600 dark:text-emerald-400">{{ streamingContent }}</span>
+            <span class="inline-block h-4 w-[2px] animate-pulse bg-emerald-600 dark:bg-emerald-400" />
           </div>
 
           <!-- Result Status with animated icons -->
           <div
             v-if="status === 'success'"
-            class="mt-3 flex items-center gap-2 border-t border-gray-700/50 pt-3"
+            class="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-700/50"
           >
-            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20">
-              <Icon name="check" size="sm" class="text-emerald-400" :stroke-width="2.5" />
+            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+              <Icon name="check" size="sm" class="text-emerald-600 dark:text-emerald-400" :stroke-width="2.5" />
             </div>
-            <span class="font-medium text-emerald-400">{{ t('admin.accounts.testCompleted') }}</span>
-            <span v-if="elapsedTime" class="ml-auto text-xs text-gray-600">{{ elapsedTime }}</span>
+            <span class="font-medium text-emerald-600 dark:text-emerald-400">{{ t('admin.accounts.testCompleted') }}</span>
+            <span v-if="elapsedTime" class="ml-auto text-xs text-gray-400 dark:text-gray-600">{{ elapsedTime }}</span>
           </div>
           <div
             v-else-if="status === 'error'"
-            class="mt-3 flex items-center gap-2 border-t border-gray-700/50 pt-3"
+            class="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-700/50"
           >
-            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/20">
-              <Icon name="x" size="sm" class="text-red-400" :stroke-width="2.5" />
+            <div class="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20">
+              <Icon name="x" size="sm" class="text-red-600 dark:text-red-400" :stroke-width="2.5" />
             </div>
-            <span class="font-medium text-red-400">{{ errorMessage }}</span>
+            <span class="font-medium text-red-600 dark:text-red-400">{{ errorMessage }}</span>
           </div>
         </div>
       </div>
@@ -189,7 +189,7 @@
       <!-- Generated Images Gallery -->
       <div v-if="generatedImages.length > 0" class="space-y-2">
         <div class="flex items-center gap-2 text-xs font-medium text-gray-600 dark:text-gray-300">
-          <Icon name="sparkles" size="sm" class="text-purple-400" :stroke-width="2" />
+          <Icon name="sparkles" size="sm" class="text-purple-600 dark:text-purple-400" :stroke-width="2" />
           {{ t('admin.accounts.geminiImagePreview') }}
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
@@ -520,8 +520,8 @@ const startTest = async () => {
   status.value = 'connecting'
   startTimer()
 
-  addLine(props.account.name, 'text-blue-400', '>', 'text-blue-500')
-  addLine(`${props.account.type} / ${props.account.platform}`, 'text-gray-500', ' ', 'text-gray-600')
+  addLine(props.account.name, 'text-blue-600 dark:text-blue-400', '>', 'text-blue-500')
+  addLine(`${props.account.type} / ${props.account.platform}`, 'text-gray-500 dark:text-gray-500', ' ', 'text-gray-400 dark:text-gray-600')
   addLine('', 'text-gray-300')
 
   closeEventSource()
@@ -582,7 +582,7 @@ const startTest = async () => {
     status.value = 'error'
     stopTimer()
     errorMessage.value = error.message || 'Unknown error'
-    addLine(errorMessage.value, 'text-red-400', '!', 'text-red-500')
+    addLine(errorMessage.value, 'text-red-600 dark:text-red-400', '!', 'text-red-500')
   }
 }
 
@@ -597,9 +597,9 @@ const handleEvent = (event: {
 }) => {
   switch (event.type) {
     case 'test_start':
-      addLine(t('admin.accounts.connectedToApi'), 'text-emerald-400', '+', 'text-emerald-500')
+      addLine(t('admin.accounts.connectedToApi'), 'text-emerald-600 dark:text-emerald-400', '+', 'text-emerald-500')
       if (event.model) {
-        addLine(event.model, 'text-cyan-400', '#', 'text-cyan-500')
+        addLine(event.model, 'text-cyan-600 dark:text-cyan-400', '#', 'text-cyan-500')
       }
       addLine(
         isSoraAccount.value
@@ -607,12 +607,12 @@ const handleEvent = (event: {
           : supportsGeminiImageTest.value
             ? t('admin.accounts.sendingGeminiImageRequest')
             : t('admin.accounts.sendingTestMessage'),
-        'text-gray-500',
+        'text-gray-500 dark:text-gray-500',
         '~',
-        'text-gray-600'
+        'text-gray-400 dark:text-gray-600'
       )
       addLine('', 'text-gray-300')
-      addLine(t('admin.accounts.response'), 'text-yellow-400', '>', 'text-yellow-500')
+      addLine(t('admin.accounts.response'), 'text-amber-600 dark:text-yellow-400', '>', 'text-amber-500 dark:text-yellow-500')
       break
 
     case 'content':
@@ -628,13 +628,13 @@ const handleEvent = (event: {
           url: event.image_url,
           mimeType: event.mime_type
         })
-        addLine(t('admin.accounts.geminiImageReceived', { count: generatedImages.value.length }), 'text-purple-400', '*', 'text-purple-500')
+        addLine(t('admin.accounts.geminiImageReceived', { count: generatedImages.value.length }), 'text-purple-600 dark:text-purple-400', '*', 'text-purple-700 dark:text-purple-500')
       }
       break
 
     case 'test_complete':
       if (streamingContent.value) {
-        addLine(streamingContent.value, 'text-emerald-300')
+        addLine(streamingContent.value, 'text-emerald-600 dark:text-emerald-300')
         streamingContent.value = ''
       }
       stopTimer()
@@ -651,7 +651,7 @@ const handleEvent = (event: {
       stopTimer()
       errorMessage.value = event.error || 'Unknown error'
       if (streamingContent.value) {
-        addLine(streamingContent.value, 'text-emerald-300')
+        addLine(streamingContent.value, 'text-emerald-600 dark:text-emerald-300')
         streamingContent.value = ''
       }
       break
