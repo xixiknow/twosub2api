@@ -225,11 +225,16 @@ func (h *AccountHandler) List(c *gin.Context) {
 	lite := parseBoolQueryWithDefault(c.Query("lite"), false)
 
 	var groupID int64
+	ungrouped := false
 	if groupIDStr := c.Query("group"); groupIDStr != "" {
-		groupID, _ = strconv.ParseInt(groupIDStr, 10, 64)
+		if groupIDStr == "ungrouped" {
+			ungrouped = true
+		} else {
+			groupID, _ = strconv.ParseInt(groupIDStr, 10, 64)
+		}
 	}
 
-	accounts, total, err := h.adminService.ListAccounts(c.Request.Context(), page, pageSize, platform, accountType, status, search, groupID)
+	accounts, total, err := h.adminService.ListAccounts(c.Request.Context(), page, pageSize, platform, accountType, status, search, groupID, ungrouped)
 	if err != nil {
 		response.ErrorFrom(c, err)
 		return
@@ -1914,7 +1919,7 @@ func (h *AccountHandler) BatchRefreshTier(c *gin.Context) {
 	accounts := make([]*service.Account, 0)
 
 	if len(req.AccountIDs) == 0 {
-		allAccounts, _, err := h.adminService.ListAccounts(ctx, 1, 10000, "gemini", "oauth", "", "", 0)
+		allAccounts, _, err := h.adminService.ListAccounts(ctx, 1, 10000, "gemini", "oauth", "", "", 0, false)
 		if err != nil {
 			response.ErrorFrom(c, err)
 			return

@@ -21,6 +21,14 @@
         </div>
       </div>
 
+      <!-- Center: Dynamic Greeting -->
+      <div v-if="user" class="hidden md:flex items-center justify-center">
+        <span class="text-sm font-medium text-gray-600 dark:text-dark-300">
+          {{ greetingText }}，{{ displayName }}
+          <span class="inline-block animate-wave text-base ml-1">{{ greetingEmoji }}</span>
+        </span>
+      </div>
+
       <!-- Right: Announcements + Docs + Language + Subscriptions + Balance + User Dropdown -->
       <div class="flex items-center gap-3">
         <!-- Announcement Bell -->
@@ -232,6 +240,26 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const contactInfo = computed(() => appStore.contactInfo)
 const docUrl = computed(() => appStore.docUrl)
 
+// Dynamic greeting based on current time
+const currentHour = ref(new Date().getHours())
+let greetingTimer: ReturnType<typeof setInterval> | null = null
+
+const greetingText = computed(() => {
+  const h = currentHour.value
+  if (h >= 5 && h < 9) return t('greeting.morning')
+  if (h >= 9 && h < 12) return t('greeting.forenoon')
+  if (h >= 12 && h < 14) return t('greeting.noon')
+  if (h >= 14 && h < 18) return t('greeting.afternoon')
+  if (h >= 18 && h < 22) return t('greeting.evening')
+  return t('greeting.night')
+})
+
+const emojiList = ['✨', '🚀', '💡', '🎯', '⚡', '🔥', '🌟', '💫', '🎉', '🤖']
+const currentEmoji = ref(0)
+let emojiTimer: ReturnType<typeof setInterval> | null = null
+
+const greetingEmoji = computed(() => emojiList[currentEmoji.value])
+
 // 只在标准模式的管理员下显示新手引导按钮
 const showOnboardingButton = computed(() => {
   return !authStore.isSimpleMode && user.value?.role === 'admin'
@@ -316,10 +344,20 @@ function handleClickOutside(event: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  // Update hour every minute
+  greetingTimer = setInterval(() => {
+    currentHour.value = new Date().getHours()
+  }, 60000)
+  // Rotate emoji every 3 seconds
+  emojiTimer = setInterval(() => {
+    currentEmoji.value = (currentEmoji.value + 1) % emojiList.length
+  }, 3000)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
+  if (greetingTimer) clearInterval(greetingTimer)
+  if (emojiTimer) clearInterval(emojiTimer)
 })
 </script>
 
@@ -333,5 +371,16 @@ onBeforeUnmount(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(-4px);
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+.animate-wave {
+  display: inline-block;
+  animation: wave 1.5s ease-in-out infinite;
 }
 </style>
