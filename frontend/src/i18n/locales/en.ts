@@ -1,4 +1,13 @@
 export default {
+  // Greeting
+  greeting: {
+    morning: 'Good morning',
+    forenoon: 'Good morning',
+    noon: 'Good afternoon',
+    afternoon: 'Good afternoon',
+    evening: 'Good evening',
+    night: 'Good night',
+  },
   // Home Page
   home: {
     viewOnGithub: 'View on GitHub',
@@ -354,6 +363,7 @@ export default {
     docs: 'Docs',
     sora: 'Sora Studio',
     modelSquare: 'Model Square',
+    availability: 'Availability',
     wallet: 'Wallet',
     paymentSettings: 'Payment',
     paymentOrders: 'Payment Orders'
@@ -1728,6 +1738,7 @@ export default {
       allTypes: 'All Types',
       allStatus: 'All Status',
       allGroups: 'All Groups',
+      ungrouped: 'Ungrouped',
       oauthType: 'OAuth',
       setupToken: 'Setup Token',
       apiKey: 'API Key',
@@ -4730,6 +4741,23 @@ export default {
     imageSize1k: '1K',
     imageSize2k: '2K',
     imageSize4k: '4K'
+  },
+
+  // Availability
+  availability: {
+    title: 'Availability',
+    subtitle: 'Real-time service availability status for each group',
+    refresh: 'Refresh',
+    totalGroups: 'Total Groups',
+    available: 'Available',
+    unavailable: 'Unavailable',
+    all: 'All',
+    online: 'Online',
+    offline: 'Offline',
+    activeAccounts: 'Active Accounts',
+    lastUpdated: 'Last Updated',
+    noGroups: 'No groups available',
+    retry: 'Retry'
   },
 
   // Wallet

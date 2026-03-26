@@ -1,4 +1,13 @@
 export default {
+  // Greeting
+  greeting: {
+    morning: '早上好',
+    forenoon: '上午好',
+    noon: '中午好',
+    afternoon: '下午好',
+    evening: '晚上好',
+    night: '夜深了',
+  },
   // Home Page
   home: {
     viewOnGithub: '在 GitHub 上查看',
@@ -354,6 +363,7 @@ export default {
     docs: '文档',
     sora: 'Sora 创作',
     modelSquare: '模型广场',
+    availability: '可用性检测',
     wallet: '钱包',
     paymentSettings: '支付设置',
     paymentOrders: '订单记录'
@@ -1818,6 +1828,7 @@ export default {
       allTypes: '全部类型',
       allStatus: '全部状态',
       allGroups: '全部分组',
+      ungrouped: '未分组',
       oauthType: 'OAuth',
       // Schedulable toggle
       schedulable: '参与调度',
@@ -4928,6 +4939,23 @@ export default {
     imageSize1k: '1K',
     imageSize2k: '2K',
     imageSize4k: '4K'
+  },
+
+  // 可用性检测
+  availability: {
+    title: '可用性检测',
+    subtitle: '实时查看各分组的服务可用性状态',
+    refresh: '刷新',
+    totalGroups: '总分组数',
+    available: '可用',
+    unavailable: '不可用',
+    all: '全部',
+    online: '在线',
+    offline: '离线',
+    activeAccounts: '活跃账号',
+    lastUpdated: '最后更新',
+    noGroups: '暂无可用分组',
+    retry: '重试'
   },
 
   // 钱包

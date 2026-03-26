@@ -6989,8 +6989,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 
 	var cost *CostBreakdown
 
-	// 按次计费判断：仅对普通请求（非 Sora/图片生成）生效
-	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 {
+	// 按次计费判断：仅对普通请求（非 Sora/图片生成）生效，且请求必须有实际输出（OutputTokens > 0）才扣费
+	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 && result.Usage.OutputTokens > 0 {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
 			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
 		}
@@ -7924,6 +7924,49 @@ func (s *GatewayService) GetAvailableModels(ctx context.Context, groupID *int64,
 		modelsListCacheStoreTotal.Add(1)
 	}
 	return cloneStringSlice(models)
+}
+
+// GroupAvailabilityInfo holds availability status for a single group.
+type GroupAvailabilityInfo struct {
+	GroupID       int64  `json:"group_id"`
+	GroupName     string `json:"group_name"`
+	Platform      string `json:"platform"`
+	Available     bool   `json:"available"`
+	TotalAccounts int    `json:"total_accounts"`
+	ActiveCount   int    `json:"active_accounts"`
+}
+
+// GetGroupsAvailability returns availability status for each provided group.
+// A group is "available" if it has at least one schedulable account.
+func (s *GatewayService) GetGroupsAvailability(ctx context.Context, groups []Group) []GroupAvailabilityInfo {
+	result := make([]GroupAvailabilityInfo, 0, len(groups))
+	for _, g := range groups {
+		info := GroupAvailabilityInfo{
+			GroupID:   g.ID,
+			GroupName: g.Name,
+			Platform:  g.Platform,
+		}
+		accounts, err := s.accountRepo.ListByGroup(ctx, g.ID)
+		if err != nil {
+			result = append(result, info)
+			continue
+		}
+		info.TotalAccounts = len(accounts)
+		now := time.Now()
+		for _, acc := range accounts {
+			if acc.Status == StatusActive && acc.Schedulable {
+				isRateLimited := acc.RateLimitResetAt != nil && now.Before(*acc.RateLimitResetAt)
+				isOverloaded := acc.OverloadUntil != nil && now.Before(*acc.OverloadUntil)
+				isTempUnsched := acc.TempUnschedulableUntil != nil && now.Before(*acc.TempUnschedulableUntil)
+				if !isRateLimited && !isOverloaded && !isTempUnsched {
+					info.ActiveCount++
+				}
+			}
+		}
+		info.Available = info.ActiveCount > 0
+		result = append(result, info)
+	}
+	return result
 }
 
 func (s *GatewayService) InvalidateAvailableModelsCache(groupID *int64, platform string) {

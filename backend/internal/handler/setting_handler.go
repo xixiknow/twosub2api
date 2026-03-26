@@ -222,3 +222,23 @@ func (h *SettingHandler) GetModelSquare(c *gin.Context) {
 		"updated_at": updatedAt.Format(time.RFC3339),
 	})
 }
+
+// GetGroupAvailability 获取用户可用分组的可用性状态（需认证）
+// GET /api/v1/groups/availability
+func (h *SettingHandler) GetGroupAvailability(c *gin.Context) {
+	ctx := c.Request.Context()
+	userID := getUserIDFromContext(c)
+	if userID == 0 {
+		response.Error(c, 401, "unauthorized")
+		return
+	}
+
+	groups, err := h.apiKeyService.GetAvailableGroups(ctx, userID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	availability := h.gatewayService.GetGroupsAvailability(ctx, groups)
+	response.Success(c, availability)
+}

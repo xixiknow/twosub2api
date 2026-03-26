@@ -230,6 +230,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/availability',
+    name: 'ModelAvailability',
+    component: () => import('@/views/ModelAvailabilityView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Model Availability',
+      titleKey: 'availability.title',
+      descriptionKey: 'availability.subtitle'
+    }
+  },
+  {
     path: '/custom/:id',
     name: 'CustomPage',
     component: () => import('@/views/user/CustomPageView.vue'),
