@@ -2088,6 +2088,11 @@ func (s *AntigravityGatewayService) ForwardGemini(ctx context.Context, c *gin.Co
 		logger.LegacyPrintf("service.antigravity_gateway", "[Antigravity] Failed to clean schema: %v", err)
 	}
 
+	// 图片生成模型需要注入 responseModalities: ["TEXT", "IMAGE"]
+	if isImageGenerationModel(mappedModel) {
+		injectedBody = injectImageResponseModalities(injectedBody)
+	}
+
 	// 包装请求
 	wrappedBody, err := s.wrapV1InternalRequest(projectID, mappedModel, injectedBody)
 	if err != nil {
@@ -3966,6 +3971,28 @@ func isImageGenerationModel(model string) bool {
 		modelLower == "gemini-2.5-flash-image" ||
 		modelLower == "gemini-2.5-flash-image-preview" ||
 		strings.HasPrefix(modelLower, "gemini-2.5-flash-image-")
+}
+
+// injectImageResponseModalities 为 Gemini 图片生成请求注入 responseModalities: ["TEXT", "IMAGE"]
+// 如果请求 JSON 中 generationConfig 不存在则创建，已存在则追加/覆写 responseModalities 字段
+func injectImageResponseModalities(body []byte) []byte {
+	var payload map[string]any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return body // 解析失败则原样返回
+	}
+
+	gc, ok := payload["generationConfig"].(map[string]any)
+	if !ok || gc == nil {
+		gc = make(map[string]any)
+	}
+	gc["responseModalities"] = []string{"TEXT", "IMAGE"}
+	payload["generationConfig"] = gc
+
+	out, err := json.Marshal(payload)
+	if err != nil {
+		return body
+	}
+	return out
 }
 
 // cleanGeminiRequest 清理 Gemini 请求体中的 Schema

@@ -1,5 +1,25 @@
 package antigravity
 
+import "strings"
+
+// IsImageModel 判断模型是否为 Gemini 图片生成模型
+// 支持的模型：gemini-3.1-flash-image, gemini-3-pro-image, gemini-2.5-flash-image 等
+func IsImageModel(model string) bool {
+	modelLower := strings.ToLower(model)
+	// 移除 models/ 前缀
+	modelLower = strings.TrimPrefix(modelLower, "models/")
+
+	return modelLower == "gemini-3.1-flash-image" ||
+		modelLower == "gemini-3.1-flash-image-preview" ||
+		strings.HasPrefix(modelLower, "gemini-3.1-flash-image-") ||
+		modelLower == "gemini-3-pro-image" ||
+		modelLower == "gemini-3-pro-image-preview" ||
+		strings.HasPrefix(modelLower, "gemini-3-pro-image-") ||
+		modelLower == "gemini-2.5-flash-image" ||
+		modelLower == "gemini-2.5-flash-image-preview" ||
+		strings.HasPrefix(modelLower, "gemini-2.5-flash-image-")
+}
+
 // Gemini v1internal 请求/响应类型定义
 
 // V1InternalRequest v1internal 请求包装
@@ -61,13 +81,14 @@ type GeminiFunctionResponse struct {
 
 // GeminiGenerationConfig Gemini 生成配置
 type GeminiGenerationConfig struct {
-	MaxOutputTokens int                   `json:"maxOutputTokens,omitempty"`
-	Temperature     *float64              `json:"temperature,omitempty"`
-	TopP            *float64              `json:"topP,omitempty"`
-	TopK            *int                  `json:"topK,omitempty"`
-	ThinkingConfig  *GeminiThinkingConfig `json:"thinkingConfig,omitempty"`
-	StopSequences   []string              `json:"stopSequences,omitempty"`
-	ImageConfig     *GeminiImageConfig    `json:"imageConfig,omitempty"`
+	MaxOutputTokens    int                   `json:"maxOutputTokens,omitempty"`
+	Temperature        *float64              `json:"temperature,omitempty"`
+	TopP               *float64              `json:"topP,omitempty"`
+	TopK               *int                  `json:"topK,omitempty"`
+	ThinkingConfig     *GeminiThinkingConfig `json:"thinkingConfig,omitempty"`
+	StopSequences      []string              `json:"stopSequences,omitempty"`
+	ResponseModalities []string              `json:"responseModalities,omitempty"`
+	ImageConfig        *GeminiImageConfig    `json:"imageConfig,omitempty"`
 }
 
 // GeminiImageConfig Gemini 图片生成配置（gemini-3-pro-image / gemini-3.1-flash-image 等图片模型支持）

@@ -574,6 +574,12 @@ func (s *GeminiMessagesCompatService) Forward(ctx context.Context, c *gin.Contex
 		return nil, s.writeClaudeError(c, http.StatusBadRequest, "invalid_request_error", err.Error())
 	}
 	geminiReq = ensureGeminiFunctionCallThoughtSignatures(geminiReq)
+
+	// 图片生成模型需要注入 responseModalities: ["TEXT", "IMAGE"]
+	if isImageGenerationModel(originalModel) {
+		geminiReq = injectImageResponseModalities(geminiReq)
+	}
+
 	originalClaudeBody := body
 
 	proxyURL := ""
@@ -1075,6 +1081,11 @@ func (s *GeminiMessagesCompatService) ForwardNative(ctx context.Context, c *gin.
 	// Some Gemini upstreams validate tool call parts strictly; ensure any `functionCall` part includes a
 	// `thoughtSignature` to avoid frequent INVALID_ARGUMENT 400s.
 	body = ensureGeminiFunctionCallThoughtSignatures(body)
+
+	// 图片生成模型需要注入 responseModalities: ["TEXT", "IMAGE"]
+	if isImageGenerationModel(originalModel) {
+		body = injectImageResponseModalities(body)
+	}
 
 	mappedModel := originalModel
 	if account.Type == AccountTypeAPIKey {

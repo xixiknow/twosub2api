@@ -661,6 +661,11 @@ func buildGenerationConfig(req *ClaudeRequest) *GeminiGenerationConfig {
 		config.TopK = req.TopK
 	}
 
+	// 图片生成模型需要设置 responseModalities 以便模型返回图片
+	if IsImageModel(req.Model) {
+		config.ResponseModalities = []string{"TEXT", "IMAGE"}
+	}
+
 	return config
 }
 

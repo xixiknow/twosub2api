@@ -1731,8 +1731,12 @@ func (s *AccountTestService) buildCodeAssistRequest(ctx context.Context, accessT
 }
 
 // createGeminiTestPayload creates a minimal test payload for Gemini API
-func createGeminiTestPayload(modelID string) []byte {
+// 可选第二个参数用于自定义 prompt（图片模型测试等场景）
+func createGeminiTestPayload(modelID string, customPrompt ...string) []byte {
 	prompt := buildModelAwareTestPrompt("gemini", modelID)
+	if len(customPrompt) > 0 && customPrompt[0] != "" {
+		prompt = customPrompt[0]
+	}
 	payload := map[string]any{
 		"contents": []map[string]any{
 			{
@@ -1748,6 +1752,17 @@ func createGeminiTestPayload(modelID string) []byte {
 			},
 		},
 	}
+
+	// 图片生成模型需要设置 responseModalities 和 imageConfig
+	if isImageGenerationModel(modelID) {
+		payload["generationConfig"] = map[string]any{
+			"responseModalities": []string{"TEXT", "IMAGE"},
+			"imageConfig": map[string]any{
+				"aspectRatio": "1:1",
+			},
+		}
+	}
+
 	bytes, _ := json.Marshal(payload)
 	return bytes
 }
