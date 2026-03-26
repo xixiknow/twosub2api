@@ -1,215 +1,176 @@
 <template>
   <AppLayout>
-    <div class="availability-page px-2 md:px-6 py-6 max-w-[1400px] mx-auto">
+    <div class="avail-page px-2 md:px-6 py-4 sm:py-6 max-w-[1400px] mx-auto">
 
-      <!-- Header Bar -->
-      <div class="header-bar mb-6 md:mb-8">
-        <div class="header-bg"></div>
-        <div class="header-noise"></div>
-        <div class="header-glow header-glow-1"></div>
-        <div class="header-glow header-glow-2"></div>
-        <div class="header-glow header-glow-3"></div>
-        <div class="relative z-10">
-          <!-- Top row: icon + title + actions -->
-          <div class="flex items-start sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="header-icon">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
-              </div>
-              <div class="min-w-0">
-                <h1 class="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white tracking-tight truncate">
-                  {{ t('availability.title') }}
-                </h1>
-                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 hidden sm:block">
-                  {{ t('availability.subtitle') }}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <!-- Live indicator -->
-              <div v-if="!loading && groups.length > 0" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-800/40">
-                <span class="live-dot"></span>
-                <span class="text-xs font-medium text-emerald-700 dark:text-emerald-400">{{ lastUpdated }}</span>
-              </div>
-              <button
-                @click="refresh"
-                :disabled="loading"
-                class="refresh-btn"
-              >
-                <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Mobile live indicator -->
-          <div v-if="!loading && groups.length > 0" class="flex sm:hidden items-center gap-2 mt-3">
-            <span class="live-dot"></span>
-            <span class="text-xs font-medium text-emerald-700 dark:text-emerald-400">{{ lastUpdated }}</span>
-          </div>
+      <!-- Page Header -->
+      <div class="mb-5 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            {{ t('availability.title') }}
+          </h1>
+          <p class="text-xs sm:text-sm text-muted-fg mt-1">
+            {{ t('availability.subtitle') }}
+          </p>
         </div>
-
-        <!-- Stats Row -->
-        <div v-if="!loading && groups.length > 0" class="relative z-10 mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-3">
-          <div class="stat-card">
-            <div class="stat-icon stat-icon-total">
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ groups.length }}</span>
-              <span class="stat-label">{{ t('availability.totalGroups') }}</span>
-            </div>
+        <div class="flex items-center gap-2.5">
+          <!-- Live badge -->
+          <div v-if="!loading && groups.length > 0" class="flex items-center gap-2 rounded-full border border-border/40 bg-background/60 backdrop-blur-md px-3 py-1.5">
+            <span class="live-dot"></span>
+            <span class="text-[11px] font-medium text-muted-fg">{{ lastUpdated }}</span>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon stat-icon-online">
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value text-emerald-600 dark:text-emerald-400">{{ availableCount }}</span>
-              <span class="stat-label">{{ t('availability.available') }}</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon stat-icon-offline">
-              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value" :class="unavailableCount > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'">{{ unavailableCount }}</span>
-              <span class="stat-label">{{ t('availability.unavailable') }}</span>
-            </div>
-          </div>
+          <button @click="refresh" :disabled="loading"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-border/40 bg-background/60 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-muted-fg transition-colors hover:bg-muted/50 hover:text-foreground disabled:opacity-50">
+            <svg class="h-3.5 w-3.5" :class="{ 'animate-spin': loading }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            {{ t('availability.refresh') }}
+          </button>
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="space-y-3 sm:space-y-4">
-        <div class="flex gap-2 mb-4 sm:mb-6 overflow-x-auto no-scrollbar">
-          <div v-for="i in 4" :key="i" class="h-7 sm:h-8 rounded-full animate-pulse flex-shrink-0" :class="i === 1 ? 'w-14 sm:w-16' : 'w-20 sm:w-24'" :style="{ background: 'var(--skeleton-bg)' }"></div>
+      <!-- Summary Stats -->
+      <div v-if="!loading && groups.length > 0" class="mb-5 sm:mb-6 flex flex-wrap items-center gap-4 sm:gap-6">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl sm:text-3xl font-bold tabular-nums text-foreground">{{ uptimePercent }}%</span>
+          <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400">{{ t('availability.available') }}</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
-          <div v-for="i in 8" :key="i" class="skeleton-card" :style="{ animationDelay: `${i * 80}ms` }">
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg animate-pulse flex-shrink-0" style="background: var(--skeleton-bg)"></div>
-              <div class="flex-1 space-y-2 min-w-0">
-                <div class="h-3 sm:h-3.5 w-20 sm:w-24 rounded animate-pulse" style="background: var(--skeleton-bg)"></div>
-                <div class="h-2.5 w-14 sm:w-16 rounded animate-pulse" style="background: var(--skeleton-bg)"></div>
+        <div class="h-5 w-px bg-border/60 hidden sm:block"></div>
+        <div class="flex items-center gap-3 text-xs text-muted-fg">
+          <span>{{ groups.length }} {{ t('availability.totalGroups') }}</span>
+          <span class="text-emerald-600 dark:text-emerald-400">{{ availableCount }} {{ t('availability.online') }}</span>
+          <span v-if="unavailableCount > 0" class="text-red-500 dark:text-red-400">{{ unavailableCount }} {{ t('availability.offline') }}</span>
+        </div>
+      </div>
+
+      <!-- Uptime bar -->
+      <div v-if="!loading && groups.length > 0" class="mb-5 sm:mb-6">
+        <div class="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
+          <div class="h-full rounded-full bg-emerald-500 transition-all duration-700" :style="{ width: uptimePercent + '%' }"></div>
+        </div>
+      </div>
+
+      <!-- Platform Filters -->
+      <div v-if="!loading && groups.length > 0" class="filter-scroll mb-5 sm:mb-6">
+        <button @click="selectedPlatform = ''" class="filter-chip" :class="selectedPlatform === '' ? 'chip-on' : 'chip-off'">
+          {{ t('availability.all') }}
+          <span class="chip-num">{{ groups.length }}</span>
+        </button>
+        <button v-for="p in platforms" :key="p.name" @click="selectedPlatform = p.name"
+          class="filter-chip" :class="selectedPlatform === p.name ? 'chip-on' : 'chip-off'">
+          <span class="h-1.5 w-1.5 rounded-full flex-shrink-0" :style="{ background: platformColor(p.name) }"></span>
+          {{ platformDisplayName(p.name) }}
+          <span class="chip-num">{{ p.count }}</span>
+        </button>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div v-for="i in 6" :key="i" class="skel-card" :style="{ animationDelay: `${i * 60}ms` }">
+          <div class="p-4 sm:p-5">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-xl shimmer"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-4 w-28 rounded shimmer"></div>
+                <div class="h-3 w-20 rounded shimmer"></div>
               </div>
-              <div class="w-11 sm:w-12 h-5 rounded-full animate-pulse flex-shrink-0" style="background: var(--skeleton-bg)"></div>
             </div>
+            <div class="h-8 w-full rounded-lg shimmer"></div>
           </div>
         </div>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="error-state">
-        <div class="error-icon-wrap">
-          <svg class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      <div v-else-if="error" class="flex flex-col items-center justify-center py-16 px-4">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 dark:bg-red-500/10 mb-4">
+          <svg class="h-7 w-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
         </div>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3 mb-4">{{ error }}</p>
-        <button @click="refresh" class="retry-btn">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-          </svg>
+        <p class="text-sm text-muted-fg mb-4">{{ error }}</p>
+        <button @click="refresh" class="rounded-lg bg-foreground px-4 py-2 text-xs font-medium text-background transition-opacity hover:opacity-90">
           {{ t('availability.retry') }}
         </button>
       </div>
 
       <!-- Empty State -->
-      <div v-else-if="groups.length === 0" class="empty-state">
-        <div class="empty-icon-wrap">
-          <svg class="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+      <div v-else-if="groups.length === 0" class="flex flex-col items-center justify-center py-16 px-4">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/50 mb-4">
+          <svg class="h-7 w-7 text-muted-fg/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
           </svg>
         </div>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-3">{{ t('availability.noGroups') }}</p>
+        <p class="text-sm text-muted-fg">{{ t('availability.noGroups') }}</p>
       </div>
 
-      <!-- Content -->
-      <template v-if="!loading && !error && groups.length > 0">
-        <!-- Platform Filter -->
-        <div class="filter-bar mb-4 sm:mb-5">
-          <button
-            @click="selectedPlatform = ''"
-            class="filter-chip"
-            :class="selectedPlatform === '' ? 'filter-chip-active' : 'filter-chip-idle'"
-          >
-            {{ t('availability.all') }}
-            <span class="chip-count">{{ groups.length }}</span>
-          </button>
-          <button
-            v-for="platform in platforms"
-            :key="platform.name"
-            @click="selectedPlatform = platform.name"
-            class="filter-chip"
-            :class="selectedPlatform === platform.name ? 'filter-chip-active' : 'filter-chip-idle'"
-          >
-            <span class="chip-dot" :style="{ background: platformColor(platform.name) }"></span>
-            {{ platformDisplayName(platform.name) }}
-            <span class="chip-count">{{ platform.count }}</span>
-          </button>
-        </div>
+      <!-- Group Cards -->
+      <div v-if="!loading && !error && filteredGroups.length > 0"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div v-for="(group, idx) in filteredGroups" :key="group.group_id"
+          class="group card-base"
+          :style="{ animationDelay: `${idx * 30}ms` }">
+          <!-- Corner crosses (hover only) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+            class="pointer-events-none absolute left-2 top-2 h-3.5 w-3.5 text-muted-fg/30 opacity-0 transition-opacity group-hover:opacity-100">
+            <line x1="12" y1="0" x2="12" y2="24"/><line x1="0" y1="12" x2="24" y2="12"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+            class="pointer-events-none absolute right-2 top-2 h-3.5 w-3.5 text-muted-fg/30 opacity-0 transition-opacity group-hover:opacity-100">
+            <line x1="12" y1="0" x2="12" y2="24"/><line x1="0" y1="12" x2="24" y2="12"/>
+          </svg>
 
-        <!-- Uptime Summary Bar -->
-        <div class="uptime-bar mb-4 sm:mb-5">
-          <div class="uptime-track">
-            <div
-              class="uptime-fill"
-              :style="{ width: uptimePercent + '%' }"
-            ></div>
-          </div>
-          <span class="uptime-label">
-            {{ uptimePercent }}% {{ t('availability.available') }}
-          </span>
-        </div>
-
-        <!-- Group Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3">
-          <div
-            v-for="(group, index) in filteredGroups"
-            :key="group.group_id"
-            class="group-card"
-            :class="group.available ? 'card-ok' : 'card-down'"
-            :style="{ animationDelay: `${index * 40}ms` }"
-          >
-            <!-- Left color accent -->
-            <div class="card-accent" :class="group.available ? 'accent-ok' : 'accent-down'"></div>
-
-            <div class="card-body">
-              <div class="flex items-center gap-3">
-                <!-- Platform icon circle -->
-                <div class="platform-icon" :style="{ background: platformColor(group.platform) + '18', color: platformColor(group.platform) }">
-                  <span class="text-xs font-bold">{{ platformDisplayName(group.platform).charAt(0) }}</span>
+          <div class="flex-1 p-4 sm:p-5">
+            <!-- Top: Icon + Name + Status -->
+            <div class="mb-3 sm:mb-4 flex items-start justify-between">
+              <div class="flex min-w-0 flex-1 items-center gap-3">
+                <!-- Platform icon -->
+                <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-white/80 to-white/20 shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 dark:from-white/10 dark:to-white/5 dark:ring-white/10 sm:h-12 sm:w-12 sm:rounded-2xl">
+                  <div class="scale-75 sm:scale-100">
+                    <ModelIcon :model="platformToModel(group.platform)" size="26px" />
+                  </div>
                 </div>
-
-                <!-- Info -->
-                <div class="flex-1 min-w-0">
-                  <h3 class="card-title">{{ group.group_name }}</h3>
-                  <span class="card-platform" :style="{ color: platformColor(group.platform) }">
-                    {{ platformDisplayName(group.platform) }}
-                  </span>
+                <!-- Name + platform label -->
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="flex-1 truncate text-sm font-bold leading-none tracking-tight text-foreground sm:text-base">
+                      {{ group.group_name }}
+                    </h3>
+                    <!-- Status badge -->
+                    <div class="shrink-0 whitespace-nowrap rounded-lg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider shadow-sm backdrop-blur-md border border-transparent sm:px-2.5 sm:py-1 sm:text-xs"
+                      :class="group.available
+                        ? 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400'
+                        : 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400'">
+                      {{ group.available ? t('availability.online') : t('availability.offline') }}
+                    </div>
+                  </div>
+                  <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-fg">
+                    <span class="inline-flex shrink-0 items-center gap-1 rounded-md bg-muted/50 px-1.5 py-0.5 font-medium text-muted-fg/80">
+                      {{ platformDisplayName(group.platform) }}
+                    </span>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- Status pill -->
-                <div class="status-pill" :class="group.available ? 'pill-ok' : 'pill-down'">
-                  <span class="pill-dot" :class="group.available ? 'pill-dot-ok' : 'pill-dot-down'"></span>
+            <!-- Status indicator bar -->
+            <div class="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 transition-colors group-hover:bg-muted/50">
+              <div class="flex items-center gap-2 text-muted-fg">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/>
+                  <path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+                <span class="text-[10px] font-semibold uppercase tracking-wider">{{ t('availability.available') }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full" :class="group.available ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                <span class="text-xs font-medium" :class="group.available ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">
                   {{ group.available ? t('availability.online') : t('availability.offline') }}
-                </div>
+                </span>
               </div>
             </div>
           </div>
         </div>
-      </template>
+      </div>
 
     </div>
   </AppLayout>
@@ -219,6 +180,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import ModelIcon from '@/components/common/ModelIcon.vue'
 import { getAvailability, type GroupAvailabilityItem } from '@/api/groups'
 
 const { t } = useI18n()
@@ -254,14 +216,28 @@ const filteredGroups = computed(() => {
 const PLATFORM_COLORS: Record<string, string> = {
   anthropic: '#d97706',
   openai: '#6366f1',
-  gemini: '#3b82f6',
+  gemini: '#4285f4',
   antigravity: '#8b5cf6',
   sora: '#ec4899',
-  qwen: '#f97316',
-  deepseek: '#14b8a6',
-  glm: '#06b6d4',
+  qwen: '#615eff',
+  deepseek: '#4d6bfe',
+  glm: '#3859ff',
   kimi: '#a855f7',
   iflow: '#10b981'
+}
+
+// Map platform names to model prefixes so ModelIcon can resolve them
+const PLATFORM_MODEL_MAP: Record<string, string> = {
+  anthropic: 'claude-3',
+  openai: 'gpt-4',
+  gemini: 'gemini-pro',
+  antigravity: 'antigravity',
+  sora: 'sora',
+  qwen: 'qwen-max',
+  deepseek: 'deepseek-chat',
+  glm: 'glm-4',
+  kimi: 'moonshot-v1',
+  iflow: 'iflow'
 }
 
 function platformDisplayName(platform: string): string {
@@ -284,6 +260,10 @@ function platformColor(platform: string): string {
   return PLATFORM_COLORS[platform] || '#6b7280'
 }
 
+function platformToModel(platform: string): string {
+  return PLATFORM_MODEL_MAP[platform] || platform
+}
+
 async function refresh() {
   loading.value = true
   error.value = ''
@@ -303,111 +283,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* === CSS Variables === */
-.availability-page {
-  --skeleton-bg: #e5e7eb;
+/* === Semantic color tokens === */
+.avail-page {
+  --foreground: #0f172a;
+  --background: #ffffff;
+  --muted: #f1f5f9;
+  --muted-fg: #64748b;
+  --border: #e2e8f0;
 }
-.dark .availability-page {
-  --skeleton-bg: rgba(75, 85, 99, 0.4);
+.dark .avail-page {
+  --foreground: #f1f5f9;
+  --background: #0f172a;
+  --muted: rgba(51, 65, 85, 0.5);
+  --muted-fg: #94a3b8;
+  --border: rgba(51, 65, 85, 0.6);
 }
+.text-foreground { color: var(--foreground); }
+.text-background { color: var(--background); }
+.bg-foreground { background: var(--foreground); }
+.text-muted-fg { color: var(--muted-fg); }
 
-/* === Header === */
-.header-bar {
-  position: relative;
-  padding: 16px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-@media (min-width: 640px) {
-  .header-bar {
-    padding: 24px;
-    border-radius: 16px;
-  }
-}
-.header-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-}
-.dark .header-bg {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-color: rgba(51, 65, 85, 0.5);
-}
-.header-noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-.header-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(50px);
-  pointer-events: none;
-  display: none;
-}
-@media (min-width: 640px) {
-  .header-glow {
-    display: block;
-  }
-}
-.header-glow-1 {
-  width: 180px; height: 180px;
-  background: rgba(16, 185, 129, 0.12);
-  top: -60px; right: 10%;
-  animation: drift 12s ease-in-out infinite;
-}
-.header-glow-2 {
-  width: 120px; height: 120px;
-  background: rgba(99, 102, 241, 0.08);
-  bottom: -30px; left: 15%;
-  animation: drift 15s ease-in-out infinite reverse;
-}
-.header-glow-3 {
-  width: 100px; height: 100px;
-  background: rgba(236, 72, 153, 0.06);
-  top: 10px; left: 50%;
-  animation: drift 18s ease-in-out infinite;
-}
-.dark .header-glow-1 { background: rgba(16, 185, 129, 0.08); }
-.dark .header-glow-2 { background: rgba(99, 102, 241, 0.06); }
-.dark .header-glow-3 { background: rgba(236, 72, 153, 0.04); }
-
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(10px, -8px); }
-  66% { transform: translate(-5px, 5px); }
-}
-
-.header-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: white;
-  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.3);
-  flex-shrink: 0;
-}
-@media (min-width: 640px) {
-  .header-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-  }
-}
-
-/* === Live Dot === */
+/* === Live dot === */
 .live-dot {
-  width: 6px;
-  height: 6px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: #10b981;
   position: relative;
+  flex-shrink: 0;
 }
 .live-dot::after {
   content: '';
@@ -415,236 +317,32 @@ onMounted(() => {
   inset: -3px;
   border-radius: 50%;
   background: rgba(16, 185, 129, 0.3);
-  animation: pulse-ring 2s ease-out infinite;
+  animation: ping 2s ease-out infinite;
 }
-@keyframes pulse-ring {
+@keyframes ping {
   0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
 }
 
-/* === Refresh Button === */
-.refresh-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+/* === Filter scroll === */
+.filter-scroll {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.refresh-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #334155;
-}
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.dark .refresh-btn {
-  background: rgba(51, 65, 85, 0.5);
-  border-color: rgba(71, 85, 105, 0.5);
-  color: #94a3b8;
-}
-.dark .refresh-btn:hover {
-  background: rgba(71, 85, 105, 0.6);
-  color: #e2e8f0;
-}
-
-/* === Stat Cards === */
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 10px;
-  border-radius: 10px;
-  background: white;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-}
-@media (min-width: 640px) {
-  .stat-card {
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 12px;
-  }
-}
-.dark .stat-card {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(51, 65, 85, 0.4);
-}
-.stat-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-@media (min-width: 640px) {
-  .stat-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-  }
-}
-.stat-icon-total {
-  background: #eff6ff;
-  color: #3b82f6;
-}
-.dark .stat-icon-total {
-  background: rgba(59, 130, 246, 0.12);
-}
-.stat-icon-online {
-  background: #ecfdf5;
-  color: #10b981;
-}
-.dark .stat-icon-online {
-  background: rgba(16, 185, 129, 0.12);
-}
-.stat-icon-offline {
-  background: #fef2f2;
-  color: #ef4444;
-}
-.dark .stat-icon-offline {
-  background: rgba(239, 68, 68, 0.12);
-}
-.stat-content {
-  display: flex;
-  flex-direction: column;
-}
-.stat-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #0f172a;
-}
-@media (min-width: 640px) {
-  .stat-value {
-    font-size: 1.25rem;
-  }
-}
-.dark .stat-value {
-  color: #f1f5f9;
-}
-.stat-label {
-  font-size: 0.6rem;
-  color: #94a3b8;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-@media (min-width: 640px) {
-  .stat-label {
-    font-size: 0.7rem;
-  }
-}
-
-/* === Skeleton === */
-.skeleton-card {
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: white;
-  border: 1px solid #f1f5f9;
-  animation: skeleton-in 0.4s ease-out both;
-}
-.dark .skeleton-card {
-  background: rgba(30, 41, 59, 0.4);
-  border-color: rgba(51, 65, 85, 0.3);
-}
-@keyframes skeleton-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* === Error & Empty States === */
-.error-state, .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px;
-}
-.error-icon-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-}
-.dark .error-icon-wrap {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-.empty-icon-wrap {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-.dark .empty-icon-wrap {
-  background: rgba(51, 65, 85, 0.3);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-.retry-btn {
-  display: inline-flex;
-  align-items: center;
   gap: 6px;
-  padding: 7px 16px;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  background: #0f172a;
-  color: white;
-  transition: all 0.15s;
-  cursor: pointer;
-  border: none;
-}
-.retry-btn:hover { background: #1e293b; }
-.dark .retry-btn { background: #e2e8f0; color: #0f172a; }
-.dark .retry-btn:hover { background: #f1f5f9; }
-
-/* === Filter Bar === */
-.filter-bar {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  align-items: center;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  -ms-overflow-style: none;
   padding-bottom: 2px;
 }
-.filter-bar::-webkit-scrollbar {
-  display: none;
-}
+.filter-scroll::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) {
-  .filter-bar {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
+  .filter-scroll { flex-wrap: wrap; overflow-x: visible; }
 }
+
 .filter-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
+  padding: 5px 11px;
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -655,265 +353,93 @@ onMounted(() => {
   flex-shrink: 0;
 }
 @media (min-width: 640px) {
-  .filter-chip {
-    padding: 5px 12px;
-    font-size: 0.8125rem;
-  }
+  .filter-chip { padding: 6px 14px; font-size: 0.8125rem; }
 }
-.filter-chip-active {
-  background: #0f172a;
-  color: white;
-  border-color: #0f172a;
+.chip-on {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
 }
-.dark .filter-chip-active {
-  background: #e2e8f0;
-  color: #0f172a;
-  border-color: #e2e8f0;
+.chip-off {
+  background: var(--background);
+  color: var(--muted-fg);
+  border-color: var(--border);
 }
-.filter-chip-idle {
-  background: white;
-  color: #475569;
-  border-color: #e2e8f0;
+.chip-off:hover {
+  background: var(--muted);
+  color: var(--foreground);
 }
-.filter-chip-idle:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-.dark .filter-chip-idle {
-  background: rgba(30, 41, 59, 0.5);
-  color: #cbd5e1;
-  border-color: rgba(51, 65, 85, 0.5);
-}
-.dark .filter-chip-idle:hover {
-  background: rgba(51, 65, 85, 0.6);
-  border-color: rgba(71, 85, 105, 0.6);
-}
-.chip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.chip-count {
-  font-size: 0.7rem;
+.chip-num {
+  font-size: 0.65rem;
   padding: 0 5px;
   border-radius: 4px;
   background: rgba(0,0,0,0.06);
-  line-height: 1.5;
+  line-height: 1.6;
 }
-.filter-chip-active .chip-count {
-  background: rgba(255,255,255,0.2);
-}
-.dark .filter-chip-active .chip-count {
-  background: rgba(0,0,0,0.15);
-}
-.dark .filter-chip-idle .chip-count {
-  background: rgba(255,255,255,0.06);
-}
+.chip-on .chip-num { background: rgba(255,255,255,0.18); }
+.dark .chip-off .chip-num { background: rgba(255,255,255,0.06); }
 
-/* === Uptime Bar === */
-.uptime-bar {
+/* === Card base (reference style) === */
+.card-base {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.uptime-track {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: #f1f5f9;
+  flex-direction: column;
   overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: card-up 0.35s ease-out both;
 }
-.dark .uptime-track {
-  background: rgba(51, 65, 85, 0.4);
-}
-.uptime-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-.uptime-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 2s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-.uptime-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #10b981;
-  white-space: nowrap;
-  min-width: 70px;
-  text-align: right;
-}
-@media (min-width: 640px) {
-  .uptime-label {
-    font-size: 0.75rem;
-    min-width: 80px;
-  }
-}
-.dark .uptime-label {
-  color: #34d399;
-}
-
-/* === Group Cards === */
-.group-card {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: card-in 0.35s ease-out both;
-}
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.group-card:hover {
-  transform: translateY(-1px);
-}
-.card-ok {
-  background: white;
-  border: 1px solid #e2e8f0;
-}
-.card-ok:hover {
-  border-color: #a7f3d0;
-  box-shadow: 0 4px 16px -4px rgba(16, 185, 129, 0.12);
-}
-.dark .card-ok {
-  background: rgba(30, 41, 59, 0.5);
+.dark .card-base {
+  background: rgba(15, 23, 42, 0.4);
   border-color: rgba(51, 65, 85, 0.4);
 }
-.dark .card-ok:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 4px 16px -4px rgba(16, 185, 129, 0.15);
+.card-base:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -8px rgba(0,0,0,0.08);
+  border-color: rgba(99, 102, 241, 0.2);
 }
-.card-down {
-  background: white;
-  border: 1px solid #fecdd3;
+.dark .card-base:hover {
+  box-shadow: 0 8px 30px -8px rgba(0,0,0,0.3);
+  border-color: rgba(99, 102, 241, 0.15);
 }
-.card-down:hover {
-  border-color: #fca5a5;
-  box-shadow: 0 4px 16px -4px rgba(239, 68, 68, 0.1);
-}
-.dark .card-down {
-  background: rgba(30, 41, 59, 0.5);
-  border-color: rgba(239, 68, 68, 0.2);
-}
-.dark .card-down:hover {
-  border-color: rgba(239, 68, 68, 0.35);
-  box-shadow: 0 4px 16px -4px rgba(239, 68, 68, 0.12);
+@keyframes card-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.card-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
+/* === Skeleton === */
+.skel-card {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(16px);
+  animation: card-up 0.35s ease-out both;
 }
-.accent-ok {
-  background: linear-gradient(180deg, #10b981, #06b6d4);
+.dark .skel-card {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(51, 65, 85, 0.4);
 }
-.accent-down {
-  background: linear-gradient(180deg, #ef4444, #f97316);
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 0%, rgba(255,255,255,0.4) 50%, var(--muted) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-move 1.5s ease-in-out infinite;
 }
-
-.card-body {
-  padding: 12px 14px 12px 16px;
+.dark .shimmer {
+  background: linear-gradient(90deg, rgba(51,65,85,0.4) 0%, rgba(71,85,105,0.3) 50%, rgba(51,65,85,0.4) 100%);
+  background-size: 200% 100%;
 }
-@media (min-width: 640px) {
-  .card-body {
-    padding: 14px 16px 14px 20px;
-  }
-}
-
-.platform-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-@media (min-width: 640px) {
-  .platform-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-  }
+@keyframes shimmer-move {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-.card-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #1e293b;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-@media (min-width: 640px) {
-  .card-title {
-    font-size: 0.875rem;
-  }
-}
-.dark .card-title {
-  color: #f1f5f9;
-}
-
-.card-platform {
-  font-size: 0.7rem;
-  font-weight: 500;
-  opacity: 0.8;
-}
-
-/* === Status Pill === */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  flex-shrink: 0;
-}
-.pill-ok {
-  background: #ecfdf5;
-  color: #059669;
-}
-.dark .pill-ok {
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-}
-.pill-down {
-  background: #fef2f2;
-  color: #dc2626;
-}
-.dark .pill-down {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
-}
-.pill-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-.pill-dot-ok {
-  background: #10b981;
-  box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
-}
-.pill-dot-down {
-  background: #ef4444;
-  box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
-}
+/* Muted background utility */
+.bg-muted\/30 { background: rgba(241,245,249,0.3); }
+.dark .bg-muted\/30 { background: rgba(51,65,85,0.2); }
+.bg-muted\/50 { background: rgba(241,245,249,0.5); }
+.dark .bg-muted\/50 { background: rgba(51,65,85,0.35); }
 </style>
