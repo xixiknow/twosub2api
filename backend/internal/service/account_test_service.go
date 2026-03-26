@@ -306,7 +306,14 @@ func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID in
 
 	testModel := modelID
 	if testModel == "" {
-		testModel = claude.DefaultTestModel
+		testModel = s.getBackgroundDefaultModel(account)
+	}
+
+	// 应用模型映射（如果账号配置了 model_mapping）
+	if mapping := account.GetModelMapping(); len(mapping) > 0 {
+		if mappedModel, exists := mapping[testModel]; exists {
+			testModel = mappedModel
+		}
 	}
 
 	result := &ScheduledTestResult{
@@ -2129,6 +2136,37 @@ func (s *AccountTestService) getDefaultTestModelForPlatform(account *Account) st
 		return "qwen3-max"
 	default:
 		return "gpt-4o-mini"
+	}
+}
+
+// getBackgroundDefaultModel returns the appropriate default test model for RunTestBackground.
+// Unlike getDefaultTestModelForPlatform (which is for upstream/multi-platform accounts),
+// this function covers all platform types including anthropic, openai, gemini, antigravity.
+func (s *AccountTestService) getBackgroundDefaultModel(account *Account) string {
+	switch account.Platform {
+	case PlatformAnthropic:
+		return claude.DefaultTestModel
+	case PlatformOpenAI:
+		return openai.DefaultTestModel
+	case PlatformGemini:
+		return geminicli.DefaultTestModel
+	case PlatformAntigravity:
+		return claude.DefaultTestModel
+	case PlatformQwen:
+		if account.IsOAuth() {
+			return "qwen3-coder-plus"
+		}
+		return "qwen-plus"
+	case PlatformDeepSeek:
+		return "deepseek-chat"
+	case PlatformGLM:
+		return "glm-4-flash"
+	case PlatformKimi:
+		return "kimi-k2"
+	case PlatformIFlow:
+		return "qwen3-max"
+	default:
+		return claude.DefaultTestModel
 	}
 }
 
