@@ -6989,8 +6989,8 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 
 	var cost *CostBreakdown
 
-	// 按次计费判断：仅对普通请求（非 Sora/图片生成）生效，且请求必须有实际输出（OutputTokens > 0）才扣费
-	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 && result.Usage.OutputTokens > 0 {
+	// 按次计费判断：对普通请求（非 Sora/图片生成）生效
+	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
 			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
 		}
@@ -7212,8 +7212,17 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 
 	var cost *CostBreakdown
 
+	// 按次计费判断：对普通请求（非图片生成）生效
+	if apiKey.Group != nil && result.ImageCount == 0 {
+		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
+			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+		}
+	}
+
 	// 根据请求类型选择计费方式
-	if result.ImageCount > 0 {
+	if cost != nil {
+		// 已按次计费，跳过其他计费逻辑
+	} else if result.ImageCount > 0 {
 		// 图片生成计费
 		var groupConfig *ImagePriceConfig
 		if apiKey.Group != nil {

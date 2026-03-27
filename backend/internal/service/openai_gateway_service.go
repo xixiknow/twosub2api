@@ -4321,25 +4321,10 @@ type OpenAIRecordUsageInput struct {
 // RecordUsage records usage and deducts balance
 func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRecordUsageInput) error {
 	result := input.Result
-
-	// 跳过所有 token 均为零的用量记录——上游未返回 usage 时不应写入数据库
-	if result.Usage.InputTokens == 0 && result.Usage.OutputTokens == 0 &&
-		result.Usage.CacheCreationInputTokens == 0 && result.Usage.CacheReadInputTokens == 0 {
-		return nil
-	}
-
 	apiKey := input.APIKey
 	user := input.User
 	account := input.Account
 	subscription := input.Subscription
-
-	// Calculate cost
-	tokens := UsageTokens{
-		InputTokens:         result.Usage.ActualNewInputTokens(),
-		OutputTokens:        result.Usage.OutputTokens,
-		CacheCreationTokens: result.Usage.CacheCreationInputTokens,
-		CacheReadTokens:     result.Usage.CacheReadInputTokens,
-	}
 
 	// Get rate multiplier
 	multiplier := s.cfg.Default.RateMultiplier
@@ -4356,15 +4341,28 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		billingModel = result.BillingModel
 	}
 
-	// 按次计费判断：请求必须有实际输出（OutputTokens > 0）才扣费，失败请求不计费
+	// 按次计费判断（优先于 token 零值检查，确保按次计费不被跳过）
 	var cost *CostBreakdown
-	if apiKey.Group != nil && result.Usage.OutputTokens > 0 {
+	if apiKey.Group != nil {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(billingModel); ok {
 			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
 		}
 	}
 
+	// 非按次计费时，跳过所有 token 均为零的用量记录
+	if cost == nil && result.Usage.InputTokens == 0 && result.Usage.OutputTokens == 0 &&
+		result.Usage.CacheCreationInputTokens == 0 && result.Usage.CacheReadInputTokens == 0 {
+		return nil
+	}
+
+	// Calculate cost (token-based fallback)
 	if cost == nil {
+		tokens := UsageTokens{
+			InputTokens:         result.Usage.ActualNewInputTokens(),
+			OutputTokens:        result.Usage.OutputTokens,
+			CacheCreationTokens: result.Usage.CacheCreationInputTokens,
+			CacheReadTokens:     result.Usage.CacheReadInputTokens,
+		}
 		serviceTier := ""
 		if result.ServiceTier != nil {
 			serviceTier = strings.TrimSpace(*result.ServiceTier)
