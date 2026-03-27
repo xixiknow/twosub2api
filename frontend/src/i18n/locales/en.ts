@@ -4757,7 +4757,10 @@ export default {
     activeAccounts: 'Active Accounts',
     lastUpdated: 'Last Updated',
     noGroups: 'No groups available',
-    retry: 'Retry'
+    retry: 'Retry',
+    platforms: 'Platforms',
+    allServicesOk: 'All Services Operational',
+    status: 'Status'
   },
 
   // Wallet

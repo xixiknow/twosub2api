@@ -4955,7 +4955,10 @@ export default {
     activeAccounts: '活跃账号',
     lastUpdated: '最后更新',
     noGroups: '暂无可用分组',
-    retry: '重试'
+    retry: '重试',
+    platforms: '平台数',
+    allServicesOk: '所有服务正常',
+    status: '状态'
   },
 
   // 钱包
