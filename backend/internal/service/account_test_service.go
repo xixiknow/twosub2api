@@ -290,6 +290,7 @@ func buildModelAwareTestPrompt(platform, modelID string) string {
 }
 
 // RunTestBackground runs a connectivity test without an HTTP/SSE context and returns a ScheduledTestResult.
+// 根据账号平台路由到对应的端点，避免 anthropic 账号走 OpenAI Codex 等不兼容端点。
 func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID int64, modelID string) (*ScheduledTestResult, error) {
 	startedAt := time.Now()
 
@@ -316,6 +317,25 @@ func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID in
 		}
 	}
 
+	proxyURL := ""
+	if account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	// 根据平台路由到对应的后台测试逻辑
+	switch account.Platform {
+	case PlatformOpenAI:
+		return s.runBackgroundOpenAI(ctx, account, testModel, proxyURL, startedAt)
+	case PlatformGemini:
+		return s.runBackgroundGemini(ctx, account, testModel, proxyURL, startedAt)
+	default:
+		// Anthropic, Antigravity 以及其他 OpenAI 兼容平台走原有逻辑
+		return s.runBackgroundAnthropic(ctx, account, testModel, proxyURL, startedAt)
+	}
+}
+
+// runBackgroundAnthropic 处理 Anthropic/Antigravity 及 OpenAI 兼容平台的后台测试
+func (s *AccountTestService) runBackgroundAnthropic(ctx context.Context, account *Account, testModel, proxyURL string, startedAt time.Time) (*ScheduledTestResult, error) {
 	result := &ScheduledTestResult{
 		Status:    "success",
 		StartedAt: startedAt,
@@ -323,7 +343,22 @@ func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID in
 
 	baseURL := account.GetCredential("base_url")
 	if baseURL == "" {
-		baseURL = "https://api.anthropic.com"
+		switch account.Platform {
+		case PlatformAntigravity:
+			baseURL = "https://api.anthropic.com"
+		case PlatformQwen:
+			baseURL = "https://dashscope.aliyuncs.com/compatible-mode"
+		case PlatformDeepSeek:
+			baseURL = "https://api.deepseek.com"
+		case PlatformGLM:
+			baseURL = "https://open.bigmodel.cn/api/paas"
+		case PlatformKimi:
+			baseURL = "https://api.moonshot.cn"
+		case PlatformIFlow:
+			baseURL = "https://api.iflow.cn"
+		default:
+			baseURL = "https://api.anthropic.com"
+		}
 	}
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
@@ -332,17 +367,24 @@ func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID in
 		apiKey = account.GetCredential("session_key")
 	}
 
-	proxyURL := ""
-	if account.Proxy != nil {
-		proxyURL = account.Proxy.URL()
+	// 对于 OpenAI 兼容平台（Qwen/DeepSeek/GLM/Kimi/iFlow），使用 OpenAI Chat 端点
+	if account.IsOpenAICompatible() {
+		return s.runBackgroundOpenAICompat(ctx, account, baseURL, apiKey, proxyURL, testModel, startedAt)
 	}
 
-	// For non-default base URLs, use auto-detection to find the correct endpoint
-	if baseURL != "https://api.anthropic.com" {
+	// 对于非默认 base URL 的 Anthropic/Antigravity 账号，使用平台感知的自动探测
+	defaultBaseURL := "https://api.anthropic.com"
+	if account.Platform == PlatformAntigravity {
+		// Antigravity 带 /antigravity 后缀
+		if strings.HasSuffix(baseURL, "/antigravity") {
+			baseURL = strings.TrimSuffix(baseURL, "/antigravity")
+		}
+	}
+	if baseURL != defaultBaseURL {
 		return s.runBackgroundWithAutoDetection(ctx, account, baseURL, apiKey, proxyURL, testModel, startedAt)
 	}
 
-	// Default Anthropic endpoint
+	// 默认 Anthropic 端点
 	testPrompt := buildModelAwareTestPrompt(string(account.Platform), testModel)
 	reqBody := fmt.Sprintf(`{"model":"%s","max_tokens":64,"messages":[{"role":"user","content":"%s"}]}`, testModel, testPrompt)
 
@@ -385,8 +427,229 @@ func (s *AccountTestService) RunTestBackground(ctx context.Context, accountID in
 	return result, nil
 }
 
+// runBackgroundOpenAI 处理 OpenAI 平台的后台测试
+func (s *AccountTestService) runBackgroundOpenAI(ctx context.Context, account *Account, testModel, proxyURL string, startedAt time.Time) (*ScheduledTestResult, error) {
+	result := &ScheduledTestResult{
+		Status:    "success",
+		StartedAt: startedAt,
+	}
+
+	var apiURL string
+	var authToken string
+
+	if account.IsOAuth() {
+		// OAuth 账号不走 Codex 端点做后台测试，使用 /v1/chat/completions 兼容端点
+		authToken = account.GetOpenAIAccessToken()
+		if authToken == "" {
+			authToken = account.GetCredential("access_token")
+		}
+		apiURL = "https://api.openai.com/v1/chat/completions"
+	} else if account.Type == AccountTypeAPIKey {
+		authToken = account.GetOpenAIApiKey()
+		if authToken == "" {
+			authToken = account.GetCredential("api_key")
+		}
+		baseURL := account.GetOpenAIBaseURL()
+		if baseURL == "" {
+			baseURL = "https://api.openai.com"
+		}
+		baseURL = strings.TrimSuffix(baseURL, "/")
+
+		// 非默认 base URL 使用平台感知自动探测
+		if baseURL != "https://api.openai.com" {
+			return s.runBackgroundWithAutoDetection(ctx, account, baseURL, authToken, proxyURL, testModel, startedAt)
+		}
+		apiURL = baseURL + "/v1/chat/completions"
+	} else {
+		result.Status = "error"
+		result.ErrorMessage = fmt.Sprintf("Unsupported OpenAI account type: %s", account.Type)
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+
+	testPrompt := buildModelAwareTestPrompt("openai", testModel)
+	payload := map[string]any{
+		"model": testModel,
+		"messages": []map[string]string{
+			{"role": "user", "content": testPrompt},
+		},
+		"max_tokens": 64,
+	}
+	payloadBytes, _ := json.Marshal(payload)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Failed to create request: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+authToken)
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Request failed: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result.FinishedAt = time.Now()
+	result.LatencyMs = time.Since(startedAt).Milliseconds()
+
+	if resp.StatusCode != http.StatusOK {
+		result.Status = "error"
+		result.ErrorMessage = fmt.Sprintf("Upstream returned status %d: %s", resp.StatusCode, string(body))
+	} else {
+		result.ResponseText = string(body)
+		if len(result.ResponseText) > 2000 {
+			result.ResponseText = result.ResponseText[:2000]
+		}
+	}
+
+	return result, nil
+}
+
+// runBackgroundGemini 处理 Gemini 平台的后台测试
+func (s *AccountTestService) runBackgroundGemini(ctx context.Context, account *Account, testModel, proxyURL string, startedAt time.Time) (*ScheduledTestResult, error) {
+	result := &ScheduledTestResult{
+		Status:    "success",
+		StartedAt: startedAt,
+	}
+
+	baseURL := account.GetCredential("base_url")
+	if baseURL == "" {
+		baseURL = "https://generativelanguage.googleapis.com"
+	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	apiKey := account.GetCredential("api_key")
+
+	if testModel == "" {
+		testModel = geminicli.DefaultTestModel
+	}
+
+	testPrompt := buildModelAwareTestPrompt("gemini", testModel)
+	payload := map[string]any{
+		"contents": []map[string]any{
+			{
+				"role": "user",
+				"parts": []map[string]any{
+					{"text": testPrompt},
+				},
+			},
+		},
+	}
+	payloadBytes, _ := json.Marshal(payload)
+
+	apiURL := fmt.Sprintf("%s/v1beta/models/%s:generateContent", baseURL, testModel)
+	if apiKey != "" {
+		apiURL += "?key=" + apiKey
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Failed to create request: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Request failed: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result.FinishedAt = time.Now()
+	result.LatencyMs = time.Since(startedAt).Milliseconds()
+
+	if resp.StatusCode != http.StatusOK {
+		result.Status = "error"
+		result.ErrorMessage = fmt.Sprintf("Upstream returned status %d: %s", resp.StatusCode, string(body))
+	} else {
+		result.ResponseText = string(body)
+		if len(result.ResponseText) > 2000 {
+			result.ResponseText = result.ResponseText[:2000]
+		}
+	}
+
+	return result, nil
+}
+
+// runBackgroundOpenAICompat 处理 OpenAI 兼容平台（Qwen/DeepSeek/GLM/Kimi/iFlow）的后台测试
+func (s *AccountTestService) runBackgroundOpenAICompat(ctx context.Context, account *Account, baseURL, apiKey, proxyURL, testModel string, startedAt time.Time) (*ScheduledTestResult, error) {
+	result := &ScheduledTestResult{
+		Status:    "success",
+		StartedAt: startedAt,
+	}
+
+	testPrompt := buildModelAwareTestPrompt(string(account.Platform), testModel)
+	payload := map[string]any{
+		"model": testModel,
+		"messages": []map[string]string{
+			{"role": "user", "content": testPrompt},
+		},
+		"max_tokens": 64,
+	}
+	payloadBytes, _ := json.Marshal(payload)
+
+	apiURL := baseURL + "/v1/chat/completions"
+
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(payloadBytes))
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Failed to create request: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := s.httpUpstream.Do(req, proxyURL, account.ID, account.Concurrency)
+	if err != nil {
+		result.Status = "error"
+		result.ErrorMessage = "Request failed: " + err.Error()
+		result.FinishedAt = time.Now()
+		result.LatencyMs = time.Since(startedAt).Milliseconds()
+		return result, nil
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	result.FinishedAt = time.Now()
+	result.LatencyMs = time.Since(startedAt).Milliseconds()
+
+	if resp.StatusCode != http.StatusOK {
+		result.Status = "error"
+		result.ErrorMessage = fmt.Sprintf("Upstream returned status %d: %s", resp.StatusCode, string(body))
+	} else {
+		result.ResponseText = string(body)
+		if len(result.ResponseText) > 2000 {
+			result.ResponseText = result.ResponseText[:2000]
+		}
+	}
+
+	return result, nil
+}
+
 // runBackgroundWithAutoDetection probes autoDetectEndpoints to find a working
 // endpoint on a custom base URL, then performs the actual test request.
+// 使用 reorderEndpointsForPlatform 按平台优先排序端点，避免 anthropic 账号被误路由到 Codex 端点。
 func (s *AccountTestService) runBackgroundWithAutoDetection(
 	ctx context.Context, account *Account,
 	baseURL, apiKey, proxyURL, testModel string,
@@ -394,10 +657,13 @@ func (s *AccountTestService) runBackgroundWithAutoDetection(
 ) (*ScheduledTestResult, error) {
 	result := &ScheduledTestResult{Status: "error", StartedAt: startedAt}
 
+	// 按平台重排端点探测顺序，确保优先探测本平台对应的端点
+	endpoints := reorderEndpointsForPlatform(account.Platform)
+
 	// Probe each endpoint to find one that doesn't 404
 	var matchedIdx = -1
-	for i := range autoDetectEndpoints {
-		ep := &autoDetectEndpoints[i]
+	for i := range endpoints {
+		ep := &endpoints[i]
 		probeBody, extraHeaders := ep.BuildProbe(testModel)
 
 		fullURL := baseURL + ep.Path
@@ -451,7 +717,7 @@ func (s *AccountTestService) runBackgroundWithAutoDetection(
 	}
 
 	// Send the real test request using the matched endpoint
-	ep := &autoDetectEndpoints[matchedIdx]
+	ep := &endpoints[matchedIdx]
 	reqBody, extraHeaders := ep.BuildProbe(testModel)
 	fullURL := baseURL + ep.Path
 	if strings.Contains(ep.Path, "{model}") {
