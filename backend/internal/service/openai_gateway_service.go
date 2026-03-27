@@ -2754,6 +2754,11 @@ func (s *OpenAIGatewayService) handleErrorResponsePassthrough(
 		UpstreamResponseBody: upstreamDetail,
 	})
 
+	// Passthrough 模式下仍需跟踪限流/认证错误状态，确保账号调度正确反映上游状态
+	if s.rateLimitService != nil && s.shouldFailoverUpstreamError(resp.StatusCode) {
+		s.rateLimitService.HandleUpstreamError(ctx, account, resp.StatusCode, resp.Header, body)
+	}
+
 	writeOpenAIPassthroughResponseHeaders(c.Writer.Header(), resp.Header, s.responseHeaderFilter)
 	contentType := resp.Header.Get("Content-Type")
 	if contentType == "" {

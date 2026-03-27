@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -139,6 +140,9 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 		upstreamMsg = truncateForLog([]byte(upstreamMsg), 512)
 	}
 
+	// Extract upstream error code for specific error handling
+	upstreamCode := extractUpstreamErrorCode(responseBody)
+
 	switch statusCode {
 	case 400:
 		// 只有当错误信息包含 "organization has been disabled" 时才禁用
@@ -149,6 +153,14 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 		}
 		// 其他 400 错误（如参数问题）不处理，不禁用账号
 	case 401:
+		// 检查是否为 token_invalidated 或 token_revoked（永久失效，需要重新授权）
+		if strings.EqualFold(upstreamCode, "token_invalidated") || strings.EqualFold(upstreamCode, "token_revoked") {
+			msg := fmt.Sprintf("Token permanently invalidated (401/%s): %s", upstreamCode, upstreamMsg)
+			s.handleAuthError(ctx, account, msg)
+			slog.Warn("account_token_invalidated", "account_id", account.ID, "platform", account.Platform, "code", upstreamCode)
+			shouldDisable = true
+			break
+		}
 		// OAuth 账号在 401 错误时临时不可调度（给 token 刷新窗口）；非 OAuth 账号保持原有 SetError 行为。
 		// Antigravity 除外：其 401 由 applyErrorPolicy 的 temp_unschedulable_rules 自行控制。
 		if account.Type == AccountTypeOAuth && account.Platform != PlatformAntigravity {
@@ -199,6 +211,14 @@ func (s *RateLimitService) HandleUpstreamError(ctx context.Context, account *Acc
 			shouldDisable = true
 		}
 	case 402:
+		// 检查是否为 deactivated_workspace（工作区已停用）
+		if strings.EqualFold(upstreamCode, "deactivated_workspace") || strings.Contains(strings.ToLower(upstreamMsg), "deactivated") {
+			msg := "Workspace deactivated (402): " + upstreamMsg
+			s.handleAuthError(ctx, account, msg)
+			slog.Warn("account_workspace_deactivated", "account_id", account.ID, "platform", account.Platform)
+			shouldDisable = true
+			break
+		}
 		// 支付要求：余额不足或计费问题，停止调度
 		msg := "Payment required (402): insufficient balance or billing issue"
 		if upstreamMsg != "" {

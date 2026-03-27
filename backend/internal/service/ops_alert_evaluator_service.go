@@ -88,6 +88,7 @@ func (s *OpsAlertEvaluatorService) Start() {
 		if s.stopCh == nil {
 			s.stopCh = make(chan struct{})
 		}
+		s.wg.Add(1) // wg.Add MUST be called before launching the goroutine to avoid race with Stop/Wait
 		go s.run()
 	})
 }
@@ -105,7 +106,6 @@ func (s *OpsAlertEvaluatorService) Stop() {
 }
 
 func (s *OpsAlertEvaluatorService) run() {
-	s.wg.Add(1)
 	defer s.wg.Done()
 
 	// Start immediately to produce early feedback in ops dashboard.
@@ -172,7 +172,7 @@ func (s *OpsAlertEvaluatorService) evaluateOnce(interval time.Duration) {
 		}
 	}
 
-	release, ok := s.tryAcquireLeaderLock(ctx, runtimeCfg.DistributedLock)
+	release, ok := s.tryAcquireLeaderLock(runtimeCfg.DistributedLock)
 	if !ok {
 		return
 	}
@@ -815,7 +815,7 @@ func isOpsAlertSilenced(now time.Time, rule *OpsAlertRule, event *OpsAlertEvent,
 	return false
 }
 
-func (s *OpsAlertEvaluatorService) tryAcquireLeaderLock(ctx context.Context, lock OpsDistributedLockSettings) (func(), bool) {
+func (s *OpsAlertEvaluatorService) tryAcquireLeaderLock(lock OpsDistributedLockSettings) (func(), bool) {
 	if !lock.Enabled {
 		return nil, true
 	}
@@ -834,7 +834,10 @@ func (s *OpsAlertEvaluatorService) tryAcquireLeaderLock(ctx context.Context, loc
 		ttl = opsAlertEvaluatorLeaderLockTTL
 	}
 
-	ok, err := s.redisClient.SetNX(ctx, key, s.instanceID, ttl).Result()
+	acquireCtx, acquireCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer acquireCancel()
+
+	ok, err := s.redisClient.SetNX(acquireCtx, key, s.instanceID, ttl).Result()
 	if err != nil {
 		// Prefer fail-closed to avoid duplicate evaluators stampeding the DB when Redis is flaky.
 		// Single-node deployments can disable the distributed lock via runtime settings.
@@ -848,7 +851,10 @@ func (s *OpsAlertEvaluatorService) tryAcquireLeaderLock(ctx context.Context, loc
 		return nil, false
 	}
 	return func() {
-		_, _ = opsAlertEvaluatorReleaseScript.Run(ctx, s.redisClient, []string{key}, s.instanceID).Result()
+		// Use a fresh context for release — the caller's ctx may already be cancelled.
+		releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer releaseCancel()
+		_, _ = opsAlertEvaluatorReleaseScript.Run(releaseCtx, s.redisClient, []string{key}, s.instanceID).Result()
 	}, true
 }
 

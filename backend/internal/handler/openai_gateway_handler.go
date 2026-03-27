@@ -330,6 +330,9 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 			wroteFallback := h.ensureForwardErrorResponse(c, streamStarted)
 			fields := []zap.Field{
 				zap.Int64("account_id", account.ID),
+				zap.String("account_name", account.Name),
+				zap.String("platform", account.Platform),
+				zap.String("account_type", account.Type),
 				zap.Bool("fallback_error_response_written", wroteFallback),
 				zap.Error(err),
 			}
@@ -718,6 +721,9 @@ func (h *OpenAIGatewayHandler) Messages(c *gin.Context) {
 			wroteFallback := h.ensureAnthropicErrorResponse(c, streamStarted)
 			reqLog.Warn("openai_messages.forward_failed",
 				zap.Int64("account_id", account.ID),
+				zap.String("account_name", account.Name),
+				zap.String("platform", account.Platform),
+				zap.String("account_type", account.Type),
 				zap.Bool("fallback_error_response_written", wroteFallback),
 				zap.Error(err),
 			)
