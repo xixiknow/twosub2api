@@ -199,25 +199,23 @@
                   <path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/>
                   <circle cx="12" cy="12" r="2"/>
                 </svg>
-                <span class="text-[10px] font-semibold uppercase tracking-wider opacity-60">{{ t('availability.available') }}</span>
+                <span class="text-[10px] font-semibold uppercase tracking-wider opacity-60">{{ t('availability.activeAccounts') }}</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="inline-flex h-1.5 w-1.5 rounded-full" :class="group.available ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                <span class="text-xs font-bold uppercase">
-                  {{ group.available ? t('availability.online') : t('availability.offline') }}
+                <span class="text-xs font-bold">
+                  {{ group.active_accounts }} / {{ group.total_accounts }}
                 </span>
               </div>
             </div>
 
-            <!-- Activity wave bars -->
-            <div class="mt-3 flex gap-[2px] h-4 items-end">
-              <div v-for="i in 20" :key="i"
-                class="wave-bar"
-                :class="group.available ? 'wave-bar-ok' : (Math.random() > 0.3 ? 'wave-bar-err' : 'wave-bar-dim')"
-                :style="{
-                  height: group.available ? `${50 + Math.random() * 50}%` : `${20 + Math.random() * 80}%`,
-                  animationDelay: `${i * 50}ms`
-                }">
+            <!-- Account capacity bar -->
+            <div class="mt-2.5">
+              <div class="h-1.5 rounded-full bg-gray-100 dark:bg-dark-700 overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-700 ease-out"
+                  :class="group.available ? 'bg-emerald-400 dark:bg-emerald-500' : 'bg-rose-400 dark:bg-rose-500'"
+                  :style="{ width: group.total_accounts > 0 ? ((group.active_accounts / group.total_accounts) * 100) + '%' : '0%' }">
+                </div>
               </div>
             </div>
           </div>
@@ -697,32 +695,4 @@ onMounted(() => { refresh() })
   border-color: rgba(244, 63, 94, 0.15);
 }
 
-/* Wave bars */
-.wave-bar {
-  flex: 1;
-  border-radius: 2px;
-  transition: all 0.2s;
-  animation: wave-grow 0.6s ease-out both;
-}
-@keyframes wave-grow {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
-}
-.wave-bar-ok {
-  background: #14b8a6;
-  opacity: 0.25;
-}
-:root.dark .wave-bar-ok { opacity: 0.3; }
-.wave-bar-ok:hover { opacity: 0.5; }
-.wave-bar-dim {
-  background: #14b8a6;
-  opacity: 0.08;
-}
-:root.dark .wave-bar-dim { opacity: 0.1; }
-.wave-bar-err {
-  background: #f43f5e;
-  opacity: 0.2;
-}
-:root.dark .wave-bar-err { opacity: 0.25; }
-.wave-bar-err:hover { opacity: 0.4; }
 </style>
