@@ -47,7 +47,7 @@
           </div>
 
           <!-- Stat cards -->
-          <div v-if="!loading && groups.length > 0" class="mt-5 sm:mt-7 grid grid-cols-3 gap-2 sm:gap-4">
+          <div v-if="!loading && groups.length > 0" class="mt-5 sm:mt-7 grid grid-cols-3 gap-1.5 sm:gap-4">
             <div class="stat-card">
               <div class="stat-value text-primary-600 dark:text-primary-400">{{ groups.length }}</div>
               <div class="stat-label">{{ t('availability.totalGroups') }}</div>
@@ -359,12 +359,14 @@ onMounted(() => { refresh() })
 
 /* ═══════════ STAT CARDS ═══════════ */
 .stat-card {
-  padding: 12px 14px;
+  padding: 10px 8px;
   border-radius: 0.75rem;
   background: rgba(249, 250, 251, 0.8);
   border: 1px solid rgba(229, 231, 235, 0.5);
   text-align: center;
   transition: all 0.2s;
+  min-width: 0;
+  overflow: hidden;
 }
 :root.dark .stat-card {
   background: rgba(30, 41, 59, 0.4);
@@ -376,7 +378,7 @@ onMounted(() => { refresh() })
 }
 @media (min-width: 640px) { .stat-card { padding: 16px 20px; } }
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -385,13 +387,14 @@ onMounted(() => { refresh() })
 .stat-label {
   font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: rgba(107, 114, 128, 0.7);
-  margin-top: 6px;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 :root.dark .stat-label { color: rgba(148, 163, 184, 0.6); }
-@media (min-width: 640px) { .stat-label { font-size: 11px; } }
+@media (min-width: 640px) { .stat-label { font-size: 11px; margin-top: 6px; } }
 .stat-bar {
   height: 3px;
   background: rgba(229, 231, 235, 0.5);
