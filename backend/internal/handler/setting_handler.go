@@ -240,13 +240,5 @@ func (h *SettingHandler) GetGroupAvailability(c *gin.Context) {
 	}
 
 	availability := h.gatewayService.GetGroupsAvailability(ctx, groups)
-
-	// 只返回有可用账号的分组给用户，隐藏不可用的分组
-	filtered := make([]service.GroupAvailabilityInfo, 0, len(availability))
-	for _, a := range availability {
-		if a.Available {
-			filtered = append(filtered, a)
-		}
-	}
-	response.Success(c, filtered)
+	response.Success(c, availability)
 }

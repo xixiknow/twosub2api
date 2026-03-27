@@ -47,7 +47,7 @@
           </div>
 
           <!-- Stat cards -->
-          <div v-if="!loading && groups.length > 0" class="mt-5 sm:mt-7 grid grid-cols-2 gap-2 sm:gap-4">
+          <div v-if="!loading && groups.length > 0" class="mt-5 sm:mt-7 grid grid-cols-3 gap-2 sm:gap-4">
             <div class="stat-card">
               <div class="stat-value text-primary-600 dark:text-primary-400">{{ groups.length }}</div>
               <div class="stat-label">{{ t('availability.totalGroups') }}</div>
@@ -56,10 +56,17 @@
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-value text-emerald-600 dark:text-emerald-400">{{ platforms.length }}</div>
-              <div class="stat-label text-emerald-600/70 dark:text-emerald-400/70">{{ t('availability.platforms') }}</div>
+              <div class="stat-value text-emerald-600 dark:text-emerald-400">{{ availableCount }}</div>
+              <div class="stat-label text-emerald-600/70 dark:text-emerald-400/70">{{ t('availability.online') }}</div>
               <div class="stat-bar">
-                <div class="stat-bar-fill bg-emerald-400 dark:bg-emerald-500" style="width:100%"></div>
+                <div class="stat-bar-fill bg-emerald-400 dark:bg-emerald-500" :style="{ width: uptimePercent + '%' }"></div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" :class="unavailableCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-300 dark:text-dark-600'">{{ unavailableCount }}</div>
+              <div class="stat-label" :class="unavailableCount > 0 ? 'text-rose-600/70 dark:text-rose-400/70' : ''">{{ t('availability.offline') }}</div>
+              <div class="stat-bar">
+                <div class="stat-bar-fill bg-rose-400 dark:bg-rose-500" :style="{ width: groups.length ? ((unavailableCount / groups.length) * 100) + '%' : '0%' }"></div>
               </div>
             </div>
           </div>
@@ -67,11 +74,13 @@
           <!-- Uptime bar -->
           <div v-if="!loading && groups.length > 0" class="mt-4 sm:mt-6">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-dark-500">{{ t('availability.allServicesOk') }}</span>
-              <span class="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">100%</span>
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-dark-500">{{ t('availability.available') }}</span>
+              <span class="text-sm font-bold tabular-nums" :class="uptimePercent >= 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">{{ uptimePercent }}%</span>
             </div>
             <div class="h-1.5 rounded-full bg-gray-100 dark:bg-dark-700 overflow-hidden">
-              <div class="h-full rounded-full bg-gradient-to-r from-primary-400 to-emerald-400 dark:from-primary-500 dark:to-emerald-500 transition-all duration-1000 ease-out uptime-shimmer" style="width: 100%"></div>
+              <div class="h-full rounded-full transition-all duration-1000 ease-out uptime-shimmer"
+                :class="uptimePercent >= 100 ? 'bg-gradient-to-r from-primary-400 to-emerald-400 dark:from-primary-500 dark:to-emerald-500' : 'bg-gradient-to-r from-amber-400 to-amber-500 dark:from-amber-500 dark:to-amber-600'"
+                :style="{ width: uptimePercent + '%' }"></div>
             </div>
           </div>
 
@@ -185,7 +194,7 @@
             </div>
 
             <!-- Status indicator bar -->
-            <div class="status-bar status-bar-ok">
+            <div class="status-bar" :class="group.available ? 'status-bar-ok' : 'status-bar-err'">
               <div class="flex items-center gap-2">
                 <svg class="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/>
@@ -195,8 +204,8 @@
                 <span class="text-[10px] font-semibold uppercase tracking-wider opacity-60">{{ t('availability.status') }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                <span class="text-xs font-bold">{{ t('availability.online') }}</span>
+                <span class="inline-flex h-1.5 w-1.5 rounded-full" :class="group.available ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span class="text-xs font-bold">{{ group.available ? t('availability.online') : t('availability.offline') }}</span>
               </div>
             </div>
           </div>
@@ -221,6 +230,13 @@ const loading = ref(true)
 const error = ref('')
 const selectedPlatform = ref('')
 const lastUpdated = ref('')
+
+const availableCount = computed(() => groups.value.filter(g => g.available).length)
+const unavailableCount = computed(() => groups.value.filter(g => !g.available).length)
+const uptimePercent = computed(() => {
+  if (groups.value.length === 0) return 100
+  return Math.round((availableCount.value / groups.value.length) * 100)
+})
 
 const platforms = computed(() => {
   const map = new Map<string, number>()
@@ -663,6 +679,10 @@ onMounted(() => { refresh() })
 .group:hover .status-bar-ok {
   background: rgba(16, 185, 129, 0.08);
   border-color: rgba(16, 185, 129, 0.15);
+}
+.group:hover .status-bar-err {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.15);
 }
 
 </style>
