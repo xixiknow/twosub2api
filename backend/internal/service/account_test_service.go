@@ -1598,7 +1598,8 @@ func (s *AccountTestService) testAntigravityAccountConnection(c *gin.Context, ac
 			}
 		}
 
-		return s.testAPIKeyWithAutoDetection(c, account, normalizedBaseURL, authToken, testModelID)
+		// 根据账号平台选择优先端点，避免 anthropic 平台请求走到 OpenAI 端点
+		return s.testAPIKeyWithAutoDetectionPlatformAware(c, account, normalizedBaseURL, authToken, testModelID)
 	}
 
 	if s.antigravityGatewayService == nil {
@@ -2227,6 +2228,152 @@ func (s *AccountTestService) processChatCompletionStream(c *gin.Context, body io
 			s.sendEvent(c, TestEvent{Type: "content", Text: content})
 		}
 	}
+}
+
+// testAPIKeyWithAutoDetectionPlatformAware 根据账号平台优先探测对应的端点格式。
+// 对于 anthropic 平台优先 /v1/messages，gemini 平台优先 Gemini 端点，
+// 避免 anthropic 账号被误路由到 OpenAI Codex 号池。
+func (s *AccountTestService) testAPIKeyWithAutoDetectionPlatformAware(c *gin.Context, account *Account, normalizedBaseURL, authToken, testModelID string) error {
+	// 根据平台重排端点探测顺序
+	reordered := reorderEndpointsForPlatform(account.Platform)
+	return s.testAPIKeyWithAutoDetectionCustomEndpoints(c, account, normalizedBaseURL, authToken, testModelID, reordered)
+}
+
+// reorderEndpointsForPlatform 将指定平台对应的端点排到最前面
+func reorderEndpointsForPlatform(platform string) []endpointDef {
+	// 确定平台对应的端点路径前缀
+	var preferredPath string
+	switch platform {
+	case PlatformAnthropic:
+		preferredPath = "/v1/messages"
+	case PlatformGemini:
+		preferredPath = "/v1beta/models/"
+	default:
+		// openai, deepseek, qwen 等默认用原始顺序（OpenAI 端点优先）
+		return autoDetectEndpoints
+	}
+
+	reordered := make([]endpointDef, 0, len(autoDetectEndpoints))
+	var rest []endpointDef
+	for _, ep := range autoDetectEndpoints {
+		if strings.Contains(ep.Path, preferredPath) {
+			reordered = append(reordered, ep)
+		} else {
+			rest = append(rest, ep)
+		}
+	}
+	reordered = append(reordered, rest...)
+	return reordered
+}
+
+// testAPIKeyWithAutoDetectionCustomEndpoints 与 testAPIKeyWithAutoDetection 相同，
+// 但使用自定义的端点列表（允许按平台重排顺序）
+func (s *AccountTestService) testAPIKeyWithAutoDetectionCustomEndpoints(c *gin.Context, account *Account, normalizedBaseURL, authToken, testModelID string, endpoints []endpointDef) error {
+	ctx := c.Request.Context()
+
+	// Set SSE headers
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("X-Accel-Buffering", "no")
+	c.Writer.Flush()
+
+	s.sendEvent(c, TestEvent{Type: "test_start", Model: testModelID})
+
+	// Get proxy URL
+	proxyURL := ""
+	if account.ProxyID != nil && account.Proxy != nil {
+		proxyURL = account.Proxy.URL()
+	}
+
+	base := strings.TrimSuffix(normalizedBaseURL, "/")
+
+	s.sendEvent(c, TestEvent{Type: "content", Text: "Detecting API endpoint format ...\n"})
+
+	var detectedIdx = -1
+	var successIdx = -1
+
+	for i, ep := range endpoints {
+		epPath := ep.Path
+		probeBody, extraHeaders := ep.BuildProbe(testModelID)
+
+		fullURL := base + epPath
+
+		if strings.Contains(epPath, "{model}") {
+			geminiModel := testModelID
+			if m, ok := extraHeaders["_gemini_model"]; ok && m != "" {
+				geminiModel = m
+				delete(extraHeaders, "_gemini_model")
+			}
+			if geminiModel == "" {
+				geminiModel = "gemini-2.0-flash"
+			}
+			fullURL = base + strings.Replace(epPath, "{model}", geminiModel, 1)
+		}
+		delete(extraHeaders, "_gemini_model")
+
+		probeReq, err := http.NewRequestWithContext(ctx, "POST", fullURL, bytes.NewReader(probeBody))
+		if err != nil {
+			continue
+		}
+
+		for k, v := range extraHeaders {
+			probeReq.Header.Set(k, v)
+		}
+		if strings.Contains(epPath, "/v1/messages") {
+			probeReq.Header.Set("x-api-key", authToken)
+		} else {
+			probeReq.Header.Set("Authorization", "Bearer "+authToken)
+		}
+
+		probeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		probeReq = probeReq.WithContext(probeCtx)
+
+		resp, err := s.httpUpstream.Do(probeReq, proxyURL, account.ID, account.Concurrency)
+		cancel()
+		if err != nil {
+			continue
+		}
+
+		statusCode := resp.StatusCode
+		_ = resp.Body.Close()
+
+		if statusCode == http.StatusNotFound || statusCode == http.StatusMethodNotAllowed {
+			continue
+		}
+
+		s.sendEvent(c, TestEvent{
+			Type:     "endpoint_check",
+			Endpoint: ep.Name,
+			Status:   "success",
+			Text:     fmt.Sprintf("HTTP %d - endpoint detected", statusCode),
+		})
+		if detectedIdx == -1 {
+			detectedIdx = i
+		}
+		if successIdx == -1 && statusCode >= 200 && statusCode < 300 {
+			successIdx = i
+			break
+		}
+	}
+
+	finalIdx := successIdx
+	if finalIdx == -1 {
+		finalIdx = detectedIdx
+	}
+
+	if finalIdx == -1 {
+		return s.sendErrorAndEnd(c, "No supported API endpoint detected on this base URL")
+	}
+
+	detected := endpoints[finalIdx]
+
+	s.sendEvent(c, TestEvent{
+		Type: "content",
+		Text: "\nRunning streaming test ...\n",
+	})
+
+	return s.runStreamingEndpointTest(c, ctx, account, base, authToken, testModelID, detected, proxyURL)
 }
 
 // testAPIKeyWithAutoDetection probes multiple endpoint formats on a custom base URL to detect
