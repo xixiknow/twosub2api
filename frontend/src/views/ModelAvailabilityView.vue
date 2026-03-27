@@ -359,14 +359,13 @@ onMounted(() => { refresh() })
 
 /* ═══════════ STAT CARDS ═══════════ */
 .stat-card {
-  padding: 10px 8px;
+  padding: 10px 6px;
   border-radius: 0.75rem;
   background: rgba(249, 250, 251, 0.8);
   border: 1px solid rgba(229, 231, 235, 0.5);
   text-align: center;
   transition: all 0.2s;
   min-width: 0;
-  overflow: hidden;
 }
 :root.dark .stat-card {
   background: rgba(30, 41, 59, 0.4);
@@ -389,9 +388,7 @@ onMounted(() => { refresh() })
   font-weight: 600;
   color: rgba(107, 114, 128, 0.7);
   margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 :root.dark .stat-label { color: rgba(148, 163, 184, 0.6); }
 @media (min-width: 640px) { .stat-label { font-size: 11px; margin-top: 6px; } }

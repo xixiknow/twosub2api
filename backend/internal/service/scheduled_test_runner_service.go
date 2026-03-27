@@ -142,6 +142,19 @@ func (s *ScheduledTestRunnerService) runOnePlan(ctx context.Context, plan *Sched
 		s.tryRecoverAccount(ctx, plan.AccountID, plan.ID)
 	}
 
+	// 测试失败时将账号标记为 error 状态，使可用性检测正确反映实际状态
+	if result.Status == "error" && s.accountRepo != nil {
+		errMsg := result.ErrorMessage
+		if len(errMsg) > 200 {
+			errMsg = errMsg[:200]
+		}
+		if setErr := s.accountRepo.SetError(ctx, plan.AccountID, "scheduled test failed: "+errMsg); setErr != nil {
+			logger.LegacyPrintf("service.scheduled_test_runner", "[ScheduledTestRunner] plan=%d SetError failed: %v", plan.ID, setErr)
+		} else {
+			logger.LegacyPrintf("service.scheduled_test_runner", "[ScheduledTestRunner] plan=%d account=%d marked as error after failed test", plan.ID, plan.AccountID)
+		}
+	}
+
 	nextRun, err := computeNextRun(plan.CronExpression, time.Now())
 	if err != nil {
 		logger.LegacyPrintf("service.scheduled_test_runner", "[ScheduledTestRunner] plan=%d computeNextRun error: %v", plan.ID, err)
