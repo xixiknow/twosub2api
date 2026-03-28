@@ -4958,7 +4958,9 @@ export default {
     retry: '重试',
     platforms: '平台数',
     allServicesOk: '所有服务正常',
-    status: '状态'
+    status: '状态',
+    recent: '历史',
+    now: '当前'
   },
 
   // 钱包

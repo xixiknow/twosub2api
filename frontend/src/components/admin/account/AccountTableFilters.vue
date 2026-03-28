@@ -26,5 +26,16 @@ const updateGroup = (value: string | number | boolean | null) => { emit('update:
 const pOpts = computed(() => [{ value: '', label: t('admin.accounts.allPlatforms') }, { value: 'anthropic', label: 'Anthropic' }, { value: 'openai', label: 'OpenAI' }, { value: 'gemini', label: 'Gemini' }, { value: 'antigravity', label: 'Antigravity' }, { value: 'sora', label: 'Sora' }])
 const tOpts = computed(() => [{ value: '', label: t('admin.accounts.allTypes') }, { value: 'oauth', label: t('admin.accounts.oauthType') }, { value: 'setup-token', label: t('admin.accounts.setupToken') }, { value: 'apikey', label: t('admin.accounts.apiKey') }])
 const sOpts = computed(() => [{ value: '', label: t('admin.accounts.allStatus') }, { value: 'active', label: t('admin.accounts.status.active') }, { value: 'inactive', label: t('admin.accounts.status.inactive') }, { value: 'error', label: t('admin.accounts.status.error') }, { value: 'rate_limited', label: t('admin.accounts.status.rateLimited') }, { value: 'temp_unschedulable', label: t('admin.accounts.status.tempUnschedulable') }])
-const gOpts = computed(() => [{ value: '', label: t('admin.accounts.allGroups') }, { value: 'ungrouped', label: t('admin.accounts.ungrouped') }, ...(props.groups || []).map(g => ({ value: String(g.id), label: g.name }))])
+const gOpts = computed(() => {
+  const formatGroupLabel = (g: AdminGroup) => {
+    let label = g.name
+    if (g.per_request_price != null) {
+      label += ` ($${g.per_request_price}/次)`
+    } else if (g.rate_multiplier !== undefined && g.rate_multiplier !== 1) {
+      label += ` (${g.rate_multiplier}x)`
+    }
+    return label
+  }
+  return [{ value: '', label: t('admin.accounts.allGroups') }, { value: 'ungrouped', label: t('admin.accounts.ungrouped') }, ...(props.groups || []).map(g => ({ value: String(g.id), label: formatGroupLabel(g) }))]
+})
 </script>

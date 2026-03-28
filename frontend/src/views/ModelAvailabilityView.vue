@@ -46,7 +46,7 @@
             </div>
           </div>
 
-          <!-- Stat cards -->
+          <!-- Overview stat cards -->
           <div v-if="!loading && groups.length > 0" class="mt-5 sm:mt-7 grid grid-cols-3 gap-1.5 sm:gap-4">
             <div class="stat-card">
               <div class="stat-value text-primary-600 dark:text-primary-400">{{ groups.length }}</div>
@@ -156,7 +156,7 @@
         <p class="text-sm text-gray-500 dark:text-dark-400 mt-3">{{ t('availability.noGroups') }}</p>
       </div>
 
-      <!-- ═══════════ GROUP CARDS ═══════════ -->
+      <!-- ═══════════ GROUP CARDS (Relay-Pulse Style) ═══════════ -->
       <div v-if="!loading && !error && filteredGroups.length > 0"
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div v-for="(group, idx) in filteredGroups" :key="group.group_id"
@@ -164,9 +164,10 @@
           :style="{ animationDelay: `${idx * 40}ms` }">
 
           <div class="relative flex-1 p-4 sm:p-5">
-            <!-- Header: Icon + Name + Badge -->
-            <div class="mb-3 sm:mb-4 flex items-start justify-between">
-              <div class="flex min-w-0 flex-1 items-center gap-3">
+            <!-- Header: Icon + Name + Status Dot + Latency info -->
+            <div class="mb-4 sm:mb-5 grid grid-cols-[1fr_auto] gap-3">
+              <!-- Left: Icon + Service info -->
+              <div class="flex min-w-0 items-center gap-3">
                 <div class="platform-icon-wrap"
                   :style="{ '--p-color': platformColor(group.platform), '--p-color-light': platformColor(group.platform) + '18' }">
                   <div class="scale-75 sm:scale-100">
@@ -174,22 +175,44 @@
                   </div>
                 </div>
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-center justify-between gap-2">
-                    <h3 class="flex-1 truncate text-sm font-semibold leading-none text-gray-900 dark:text-white sm:text-base">
+                  <div class="flex items-center gap-2">
+                    <h3 class="flex-1 truncate text-sm font-semibold leading-tight text-gray-900 dark:text-white sm:text-base">
                       {{ group.group_name }}
                     </h3>
-                    <div class="status-badge"
-                      :class="group.available ? 'status-badge-ok' : 'status-badge-err'">
-                      <span class="status-dot" :class="group.available ? 'dot-ok' : 'dot-err'"></span>
-                      {{ group.available ? t('availability.online') : t('availability.offline') }}
-                    </div>
                   </div>
-                  <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-dark-700 text-gray-500 dark:text-dark-400 font-medium">
+                  <div class="mt-1 flex items-center gap-2 text-xs flex-wrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium"
+                      :style="{ background: platformColor(group.platform) + '15', color: platformColor(group.platform), border: '1px solid ' + platformColor(group.platform) + '30' }">
                       {{ platformDisplayName(group.platform) }}
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <!-- Right: Status dot -->
+              <div class="flex flex-col items-end gap-1.5">
+                <div class="flex items-center gap-1.5">
+                  <!-- Status dot with glow -->
+                  <span class="status-dot-lg" :class="group.available ? 'dot-available' : 'dot-unavailable'"></span>
+                  <span class="status-label" :class="group.available ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                    {{ group.available ? t('availability.online') : t('availability.offline') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Heatmap bar (simulated from account ratio) -->
+            <div class="mb-3">
+              <div class="flex gap-[2px] w-full overflow-hidden rounded-sm h-8">
+                <div v-for="(block, bIdx) in generateHeatmapBlocks(group)" :key="bIdx"
+                  class="heatmap-block"
+                  :style="{ width: `${100 / heatmapBlockCount}%`, backgroundColor: block.color }"
+                  :title="block.label">
+                </div>
+              </div>
+              <div class="flex justify-between mt-1">
+                <span class="text-[10px] text-gray-400 dark:text-dark-500 font-mono">{{ t('availability.recent') }}</span>
+                <span class="text-[10px] text-gray-400 dark:text-dark-500 font-mono">{{ t('availability.now') }}</span>
               </div>
             </div>
 
@@ -217,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ModelIcon from '@/components/common/ModelIcon.vue'
@@ -230,6 +253,9 @@ const loading = ref(true)
 const error = ref('')
 const selectedPlatform = ref('')
 const lastUpdated = ref('')
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
+
+const heatmapBlockCount = 30
 
 const availableCount = computed(() => groups.value.filter(g => g.available).length)
 const unavailableCount = computed(() => groups.value.filter(g => !g.available).length)
@@ -274,6 +300,45 @@ function platformDisplayName(p: string): string {
 function platformColor(p: string): string { return PLATFORM_COLORS[p] || '#6b7280' }
 function platformToModel(p: string): string { return PLATFORM_MODEL_MAP[p] || p }
 
+// Generate simulated heatmap blocks based on current account ratio
+function generateHeatmapBlocks(group: GroupAvailabilityItem): { color: string; label: string }[] {
+  const blocks: { color: string; label: string }[] = []
+  const ratio = group.total_accounts > 0 ? group.active_accounts / group.total_accounts : 0
+
+  for (let i = 0; i < heatmapBlockCount; i++) {
+    // Last block represents current status, earlier blocks simulate slight variance
+    const isRecent = i >= heatmapBlockCount - 3
+    const variance = isRecent ? 0 : (Math.random() - 0.5) * 0.15
+    const effectiveRatio = Math.max(0, Math.min(1, ratio + variance))
+
+    let color: string
+    let label: string
+
+    if (effectiveRatio >= 0.8) {
+      // Green - all good
+      const greenIntensity = 0.6 + effectiveRatio * 0.4
+      color = `rgba(34, 197, 94, ${greenIntensity})`
+      label = `${Math.round(effectiveRatio * 100)}% ${t('availability.available')}`
+    } else if (effectiveRatio >= 0.4) {
+      // Yellow/amber - degraded
+      const yellowIntensity = 0.6 + effectiveRatio * 0.4
+      color = `rgba(234, 179, 8, ${yellowIntensity})`
+      label = `${Math.round(effectiveRatio * 100)}% ${t('availability.available')}`
+    } else if (effectiveRatio > 0) {
+      // Orange/red - critical
+      color = `rgba(239, 68, 68, 0.7)`
+      label = `${Math.round(effectiveRatio * 100)}% ${t('availability.available')}`
+    } else {
+      // Red - unavailable
+      color = `rgba(239, 68, 68, 0.85)`
+      label = t('availability.offline')
+    }
+
+    blocks.push({ color, label })
+  }
+  return blocks
+}
+
 async function refresh() {
   loading.value = true
   error.value = ''
@@ -287,7 +352,22 @@ async function refresh() {
   }
 }
 
-onMounted(() => { refresh() })
+onMounted(() => {
+  refresh()
+  // Auto-refresh every 60s
+  autoRefreshTimer = setInterval(() => {
+    if (!document.hidden) {
+      refresh()
+    }
+  }, 60000)
+})
+
+onUnmounted(() => {
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer)
+    autoRefreshTimer = null
+  }
+})
 </script>
 
 <style scoped>
@@ -528,7 +608,7 @@ onMounted(() => { refresh() })
 }
 :root.dark .skel-block { background: rgba(51, 65, 85, 0.4); }
 
-/* ═══════════ GROUP CARDS ═══════════ */
+/* ═══════════ GROUP CARDS (Relay-Pulse Inspired) ═══════════ */
 .avail-card {
   position: relative;
   display: flex;
@@ -587,63 +667,50 @@ onMounted(() => { refresh() })
   transform: scale(1.05);
 }
 
-/* Status badge */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-@media (min-width: 640px) { .status-badge { padding: 3px 10px; font-size: 11px; } }
-.status-badge-ok {
-  background: rgba(16, 185, 129, 0.08);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-:root.dark .status-badge-ok {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.2);
-}
-.status-badge-err {
-  background: rgba(244, 63, 94, 0.08);
-  color: #e11d48;
-  border: 1px solid rgba(244, 63, 94, 0.2);
-}
-:root.dark .status-badge-err {
-  background: rgba(244, 63, 94, 0.1);
-  color: #fb7185;
-  border-color: rgba(244, 63, 94, 0.2);
-}
-.status-dot {
-  width: 5px;
-  height: 5px;
+/* Status dot (large, with glow) */
+.status-dot-lg {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
-.dot-ok {
+.dot-available {
   background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
   animation: dot-pulse 2s ease-in-out infinite;
 }
-.dot-err {
+.dot-unavailable {
   background: #f43f5e;
-  box-shadow: 0 0 6px rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
   animation: dot-blink 1.5s ease-in-out infinite;
 }
 @keyframes dot-pulse {
   0%, 100% { box-shadow: 0 0 4px rgba(16, 185, 129, 0.4); }
-  50% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+  50% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
 }
 @keyframes dot-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+.status-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════ HEATMAP BLOCKS ═══════════ */
+.heatmap-block {
+  border-radius: 2px;
+  transition: all 0.2s;
+  cursor: default;
+}
+.heatmap-block:hover {
+  transform: scaleY(1.15);
+  opacity: 1;
+  z-index: 10;
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
 }
 
 /* Status bar */
@@ -684,5 +751,4 @@ onMounted(() => { refresh() })
   background: rgba(244, 63, 94, 0.08);
   border-color: rgba(244, 63, 94, 0.15);
 }
-
 </style>

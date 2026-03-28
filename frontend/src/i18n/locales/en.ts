@@ -4760,7 +4760,9 @@ export default {
     retry: 'Retry',
     platforms: 'Platforms',
     allServicesOk: 'All Services Operational',
-    status: 'Status'
+    status: 'Status',
+    recent: 'History',
+    now: 'Now'
   },
 
   // Wallet

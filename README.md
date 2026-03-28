@@ -52,7 +52,7 @@ Pull the latest image directly from Alibaba Cloud Container Registry:
 docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
 
 # Or pull a specific version
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.65
+docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.91
 ```
 
 ### Docker Compose (Recommended)
@@ -269,6 +269,12 @@ twosub2api/
 > **Please read carefully before using this project:**
 >
 > This project is for technical learning and research purposes only. The author assumes no responsibility for account suspension, service interruption, or any other losses caused by the use of this project.
+
+---
+
+## Community
+
+QQ Exchange Group: **314854554**
 
 ---
 
