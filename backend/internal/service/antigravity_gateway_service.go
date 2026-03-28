@@ -925,6 +925,12 @@ func mapAntigravityModel(account *Account, requestedModel string) string {
 		return requestedModel
 	}
 
+	// Gemini 模型默认透传：Google 模型变体众多且持续新增，无法穷举
+	// 未在映射表中精确配置的 gemini-* 模型直接透传原始名称
+	if strings.HasPrefix(requestedModel, "gemini-") {
+		return requestedModel
+	}
+
 	// 未在映射表中配置的模型，返回空字符串（不支持）
 	return ""
 }

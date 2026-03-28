@@ -512,6 +512,23 @@ func (s *PricingService) GetModelPricing(modelName string) *LiteLLMModelPricing 
 		}
 	}
 
+	// 2.5. 剥离常见后缀变体回退到基础模型
+	// gemini-2.5-flash-nothinking -> gemini-2.5-flash
+	// gemini-2.5-pro-thinking -> gemini-2.5-pro
+	// gemini-2.5-flash-image-preview-t -> gemini-2.5-flash-image-preview
+	// gemini-3-pro-image-preview-l -> gemini-3-pro-image-preview
+	variantSuffixes := []string{"-nothinking", "-thinking", "-t", "-l"}
+	for _, candidate := range lookupCandidates {
+		for _, suffix := range variantSuffixes {
+			if strings.HasSuffix(candidate, suffix) {
+				base := strings.TrimSuffix(candidate, suffix)
+				if pricing, ok := s.pricingData[base]; ok {
+					return pricing
+				}
+			}
+		}
+	}
+
 	// 3. 尝试模糊匹配（去掉版本号后缀）
 	// claude-opus-4-5-20251101 -> claude-opus-4.5
 	baseName := s.extractBaseName(lookupCandidates[0])

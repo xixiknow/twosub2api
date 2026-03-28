@@ -89,18 +89,49 @@ const antigravityModels = [
   // Gemini 2.5 系列
   'gemini-3.1-flash-image',
   'gemini-2.5-flash-image',
+  'gemini-2.5-flash-image-preview',
+  'gemini-2.5-flash-image-preview-t',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
   'gemini-2.5-flash-thinking',
+  'gemini-2.5-flash-nothinking',
+  'gemini-2.5-flash-thinking-*',
   'gemini-2.5-pro',
+  'gemini-2.5-pro-thinking',
+  'gemini-2.5-pro-nothinking',
+  // Gemini 2.5 preview 版本
+  'gemini-2.5-flash-preview-09-2025',
+  'gemini-2.5-flash-preview-09-2025-thinking',
+  'gemini-2.5-flash-preview-09-2025-nothinking',
+  'gemini-2.5-flash-preview-09-2025-thinking-*',
+  'gemini-2.5-flash-lite-preview-09-2025',
+  'gemini-2.5-flash-preview-tts',
+  // Gemini 2.0
+  'gemini-2.0-flash-preview-image-generation',
+  // Gemini latest 别名
+  'gemini-flash-latest',
+  'gemini-flash-latest-thinking',
+  'gemini-flash-latest-nothinking',
+  'gemini-flash-latest-thinking-*',
+  'gemini-flash-lite-latest',
+  'gemini-flash-lite-latest-thinking',
+  'gemini-flash-lite-latest-nothinking',
+  'gemini-flash-lite-latest-thinking-*',
+  // Gemini embedding
+  'gemini-embedding-001',
   // Gemini 3 系列
   'gemini-3-flash',
   'gemini-3-pro-high',
   'gemini-3-pro-low',
+  'gemini-3-pro-preview-thinking',
+  'gemini-3-pro-preview-nothinking',
+  'gemini-3-pro-preview-thinking-*',
   // Gemini 3.1 系列
   'gemini-3.1-pro-high',
   'gemini-3.1-pro-low',
+  'gemini-3.1-flash-lite-preview',
   'gemini-3-pro-image',
+  'gemini-3-pro-image-preview-l',
   // 其他
   'gpt-oss-120b-medium',
   'tab_flash_lite_preview'
