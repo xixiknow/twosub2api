@@ -52,7 +52,7 @@ TwoSub2API 是一个 AI API 网关平台，用于分发和管理 AI 产品订阅
 docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
 
 # 拉取指定版本
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.94
+docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.95
 ```
 
 ### Docker Compose 部署（推荐）

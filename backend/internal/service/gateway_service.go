@@ -7961,15 +7961,10 @@ func (s *GatewayService) GetGroupsAvailability(ctx context.Context, groups []Gro
 			continue
 		}
 		info.TotalAccounts = len(accounts)
-		now := time.Now()
 		for _, acc := range accounts {
+			// 可用性展示只看账号基础状态，忽略临时限流/过载（这些是瞬态，不代表服务下线）
 			if acc.Status == StatusActive && acc.Schedulable {
-				isRateLimited := acc.RateLimitResetAt != nil && now.Before(*acc.RateLimitResetAt)
-				isOverloaded := acc.OverloadUntil != nil && now.Before(*acc.OverloadUntil)
-				isTempUnsched := acc.TempUnschedulableUntil != nil && now.Before(*acc.TempUnschedulableUntil)
-				if !isRateLimited && !isOverloaded && !isTempUnsched {
-					info.ActiveCount++
-				}
+				info.ActiveCount++
 			}
 		}
 		info.Available = info.ActiveCount > 0
