@@ -24,6 +24,20 @@ export interface CommissionsResponse {
   pages: number
 }
 
+export interface ReferredUser {
+  email: string
+  created_at: string
+  total_commission: number
+}
+
+export interface ReferredUsersResponse {
+  items: ReferredUser[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
 export const referralAPI = {
   getReferralInfo: async (): Promise<ReferralInfo> => {
     const { data } = await apiClient.get<ReferralInfo>('/user/referral')
@@ -32,6 +46,13 @@ export const referralAPI = {
 
   getCommissions: async (page = 1, pageSize = 20): Promise<CommissionsResponse> => {
     const { data } = await apiClient.get<CommissionsResponse>('/user/referral/commissions', {
+      params: { page, page_size: pageSize }
+    })
+    return data
+  },
+
+  getReferredUsers: async (page = 1, pageSize = 20): Promise<ReferredUsersResponse> => {
+    const { data } = await apiClient.get<ReferredUsersResponse>('/user/referral/users', {
       params: { page, page_size: pageSize }
     })
     return data

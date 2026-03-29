@@ -103,6 +103,7 @@ func RegisterUserRoutes(
 		{
 			referral.GET("", h.Referral.GetReferralInfo)
 			referral.GET("/commissions", h.Referral.GetCommissions)
+			referral.GET("/users", h.Referral.GetReferredUsers)
 		}
 
 		// 模型广场

@@ -1,76 +1,6 @@
 <template>
   <AppLayout>
     <div class="mx-auto max-w-2xl space-y-6">
-      <!-- Referral Section -->
-      <div v-if="referralEnabled && referralInfo" class="card">
-        <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ t('wallet.referral.title') }}
-          </h2>
-        </div>
-        <div class="space-y-5 p-6">
-          <!-- Stats -->
-          <div class="grid grid-cols-3 gap-3">
-            <div class="rounded-xl bg-emerald-50 p-3 text-center dark:bg-emerald-900/20">
-              <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('wallet.referral.totalEarnings') }}</p>
-              <p class="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">${{ referralInfo.total_earnings.toFixed(2) }}</p>
-            </div>
-            <div class="rounded-xl bg-blue-50 p-3 text-center dark:bg-blue-900/20">
-              <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('wallet.referral.totalReferred') }}</p>
-              <p class="mt-1 text-lg font-bold text-blue-600 dark:text-blue-400">{{ referralInfo.total_referred }} {{ t('wallet.referral.people') }}</p>
-            </div>
-            <div class="rounded-xl bg-purple-50 p-3 text-center dark:bg-purple-900/20">
-              <p class="text-xs text-gray-500 dark:text-dark-400">{{ t('wallet.referral.commissionRate') }}</p>
-              <p class="mt-1 text-lg font-bold text-purple-600 dark:text-purple-400">{{ (referralInfo.commission_rate * 100).toFixed(0) }}%</p>
-            </div>
-          </div>
-
-          <!-- Referral Code -->
-          <div>
-            <label class="input-label mb-1">{{ t('wallet.referral.yourCode') }}</label>
-            <div class="flex items-center gap-2">
-              <div class="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 font-mono text-sm text-gray-900 dark:border-dark-600 dark:bg-dark-800 dark:text-white">
-                {{ referralInfo.referral_code }}
-              </div>
-              <button
-                type="button"
-                class="btn btn-primary flex-shrink-0 px-4 py-2.5"
-                @click="copyToClipboard(referralInfo.referral_code, 'code')"
-              >
-                {{ referralCopied === 'code' ? t('wallet.referral.copied') : t('wallet.referral.copyCode') }}
-              </button>
-            </div>
-          </div>
-
-          <!-- Referral Link -->
-          <div>
-            <label class="input-label mb-1">{{ t('wallet.referral.referralLink') }}</label>
-            <div class="flex items-center gap-2">
-              <div class="flex-1 truncate rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 font-mono text-sm text-gray-900 dark:border-dark-600 dark:bg-dark-800 dark:text-white">
-                {{ referralLink }}
-              </div>
-              <button
-                type="button"
-                class="btn btn-primary flex-shrink-0 px-4 py-2.5"
-                @click="copyToClipboard(referralLink, 'link')"
-              >
-                {{ referralCopied === 'link' ? t('wallet.referral.copied') : t('wallet.referral.copyLink') }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Referral Loading -->
-      <div v-else-if="referralEnabled && referralLoading" class="card">
-        <div class="flex items-center justify-center p-8">
-          <svg class="h-6 w-6 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      </div>
-
       <!-- Current Balance Card -->
       <div class="card overflow-hidden">
         <div class="bg-gradient-to-br from-primary-500 to-primary-600 px-6 py-8 text-center">
@@ -584,7 +514,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { useSubscriptionStore } from '@/stores/subscriptions'
-import { redeemAPI, paymentAPI, referralAPI, type RedeemHistoryItem, type ReferralInfo } from '@/api'
+import { redeemAPI, paymentAPI, type RedeemHistoryItem } from '@/api'
 import type { PaymentConfig, CreatePaymentResponse } from '@/types'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -597,12 +527,6 @@ const appStore = useAppStore()
 const subscriptionStore = useSubscriptionStore()
 
 const user = computed(() => authStore.user)
-
-// Referral state
-const referralEnabled = computed(() => appStore.cachedPublicSettings?.referral_enabled || false)
-const referralInfo = ref<ReferralInfo | null>(null)
-const referralLoading = ref(false)
-const referralCopied = ref<'code' | 'link' | null>(null)
 
 // Payment state
 const paymentConfig = ref<PaymentConfig | null>(null)
@@ -931,49 +855,10 @@ async function fetchOrders() {
   }
 }
 
-async function fetchReferralInfo() {
-  referralLoading.value = true
-  try {
-    referralInfo.value = await referralAPI.getReferralInfo()
-  } catch {
-    console.error('Failed to fetch referral info')
-  } finally {
-    referralLoading.value = false
-  }
-}
-
-const referralLink = computed(() => {
-  if (!referralInfo.value) return ''
-  return `${window.location.origin}/register?ref=${referralInfo.value.referral_code}`
-})
-
-async function copyToClipboard(text: string, type: 'code' | 'link') {
-  try {
-    await navigator.clipboard.writeText(text)
-    referralCopied.value = type
-    setTimeout(() => {
-      referralCopied.value = null
-    }, 2000)
-  } catch {
-    console.error('Failed to copy to clipboard')
-  }
-}
-
 onMounted(() => {
   fetchHistory()
   loadPaymentConfig()
   fetchOrders()
-  if (referralEnabled.value) {
-    fetchReferralInfo()
-  }
-  // Also load public settings if not loaded yet, then check referral
-  if (!appStore.cachedPublicSettings) {
-    appStore.fetchPublicSettings().then(() => {
-      if (referralEnabled.value && !referralInfo.value) {
-        fetchReferralInfo()
-      }
-    })
-  }
 })
 
 onUnmounted(() => {

@@ -365,6 +365,7 @@ export default {
     modelSquare: 'Model Square',
     availability: 'Availability',
     wallet: 'Wallet',
+    referral: 'Referral',
     paymentSettings: 'Payment',
     paymentOrders: 'Payment Orders'
   },
@@ -4834,5 +4835,18 @@ export default {
     enabledHint: 'Allow users to earn commissions by referring new users',
     commissionRateLabel: 'Commission Rate',
     commissionRateHint: 'Percentage of referred user\'s payment that the referrer earns as commission'
+  },
+
+  // Referral Page
+  referralPage: {
+    title: 'Referral Program',
+    description: 'View your referral info and commission records',
+    referredUsers: 'Referred Users',
+    noUsers: 'No referred users yet',
+    email: 'Email',
+    registerTime: 'Registered',
+    generatedCommission: 'Commission',
+    prev: 'Previous',
+    next: 'Next',
   }
 }

@@ -365,6 +365,7 @@ export default {
     modelSquare: '模型广场',
     availability: '可用性检测',
     wallet: '钱包',
+    referral: '推荐返利',
     paymentSettings: '支付设置',
     paymentOrders: '订单记录'
   },
@@ -5032,5 +5033,18 @@ export default {
     enabledHint: '允许用户通过推荐新用户获得佣金',
     commissionRateLabel: '返佣比例',
     commissionRateHint: '推荐用户消费金额中，推荐人可获得的佣金百分比'
+  },
+
+  // 推荐返利页面
+  referralPage: {
+    title: '推荐返利',
+    description: '查看推荐信息和返利记录',
+    referredUsers: '推荐用户列表',
+    noUsers: '暂无推荐用户',
+    email: '邮箱',
+    registerTime: '注册时间',
+    generatedCommission: '产生返利',
+    prev: '上一页',
+    next: '下一页',
   }
 }

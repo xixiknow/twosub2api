@@ -580,6 +580,9 @@ const userNavItems = computed((): NavItem[] => {
         ]
       : []),
     { path: '/wallet', label: t('nav.wallet'), icon: WalletIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.referral_enabled
+      ? [{ path: '/referral', label: t('nav.referral'), icon: GiftIcon, hideInSimpleMode: true }]
+      : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,
@@ -613,6 +616,9 @@ const personalNavItems = computed((): NavItem[] => {
         ]
       : []),
     { path: '/wallet', label: t('nav.wallet'), icon: WalletIcon, hideInSimpleMode: true },
+    ...(appStore.cachedPublicSettings?.referral_enabled
+      ? [{ path: '/referral', label: t('nav.referral'), icon: GiftIcon, hideInSimpleMode: true }]
+      : []),
     { path: '/profile', label: t('nav.profile'), icon: UserIcon },
     ...customMenuItemsForUser.value.map((item): NavItem => ({
       path: `/custom/${item.id}`,

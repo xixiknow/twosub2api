@@ -96,6 +96,107 @@ type CommissionsResponse struct {
 	Pages    int                `json:"pages"`
 }
 
+// ReferredUserRecord represents a user referred by the current user
+type ReferredUserRecord struct {
+	Email           string  `json:"email"`
+	CreatedAt       string  `json:"created_at"`
+	TotalCommission float64 `json:"total_commission"`
+}
+
+// ReferredUsersResponse is the paginated response for referred users
+type ReferredUsersResponse struct {
+	Items    []ReferredUserRecord `json:"items"`
+	Total    int                  `json:"total"`
+	Page     int                  `json:"page"`
+	PageSize int                  `json:"page_size"`
+	Pages    int                  `json:"pages"`
+}
+
+// GetReferredUsers returns paginated list of users referred by the current user
+// GET /api/v1/user/referral/users
+func (h *ReferralHandler) GetReferredUsers(c *gin.Context) {
+	subject, ok := middleware2.GetAuthSubjectFromContext(c)
+	if !ok {
+		response.Unauthorized(c, "User not authenticated")
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	var total int
+	if h.sqlDB != nil {
+		_ = h.sqlDB.QueryRowContext(c.Request.Context(),
+			`SELECT COUNT(*) FROM users WHERE referrer_id = $1 AND deleted_at IS NULL`,
+			subject.UserID,
+		).Scan(&total)
+	}
+
+	pages := 0
+	if total > 0 {
+		pages = int(math.Ceil(float64(total) / float64(pageSize)))
+	}
+
+	items := make([]ReferredUserRecord, 0)
+	if h.sqlDB != nil && total > 0 {
+		offset := (page - 1) * pageSize
+		rows, err := h.sqlDB.QueryContext(c.Request.Context(),
+			`SELECT u.email, u.created_at, COALESCE(rc.total, 0) AS total_commission
+			 FROM users u
+			 LEFT JOIN (
+			   SELECT referred_user_id, SUM(commission_amount) AS total
+			   FROM referral_commissions
+			   WHERE referrer_id = $1
+			   GROUP BY referred_user_id
+			 ) rc ON rc.referred_user_id = u.id
+			 WHERE u.referrer_id = $1 AND u.deleted_at IS NULL
+			 ORDER BY u.created_at DESC
+			 LIMIT $2 OFFSET $3`,
+			subject.UserID, pageSize, offset,
+		)
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var r ReferredUserRecord
+				var email string
+				var createdAt time.Time
+				var totalComm float64
+				if err := rows.Scan(&email, &createdAt, &totalComm); err == nil {
+					// Mask email: show first 2 chars + *** + @domain
+					r.Email = email
+					for i, ch := range email {
+						if ch == '@' {
+							if i > 2 {
+								r.Email = email[:2] + "***" + email[i:]
+							} else if i > 0 {
+								r.Email = email[:1] + "***" + email[i:]
+							}
+							break
+						}
+					}
+					r.CreatedAt = createdAt.Format(time.RFC3339)
+					r.TotalCommission = totalComm
+					items = append(items, r)
+				}
+			}
+		}
+	}
+
+	response.Success(c, ReferredUsersResponse{
+		Items:    items,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+		Pages:    pages,
+	})
+}
+
 // GetCommissions returns paginated commission records for the current user
 // GET /api/v1/user/referral/commissions
 func (h *ReferralHandler) GetCommissions(c *gin.Context) {
