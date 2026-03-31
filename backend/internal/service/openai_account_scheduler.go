@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"context"
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"math"
 	"sort"
@@ -572,6 +573,7 @@ func (s *defaultOpenAIAccountScheduler) selectByLoadBalance(
 
 	filtered := make([]*Account, 0, len(accounts))
 	loadReq := make([]AccountWithConcurrency, 0, len(accounts))
+	hasModelSupportCheck := false
 	for i := range accounts {
 		account := &accounts[i]
 		if req.ExcludedIDs != nil {
@@ -583,6 +585,7 @@ func (s *defaultOpenAIAccountScheduler) selectByLoadBalance(
 			continue
 		}
 		if req.RequestedModel != "" && !account.IsModelSupported(req.RequestedModel) {
+			hasModelSupportCheck = true
 			continue
 		}
 		if !s.isAccountTransportCompatible(account, req.RequiredTransport) {
@@ -595,6 +598,9 @@ func (s *defaultOpenAIAccountScheduler) selectByLoadBalance(
 		})
 	}
 	if len(filtered) == 0 {
+		if hasModelSupportCheck {
+			return nil, 0, 0, 0, fmt.Errorf("no available OpenAI accounts support model: %s", req.RequestedModel)
+		}
 		return nil, 0, 0, 0, errors.New("no available OpenAI accounts")
 	}
 

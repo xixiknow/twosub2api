@@ -17,6 +17,11 @@ import (
 	"github.com/Wei-Shaw/sub2api/internal/util/soraerror"
 )
 
+// ModelsCacheInvalidator 用于在账号/分组变更时失效模型列表缓存
+type ModelsCacheInvalidator interface {
+	InvalidateAvailableModelsCache(groupID *int64, platform string)
+}
+
 // AdminService interface defines admin management operations
 type AdminService interface {
 	// User management
@@ -92,6 +97,7 @@ type AdminService interface {
 	BatchDeleteRedeemCodes(ctx context.Context, ids []int64) (int64, error)
 	ExpireRedeemCode(ctx context.Context, id int64) (*RedeemCode, error)
 	ResetAccountQuota(ctx context.Context, id int64) error
+	SetModelsCacheInvalidator(invalidator ModelsCacheInvalidator)
 }
 
 // CreateUserInput represents input for creating a new user via admin operations.
@@ -442,6 +448,7 @@ type adminServiceImpl struct {
 	proxyProber          ProxyExitInfoProber
 	proxyLatencyCache    ProxyLatencyCache
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	modelsCacheInvalidator ModelsCacheInvalidator // 用于在账号变更时失效模型列表缓存
 	entClient            *dbent.Client // 用于开启数据库事务
 	settingService       *SettingService
 	defaultSubAssigner   DefaultSubscriptionAssigner
@@ -471,6 +478,7 @@ func NewAdminService(
 	proxyProber ProxyExitInfoProber,
 	proxyLatencyCache ProxyLatencyCache,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
+	modelsCacheInvalidator ModelsCacheInvalidator,
 	entClient *dbent.Client,
 	settingService *SettingService,
 	defaultSubAssigner DefaultSubscriptionAssigner,
@@ -478,24 +486,30 @@ func NewAdminService(
 	privacyClientFactory PrivacyClientFactory,
 ) AdminService {
 	return &adminServiceImpl{
-		userRepo:             userRepo,
-		groupRepo:            groupRepo,
-		accountRepo:          accountRepo,
-		soraAccountRepo:      soraAccountRepo,
-		proxyRepo:            proxyRepo,
-		apiKeyRepo:           apiKeyRepo,
-		redeemCodeRepo:       redeemCodeRepo,
-		userGroupRateRepo:    userGroupRateRepo,
-		billingCacheService:  billingCacheService,
-		proxyProber:          proxyProber,
-		proxyLatencyCache:    proxyLatencyCache,
-		authCacheInvalidator: authCacheInvalidator,
-		entClient:            entClient,
-		settingService:       settingService,
-		defaultSubAssigner:   defaultSubAssigner,
-		userSubRepo:          userSubRepo,
-		privacyClientFactory: privacyClientFactory,
+		userRepo:               userRepo,
+		groupRepo:              groupRepo,
+		accountRepo:            accountRepo,
+		soraAccountRepo:        soraAccountRepo,
+		proxyRepo:              proxyRepo,
+		apiKeyRepo:             apiKeyRepo,
+		redeemCodeRepo:         redeemCodeRepo,
+		userGroupRateRepo:      userGroupRateRepo,
+		billingCacheService:    billingCacheService,
+		proxyProber:            proxyProber,
+		proxyLatencyCache:      proxyLatencyCache,
+		authCacheInvalidator:   authCacheInvalidator,
+		modelsCacheInvalidator: modelsCacheInvalidator,
+		entClient:              entClient,
+		settingService:         settingService,
+		defaultSubAssigner:     defaultSubAssigner,
+		userSubRepo:            userSubRepo,
+		privacyClientFactory:   privacyClientFactory,
 	}
+}
+
+// SetModelsCacheInvalidator 设置模型缓存失效器（用于解决循环依赖）
+func (s *adminServiceImpl) SetModelsCacheInvalidator(invalidator ModelsCacheInvalidator) {
+	s.modelsCacheInvalidator = invalidator
 }
 
 // User management implementations
@@ -1525,6 +1539,13 @@ func (s *adminServiceImpl) CreateAccount(ctx context.Context, input *CreateAccou
 		}
 	}
 
+	// 失效模型列表缓存
+	if s.modelsCacheInvalidator != nil && len(groupIDs) > 0 {
+		for _, gid := range groupIDs {
+			s.modelsCacheInvalidator.InvalidateAvailableModelsCache(&gid, account.Platform)
+		}
+	}
+
 	return account, nil
 }
 
@@ -1636,6 +1657,24 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 	if input.GroupIDs != nil {
 		if err := s.accountRepo.BindGroups(ctx, account.ID, *input.GroupIDs); err != nil {
 			return nil, err
+		}
+	}
+
+	// 失效模型列表缓存
+	if s.modelsCacheInvalidator != nil {
+		groupIDsToInvalidate := input.GroupIDs
+		// 如果没有传入分组，使用原有分组
+		if groupIDsToInvalidate == nil {
+			existingGroupIDs, err := s.accountRepo.GetGroupIDsByAccountID(ctx, account.ID)
+			if err == nil && len(existingGroupIDs) > 0 {
+				groupIDsToInvalidate = &existingGroupIDs
+			}
+		}
+		// 失效缓存
+		if groupIDsToInvalidate != nil {
+			for _, gid := range *groupIDsToInvalidate {
+				s.modelsCacheInvalidator.InvalidateAvailableModelsCache(&gid, account.Platform)
+			}
 		}
 	}
 

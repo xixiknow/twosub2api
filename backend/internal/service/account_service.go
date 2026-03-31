@@ -48,6 +48,8 @@ type AccountRepository interface {
 	SetSchedulable(ctx context.Context, id int64, schedulable bool) error
 	AutoPauseExpiredAccounts(ctx context.Context, now time.Time) (int64, error)
 	BindGroups(ctx context.Context, accountID int64, groupIDs []int64) error
+	// GetGroupIDsByAccountID 获取账号所属的分组 ID 列表
+	GetGroupIDsByAccountID(ctx context.Context, accountID int64) ([]int64, error)
 
 	ListSchedulable(ctx context.Context) ([]Account, error)
 	ListSchedulableByGroupID(ctx context.Context, groupID int64) ([]Account, error)

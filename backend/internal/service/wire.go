@@ -326,6 +326,11 @@ func ProvideSettingService(settingRepo SettingRepository, groupRepo GroupReposit
 	return svc
 }
 
+// ProvideModelsCacheInvalidator 提供模型缓存失效器（由 GatewayService 实现）
+func ProvideModelsCacheInvalidator(gateway *GatewayService) ModelsCacheInvalidator {
+	return gateway
+}
+
 // ProviderSet is the Wire provider set for all services
 var ProviderSet = wire.NewSet(
 	// Core services
@@ -346,6 +351,8 @@ var ProviderSet = wire.NewSet(
 	NewAnnouncementService,
 	NewAdminService,
 	NewGatewayService,
+	ProvideModelsCacheInvalidator,
+	wire.Bind(new(ModelsCacheInvalidator), new(*GatewayService)),
 	ProvideSoraMediaStorage,
 	ProvideSoraMediaCleanupService,
 	ProvideSoraSDKClient,

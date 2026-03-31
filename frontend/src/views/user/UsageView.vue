@@ -428,7 +428,7 @@
             </div>
             <div v-if="tooltipData && tooltipData.input_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('usage.inputTokenPrice') }}</span>
-              <span class="font-medium text-sky-300">{{ formatTokenPricePerMillion(tooltipData.input_cost, tooltipData.input_tokens) }} {{ t('usage.perMillionTokens') }}</span>
+              <span class="font-medium text-sky-300">{{ formatTokenPricePerMillion(tooltipData.input_cost, tooltipData.input_tokens - (tooltipData.cache_read_tokens || 0)) }} {{ t('usage.perMillionTokens') }}</span>
             </div>
             <div v-if="tooltipData && tooltipData.output_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('usage.outputTokenPrice') }}</span>

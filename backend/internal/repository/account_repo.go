@@ -1621,6 +1621,11 @@ func (r *accountRepository) loadAccountGroupIDs(ctx context.Context, accountID i
 	return ids, nil
 }
 
+// GetGroupIDsByAccountID 获取账号所属的分组 ID 列表
+func (r *accountRepository) GetGroupIDsByAccountID(ctx context.Context, accountID int64) ([]int64, error) {
+	return r.loadAccountGroupIDs(ctx, accountID)
+}
+
 func mergeGroupIDs(a []int64, b []int64) []int64 {
 	seen := make(map[int64]struct{}, len(a)+len(b))
 	out := make([]int64, 0, len(a)+len(b))
