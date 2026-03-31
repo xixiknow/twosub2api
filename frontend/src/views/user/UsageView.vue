@@ -203,7 +203,7 @@
                   <div class="inline-flex items-center gap-1">
                     <Icon name="arrowDown" size="sm" class="text-emerald-500" />
                     <span class="font-medium text-gray-900 dark:text-white">{{
-                      row.input_tokens.toLocaleString()
+                      Math.max(0, row.input_tokens - (row.cache_read_tokens || 0)).toLocaleString()
                     }}</span>
                   </div>
                   <!-- Output -->
@@ -345,7 +345,7 @@
             <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.tokenDetails') }}</div>
             <div v-if="tokenTooltipData && tokenTooltipData.input_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('admin.usage.inputTokens') }}</span>
-              <span class="font-medium text-white">{{ tokenTooltipData.input_tokens.toLocaleString() }}</span>
+              <span class="font-medium text-white">{{ Math.max(0, tokenTooltipData.input_tokens - (tokenTooltipData.cache_read_tokens || 0)).toLocaleString() }}</span>
             </div>
             <div v-if="tokenTooltipData && tokenTooltipData.output_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('admin.usage.outputTokens') }}</span>
@@ -390,7 +390,7 @@
           <!-- Total -->
           <div class="flex items-center justify-between gap-6 border-t border-gray-700 pt-1.5">
             <span class="text-gray-400">{{ t('usage.totalTokens') }}</span>
-            <span class="font-semibold text-blue-400">{{ ((tokenTooltipData?.input_tokens || 0) + (tokenTooltipData?.output_tokens || 0) + (tokenTooltipData?.cache_creation_tokens || 0) + (tokenTooltipData?.cache_read_tokens || 0)).toLocaleString() }}</span>
+            <span class="font-semibold text-blue-400">{{ ((tokenTooltipData?.input_tokens || 0) + (tokenTooltipData?.output_tokens || 0) + (tokenTooltipData?.cache_creation_tokens || 0)).toLocaleString() }}</span>
           </div>
         </div>
         <!-- Tooltip Arrow (left side) -->

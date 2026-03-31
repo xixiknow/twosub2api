@@ -174,13 +174,28 @@ func (s *FrontendServer) serveIndexHTML(c *gin.Context) {
 }
 
 func (s *FrontendServer) injectSettings(settingsJSON []byte) []byte {
+	// Parse settings to extract site name for dynamic title
+	type Settings struct {
+		SiteName string `json:"site_name"`
+	}
+	var settings Settings
+	_ = json.Unmarshal(settingsJSON, &settings)
+
+	content := s.baseHTML
+
+	// Update <title> tag if site_name is configured
+	if settings.SiteName != "" && settings.SiteName != "Sub2API" {
+		titleTag := []byte("<title>" + settings.SiteName + " - AI API Gateway</title>")
+		content = bytes.ReplaceAll(content, []byte("<title>Sub2API - AI API Gateway</title>"), titleTag)
+	}
+
 	// Create the script tag to inject with nonce placeholder
 	// The placeholder will be replaced with actual nonce at request time
 	script := []byte(`<script nonce="` + NonceHTMLPlaceholder + `">window.__APP_CONFIG__=` + string(settingsJSON) + `;</script>`)
 
 	// Inject before </head>
 	headClose := []byte("</head>")
-	return bytes.Replace(s.baseHTML, headClose, append(script, headClose...), 1)
+	return bytes.Replace(content, headClose, append(script, headClose...), 1)
 }
 
 // replaceNoncePlaceholder replaces the nonce placeholder with actual nonce value

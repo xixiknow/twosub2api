@@ -1049,20 +1049,20 @@ func (s *AuthService) RequestPasswordResetAsync(ctx context.Context, email, fron
 
 // ResetPassword 重置密码
 // Security: Increments TokenVersion to invalidate all existing JWT tokens
+// Note: Once a valid reset token is consumed, password reset is allowed even if the feature was disabled afterwards,
+// because the user has already proven ownership of the email address via the reset link.
 func (s *AuthService) ResetPassword(ctx context.Context, email, token, newPassword string) error {
-	// Check if password reset is enabled
-	if !s.IsPasswordResetEnabled(ctx) {
-		return infraerrors.Forbidden("PASSWORD_RESET_DISABLED", "password reset is not enabled")
-	}
-
 	if s.emailService == nil {
 		return ErrServiceUnavailable
 	}
 
-	// Verify and consume the reset token (one-time use)
+	// Verify and consume the reset token first (one-time use)
 	if err := s.emailService.ConsumePasswordResetToken(ctx, email, token); err != nil {
 		return err
 	}
+
+	// Token was successfully consumed - proceed with password reset
+	// We don't check IsPasswordResetEnabled here because the user has already proven email ownership
 
 	// Get user
 	user, err := s.userRepo.GetByEmail(ctx, email)
