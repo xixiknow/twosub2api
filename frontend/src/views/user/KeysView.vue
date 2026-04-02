@@ -427,6 +427,42 @@
           </Select>
         </div>
 
+        <div>
+          <label class="input-label">{{ t('keys.fallbackGroupLabel') }}</label>
+          <Select
+            v-model="formData.fallback_group_id"
+            :options="groupOptions"
+            :placeholder="t('keys.selectFallbackGroup')"
+            :searchable="true"
+            :search-placeholder="t('keys.searchGroup')"
+          >
+            <template #selected="{ option }">
+              <GroupBadge
+                v-if="option"
+                :name="(option as unknown as GroupOption).label"
+                :platform="(option as unknown as GroupOption).platform"
+                :subscription-type="(option as unknown as GroupOption).subscriptionType"
+                :rate-multiplier="(option as unknown as GroupOption).rate"
+                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+                :per-request-price="(option as unknown as GroupOption).perRequestPrice"
+              />
+              <span v-else class="text-gray-400">{{ t('keys.selectFallbackGroup') }}</span>
+            </template>
+            <template #option="{ option, selected }">
+              <GroupOptionItem
+                :name="(option as unknown as GroupOption).label"
+                :platform="(option as unknown as GroupOption).platform"
+                :subscription-type="(option as unknown as GroupOption).subscriptionType"
+                :rate-multiplier="(option as unknown as GroupOption).rate"
+                :user-rate-multiplier="(option as unknown as GroupOption).userRate"
+                :per-request-price="(option as unknown as GroupOption).perRequestPrice"
+                :description="(option as unknown as GroupOption).description"
+                :selected="selected"
+              />
+            </template>
+          </Select>
+        </div>
+
         <!-- Custom Key Section (only for create) -->
         <div v-if="!showEditModal" class="space-y-3">
           <div class="flex items-center justify-between">
@@ -1150,6 +1186,7 @@ const setGroupButtonRef = (keyId: number, el: Element | ComponentPublicInstance 
 const formData = ref({
   name: '',
   group_id: null as number | null,
+  fallback_group_id: null as number | null,
   status: 'active' as 'active' | 'inactive',
   use_custom_key: false,
   custom_key: '',
@@ -1364,6 +1401,7 @@ const editKey = (key: ApiKey) => {
   formData.value = {
     name: key.name,
     group_id: key.group_id,
+    fallback_group_id: key.fallback_group_id,
     status: key.status === 'quota_exhausted' || key.status === 'expired' ? 'inactive' : key.status,
     use_custom_key: false,
     custom_key: '',
@@ -1515,6 +1553,7 @@ const handleSubmit = async () => {
       await keysAPI.update(selectedKey.value.id, {
         name: formData.value.name,
         group_id: formData.value.group_id,
+        fallback_group_id: formData.value.fallback_group_id,
         status: formData.value.status,
         ip_whitelist: ipWhitelist,
         ip_blacklist: ipBlacklist,
@@ -1535,7 +1574,8 @@ const handleSubmit = async () => {
         ipBlacklist,
         quota,
         expiresInDays,
-        rateLimitData
+        rateLimitData,
+        formData.value.fallback_group_id
       )
       appStore.showSuccess(t('keys.keyCreatedSuccess'))
       // Only advance tour if active, on submit step, and creation succeeded
@@ -1581,6 +1621,7 @@ const closeModals = () => {
   formData.value = {
     name: '',
     group_id: null,
+    fallback_group_id: null,
     status: 'active',
     use_custom_key: false,
     custom_key: '',

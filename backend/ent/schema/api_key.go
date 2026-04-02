@@ -44,6 +44,10 @@ func (APIKey) Fields() []ent.Field {
 		field.Int64("group_id").
 			Optional().
 			Nillable(),
+		field.Int64("fallback_group_id").
+			Optional().
+			Nillable().
+			Comment("Fallback group ID when primary group has no available accounts"),
 		field.String("status").
 			MaxLen(20).
 			Default(domain.StatusActive),

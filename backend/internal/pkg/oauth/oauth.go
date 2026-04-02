@@ -30,9 +30,6 @@ const (
 	// Scopes - Setup token (inference only)
 	ScopeInference = "user:inference"
 
-	// Code Verifier character set (RFC 7636 compliant)
-	codeVerifierCharset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-
 	// Session TTL
 	SessionTTL = 30 * time.Minute
 )
@@ -147,30 +144,13 @@ func GenerateSessionID() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// GenerateCodeVerifier generates a PKCE code verifier using character set method
+// GenerateCodeVerifier generates a PKCE code verifier using random bytes → base64url (RFC 7636).
 func GenerateCodeVerifier() (string, error) {
-	const targetLen = 32
-	charsetLen := len(codeVerifierCharset)
-	limit := 256 - (256 % charsetLen)
-
-	result := make([]byte, 0, targetLen)
-	randBuf := make([]byte, targetLen*2)
-
-	for len(result) < targetLen {
-		if _, err := rand.Read(randBuf); err != nil {
-			return "", err
-		}
-		for _, b := range randBuf {
-			if int(b) < limit {
-				result = append(result, codeVerifierCharset[int(b)%charsetLen])
-				if len(result) >= targetLen {
-					break
-				}
-			}
-		}
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
 	}
-
-	return base64URLEncode(result), nil
+	return base64URLEncode(bytes), nil
 }
 
 // GenerateCodeChallenge generates a PKCE code challenge using S256 method

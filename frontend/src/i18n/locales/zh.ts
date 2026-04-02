@@ -469,6 +469,8 @@ export default {
     sendResetLink: '发送重置链接',
     sendingResetLink: '发送中...',
     sendResetLinkFailed: '发送重置链接失败，请重试。',
+    passwordResetDisabled: '密码重置功能未开启',
+    passwordResetDisabledHint: '管理员尚未启用密码重置功能，请联系管理员获取帮助。',
     resetEmailSent: '重置链接已发送',
     resetEmailSentHint:
       '如果该邮箱已注册，您将很快收到密码重置链接。请检查您的收件箱和垃圾邮件文件夹。',
@@ -571,6 +573,8 @@ export default {
     namePlaceholder: '我的 API 密钥',
     groupLabel: '分组',
     selectGroup: '选择分组',
+    fallbackGroupLabel: '备用分组',
+    selectFallbackGroup: '选择备用分组（可选）',
     statusLabel: '状态',
     selectStatus: '选择状态',
     saving: '保存中...',

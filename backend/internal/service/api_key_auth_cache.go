@@ -6,8 +6,9 @@ import "time"
 type APIKeyAuthSnapshot struct {
 	APIKeyID    int64                    `json:"api_key_id"`
 	UserID      int64                    `json:"user_id"`
-	GroupID     *int64                   `json:"group_id,omitempty"`
-	Status      string                   `json:"status"`
+	GroupID         *int64                   `json:"group_id,omitempty"`
+	FallbackGroupID *int64                   `json:"fallback_group_id,omitempty"`
+	Status          string                   `json:"status"`
 	IPWhitelist []string                 `json:"ip_whitelist,omitempty"`
 	IPBlacklist []string                 `json:"ip_blacklist,omitempty"`
 	User        APIKeyAuthUserSnapshot   `json:"user"`

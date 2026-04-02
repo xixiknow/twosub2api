@@ -215,6 +215,7 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 	failedAccountIDs := make(map[int64]struct{})
 	sameAccountRetryCount := make(map[int64]int)
 	var lastFailoverErr *service.UpstreamFailoverError
+	apiKeyFallbackUsed := false
 
 	for {
 		// Select account supporting the requested model
@@ -234,6 +235,19 @@ func (h *OpenAIGatewayHandler) Responses(c *gin.Context) {
 				zap.Int("excluded_account_count", len(failedAccountIDs)),
 			)
 			if len(failedAccountIDs) == 0 {
+				// API Key 备用分组兜底
+				if !apiKeyFallbackUsed && apiKey.FallbackGroupID != nil && *apiKey.FallbackGroupID > 0 {
+					fallbackGroup, resolveErr := h.gatewayService.ResolveGroupByID(c.Request.Context(), *apiKey.FallbackGroupID)
+					if resolveErr == nil && fallbackGroup.Status == service.StatusActive {
+						fallbackAPIKey := cloneAPIKeyWithGroup(apiKey, fallbackGroup)
+						if billingErr := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil); billingErr == nil {
+							apiKey = fallbackAPIKey
+							apiKeyFallbackUsed = true
+							failedAccountIDs = make(map[int64]struct{})
+							continue
+						}
+					}
+				}
 				h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "Service temporarily unavailable", streamStarted)
 				return
 			}

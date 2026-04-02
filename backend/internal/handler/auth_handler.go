@@ -438,7 +438,7 @@ type ForgotPasswordResponse struct {
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request: "+err.Error())
+		response.BadRequest(c, "Please enter a valid email address")
 		return
 	}
 
@@ -484,7 +484,7 @@ type ResetPasswordResponse struct {
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request: "+err.Error())
+		response.BadRequest(c, "Invalid request: please provide a valid email, token and password (min 6 characters)")
 		return
 	}
 

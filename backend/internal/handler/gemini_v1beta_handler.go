@@ -343,6 +343,7 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 	cleanedForUnknownBinding := false
 
 	fs := NewFailoverState(h.maxAccountSwitchesGemini, hasBoundSession)
+	apiKeyFallbackUsed := false
 
 	// 单账号分组提前设置 SingleAccountRetry 标记，让 Service 层首次 503 就不设模型限流标记。
 	// 避免单账号分组收到 503 (MODEL_CAPACITY_EXHAUSTED) 时设 29s 限流，导致后续请求连续快速失败。
@@ -355,6 +356,23 @@ func (h *GatewayHandler) GeminiV1BetaModels(c *gin.Context) {
 		selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), apiKey.GroupID, sessionKey, modelName, fs.FailedAccountIDs, "") // Gemini 不使用会话限制
 		if err != nil {
 			if len(fs.FailedAccountIDs) == 0 {
+				// API Key 备用分组兜底
+				if !apiKeyFallbackUsed && apiKey.FallbackGroupID != nil && *apiKey.FallbackGroupID > 0 {
+					fallbackGroup, resolveErr := h.gatewayService.ResolveGroupByID(c.Request.Context(), *apiKey.FallbackGroupID)
+					if resolveErr == nil && fallbackGroup.Status == service.StatusActive {
+						fallbackAPIKey := cloneAPIKeyWithGroup(apiKey, fallbackGroup)
+						if billingErr := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil); billingErr == nil {
+							apiKey = fallbackAPIKey
+							apiKeyFallbackUsed = true
+							fs.FailedAccountIDs = make(map[int64]struct{})
+							if h.gatewayService.IsSingleAntigravityAccountGroup(c.Request.Context(), apiKey.GroupID) {
+								ctx := service.WithSingleAccountRetry(c.Request.Context(), true, h.metadataBridgeEnabled())
+								c.Request = c.Request.WithContext(ctx)
+							}
+							continue
+						}
+					}
+				}
 				googleError(c, http.StatusServiceUnavailable, "No available Gemini accounts: "+err.Error())
 				return
 			}

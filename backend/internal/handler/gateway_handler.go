@@ -281,19 +281,34 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 	hasBoundSession := sessionKey != "" && sessionBoundAccountID > 0
 
 	if platform == service.PlatformGemini {
+		geminiAPIKeyFallbackUsed := false
+		currentGeminiAPIKey := apiKey
 		fs := NewFailoverState(h.maxAccountSwitchesGemini, hasBoundSession)
 
 		// 单账号分组提前设置 SingleAccountRetry 标记，让 Service 层首次 503 就不设模型限流标记。
 		// 避免单账号分组收到 503 (MODEL_CAPACITY_EXHAUSTED) 时设 29s 限流，导致后续请求连续快速失败。
-		if h.gatewayService.IsSingleAntigravityAccountGroup(c.Request.Context(), apiKey.GroupID) {
+		if h.gatewayService.IsSingleAntigravityAccountGroup(c.Request.Context(), currentGeminiAPIKey.GroupID) {
 			ctx := service.WithSingleAccountRetry(c.Request.Context(), true, h.metadataBridgeEnabled())
 			c.Request = c.Request.WithContext(ctx)
 		}
 
 		for {
-			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), apiKey.GroupID, sessionKey, reqModel, fs.FailedAccountIDs, "") // Gemini 不使用会话限制
+			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), currentGeminiAPIKey.GroupID, sessionKey, reqModel, fs.FailedAccountIDs, "") // Gemini 不使用会话限制
 			if err != nil {
 				if len(fs.FailedAccountIDs) == 0 {
+					// API Key 备用分组兜底
+					if !geminiAPIKeyFallbackUsed && currentGeminiAPIKey.FallbackGroupID != nil && *currentGeminiAPIKey.FallbackGroupID > 0 {
+						fallbackGroup, resolveErr := h.gatewayService.ResolveGroupByID(c.Request.Context(), *currentGeminiAPIKey.FallbackGroupID)
+						if resolveErr == nil && fallbackGroup.Status == service.StatusActive {
+							fallbackAPIKey := cloneAPIKeyWithGroup(currentGeminiAPIKey, fallbackGroup)
+							if billingErr := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil); billingErr == nil {
+								currentGeminiAPIKey = fallbackAPIKey
+								geminiAPIKeyFallbackUsed = true
+								fs = NewFailoverState(h.maxAccountSwitchesGemini, hasBoundSession)
+								continue
+							}
+						}
+					}
 					h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 					return
 				}
@@ -489,6 +504,7 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 		fallbackGroupID = apiKey.Group.FallbackGroupIDOnInvalidRequest
 	}
 	fallbackUsed := false
+	apiKeyFallbackUsed := false
 
 	// 单账号分组提前设置 SingleAccountRetry 标记，让 Service 层首次 503 就不设模型限流标记。
 	// 避免单账号分组收到 503 (MODEL_CAPACITY_EXHAUSTED) 时设 29s 限流，导致后续请求连续快速失败。
@@ -506,6 +522,22 @@ func (h *GatewayHandler) Messages(c *gin.Context) {
 			selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), currentAPIKey.GroupID, sessionKey, reqModel, fs.FailedAccountIDs, parsedReq.MetadataUserID)
 			if err != nil {
 				if len(fs.FailedAccountIDs) == 0 {
+					// API Key 备用分组兜底
+					if !apiKeyFallbackUsed && currentAPIKey.FallbackGroupID != nil && *currentAPIKey.FallbackGroupID > 0 {
+						fallbackGroup, resolveErr := h.gatewayService.ResolveGroupByID(c.Request.Context(), *currentAPIKey.FallbackGroupID)
+						if resolveErr == nil && fallbackGroup.Status == service.StatusActive {
+							fallbackAPIKey := cloneAPIKeyWithGroup(currentAPIKey, fallbackGroup)
+							if billingErr := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil); billingErr == nil {
+								ctx := context.WithValue(c.Request.Context(), ctxkey.ForcePlatform, "")
+								c.Request = c.Request.WithContext(ctx)
+								currentAPIKey = fallbackAPIKey
+								currentSubscription = nil
+								apiKeyFallbackUsed = true
+								retryWithFallback = true
+								break
+							}
+						}
+					}
 					h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 					return
 				}

@@ -6990,9 +6990,14 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	var cost *CostBreakdown
 
 	// 按次计费判断：对普通请求（非 Sora/图片生成）生效
+	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
-			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
 		}
 	}
 
@@ -7213,9 +7218,14 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	var cost *CostBreakdown
 
 	// 按次计费判断：对普通请求（非图片生成）生效
+	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	if apiKey.Group != nil && result.ImageCount == 0 {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
-			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
 		}
 	}
 

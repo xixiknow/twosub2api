@@ -236,11 +236,12 @@ type OpenAIForwardResult struct {
 	// ReasoningEffort is extracted from request body (reasoning.effort) or derived from model suffix.
 	// Stored for usage records display; nil means not provided / not applicable.
 	ReasoningEffort *string
-	Stream          bool
-	OpenAIWSMode    bool
-	ResponseHeaders http.Header
-	Duration        time.Duration
-	FirstTokenMs    *int
+	Stream           bool
+	OpenAIWSMode     bool
+	ClientDisconnect bool // 客户端是否在流式传输过程中断开
+	ResponseHeaders  http.Header
+	Duration         time.Duration
+	FirstTokenMs     *int
 }
 
 type OpenAIWSRetryMetricsSnapshot struct {
@@ -318,6 +319,7 @@ type OpenAIGatewayService struct {
 	usageLogRepo          UsageLogRepository
 	userRepo              UserRepository
 	userSubRepo           UserSubscriptionRepository
+	groupRepo             GroupRepository
 	cache                 GatewayCache
 	cfg                   *config.Config
 	codexDetector         CodexClientRestrictionDetector
@@ -356,6 +358,7 @@ func NewOpenAIGatewayService(
 	usageLogRepo UsageLogRepository,
 	userRepo UserRepository,
 	userSubRepo UserSubscriptionRepository,
+	groupRepo GroupRepository,
 	userGroupRateRepo UserGroupRateRepository,
 	cache GatewayCache,
 	cfg *config.Config,
@@ -374,6 +377,7 @@ func NewOpenAIGatewayService(
 		usageLogRepo:        usageLogRepo,
 		userRepo:            userRepo,
 		userSubRepo:         userSubRepo,
+		groupRepo:           groupRepo,
 		cache:               cache,
 		cfg:                 cfg,
 		codexDetector:       NewOpenAICodexClientRestrictionDetector(cfg),
@@ -1550,6 +1554,15 @@ func (s *OpenAIGatewayService) listSchedulableAnthropicAccounts(ctx context.Cont
 	return accounts, nil
 }
 
+// ResolveGroupByID resolves a group by its ID for fallback group lookup.
+func (s *OpenAIGatewayService) ResolveGroupByID(ctx context.Context, groupID int64) (*Group, error) {
+	group, err := s.groupRepo.GetByIDLite(ctx, groupID)
+	if err != nil {
+		return nil, fmt.Errorf("get group failed: %w", err)
+	}
+	return group, nil
+}
+
 // SelectAnthropicAccountForChatCompletions selects an Anthropic platform account
 // that supports the requested model, with simple load-balanced selection.
 func (s *OpenAIGatewayService) SelectAnthropicAccountForChatCompletions(
@@ -2383,6 +2396,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	// Handle normal response
 	var usage *OpenAIUsage
 	var firstTokenMs *int
+	var clientDisconnect bool
 	if reqStream {
 		streamResult, err := s.handleStreamingResponse(ctx, resp, c, account, startTime, originalModel, mappedModel)
 		if err != nil {
@@ -2390,6 +2404,7 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		}
 		usage = streamResult.usage
 		firstTokenMs = streamResult.firstTokenMs
+		clientDisconnect = streamResult.clientDisconnect
 	} else {
 		usage, err = s.handleNonStreamingResponse(ctx, resp, c, account, originalModel, mappedModel)
 		if err != nil {
@@ -2412,15 +2427,16 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 	serviceTier := extractOpenAIServiceTier(reqBody)
 
 	return &OpenAIForwardResult{
-		RequestID:       resp.Header.Get("x-request-id"),
-		Usage:           *usage,
-		Model:           originalModel,
-		ServiceTier:     serviceTier,
-		ReasoningEffort: reasoningEffort,
-		Stream:          reqStream,
-		OpenAIWSMode:    false,
-		Duration:        time.Since(startTime),
-		FirstTokenMs:    firstTokenMs,
+		RequestID:        resp.Header.Get("x-request-id"),
+		Usage:            *usage,
+		Model:            originalModel,
+		ServiceTier:      serviceTier,
+		ReasoningEffort:  reasoningEffort,
+		Stream:           reqStream,
+		OpenAIWSMode:     false,
+		ClientDisconnect: clientDisconnect,
+		Duration:         time.Since(startTime),
+		FirstTokenMs:     firstTokenMs,
 	}, nil
 	}
 }
@@ -2547,6 +2563,7 @@ func (s *OpenAIGatewayService) forwardOpenAIPassthrough(
 
 	var usage *OpenAIUsage
 	var firstTokenMs *int
+	var clientDisconnect bool
 	if reqStream {
 		result, err := s.handleStreamingResponsePassthrough(ctx, resp, c, account, startTime)
 		if err != nil {
@@ -2554,6 +2571,7 @@ func (s *OpenAIGatewayService) forwardOpenAIPassthrough(
 		}
 		usage = result.usage
 		firstTokenMs = result.firstTokenMs
+		clientDisconnect = result.clientDisconnect
 	} else {
 		usage, err = s.handleNonStreamingResponsePassthrough(ctx, resp, c)
 		if err != nil {
@@ -2570,15 +2588,16 @@ func (s *OpenAIGatewayService) forwardOpenAIPassthrough(
 	}
 
 	return &OpenAIForwardResult{
-		RequestID:       resp.Header.Get("x-request-id"),
-		Usage:           *usage,
-		Model:           reqModel,
-		ServiceTier:     extractOpenAIServiceTierFromBody(body),
-		ReasoningEffort: reasoningEffort,
-		Stream:          reqStream,
-		OpenAIWSMode:    false,
-		Duration:        time.Since(startTime),
-		FirstTokenMs:    firstTokenMs,
+		RequestID:        resp.Header.Get("x-request-id"),
+		Usage:            *usage,
+		Model:            reqModel,
+		ServiceTier:      extractOpenAIServiceTierFromBody(body),
+		ReasoningEffort:  reasoningEffort,
+		Stream:           reqStream,
+		OpenAIWSMode:     false,
+		ClientDisconnect: clientDisconnect,
+		Duration:         time.Since(startTime),
+		FirstTokenMs:     firstTokenMs,
 	}, nil
 }
 
@@ -2820,8 +2839,9 @@ func collectOpenAIPassthroughTimeoutHeaders(h http.Header) []string {
 }
 
 type openaiStreamingResultPassthrough struct {
-	usage        *OpenAIUsage
-	firstTokenMs *int
+	usage            *OpenAIUsage
+	firstTokenMs     *int
+	clientDisconnect bool
 }
 
 func (s *OpenAIGatewayService) handleStreamingResponsePassthrough(
@@ -2894,7 +2914,7 @@ func (s *OpenAIGatewayService) handleStreamingResponsePassthrough(
 	if err := scanner.Err(); err != nil {
 		if clientDisconnected {
 			logger.LegacyPrintf("service.openai_gateway", "[OpenAI passthrough] Upstream read error after client disconnect: account=%d err=%v", account.ID, err)
-			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs}, nil
+			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}, nil
 		}
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			logger.LegacyPrintf("service.openai_gateway",
@@ -2904,11 +2924,11 @@ func (s *OpenAIGatewayService) handleStreamingResponsePassthrough(
 				err,
 				ctx.Err(),
 			)
-			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs}, nil
+			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}, nil
 		}
 		if errors.Is(err, bufio.ErrTooLong) {
 			logger.LegacyPrintf("service.openai_gateway", "[OpenAI passthrough] SSE line too long: account=%d max_size=%d error=%v", account.ID, maxLineSize, err)
-			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs}, err
+			return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}, err
 		}
 		logger.LegacyPrintf("service.openai_gateway",
 			"[OpenAI passthrough] 流读取异常中断: account=%d request_id=%s err=%v",
@@ -2916,7 +2936,7 @@ func (s *OpenAIGatewayService) handleStreamingResponsePassthrough(
 			upstreamRequestID,
 			err,
 		)
-		return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs}, fmt.Errorf("stream read error: %w", err)
+		return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}, fmt.Errorf("stream read error: %w", err)
 	}
 	if !clientDisconnected && !sawDone && ctx.Err() == nil {
 		logger.FromContext(ctx).With(
@@ -2926,7 +2946,7 @@ func (s *OpenAIGatewayService) handleStreamingResponsePassthrough(
 		).Info("OpenAI passthrough 上游流在未收到 [DONE] 时结束，疑似断流")
 	}
 
-	return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs}, nil
+	return &openaiStreamingResultPassthrough{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}, nil
 }
 
 func (s *OpenAIGatewayService) handleNonStreamingResponsePassthrough(
@@ -3396,8 +3416,9 @@ func (s *OpenAIGatewayService) handleCompatErrorResponse(
 
 // openaiStreamingResult streaming response result
 type openaiStreamingResult struct {
-	usage        *OpenAIUsage
-	firstTokenMs *int
+	usage            *OpenAIUsage
+	firstTokenMs     *int
+	clientDisconnect bool
 }
 
 func (s *OpenAIGatewayService) handleStreamingResponse(ctx context.Context, resp *http.Response, c *gin.Context, account *Account, startTime time.Time, originalModel, mappedModel string) (*openaiStreamingResult, error) {
@@ -3498,7 +3519,7 @@ func (s *OpenAIGatewayService) handleStreamingResponse(ctx context.Context, resp
 
 	needModelReplace := originalModel != mappedModel
 	resultWithUsage := func() *openaiStreamingResult {
-		return &openaiStreamingResult{usage: usage, firstTokenMs: firstTokenMs}
+		return &openaiStreamingResult{usage: usage, firstTokenMs: firstTokenMs, clientDisconnect: clientDisconnected}
 	}
 	finalizeStream := func() (*openaiStreamingResult, error) {
 		if !clientDisconnected {
@@ -4352,10 +4373,15 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	}
 
 	// 按次计费判断（优先于 token 零值检查，确保按次计费不被跳过）
+	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	var cost *CostBreakdown
 	if apiKey.Group != nil {
 		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(billingModel); ok {
-			cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.openai_gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", billingModel, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
 		}
 	}
 

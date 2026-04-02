@@ -40,6 +40,7 @@ func (r *apiKeyRepository) Create(ctx context.Context, key *service.APIKey) erro
 		SetName(key.Name).
 		SetStatus(key.Status).
 		SetNillableGroupID(key.GroupID).
+		SetNillableFallbackGroupID(key.FallbackGroupID).
 		SetNillableLastUsedAt(key.LastUsedAt).
 		SetQuota(key.Quota).
 		SetQuotaUsed(key.QuotaUsed).
@@ -206,6 +207,11 @@ func (r *apiKeyRepository) Update(ctx context.Context, key *service.APIKey) erro
 		builder.SetGroupID(*key.GroupID)
 	} else {
 		builder.ClearGroupID()
+	}
+	if key.FallbackGroupID != nil {
+		builder.SetFallbackGroupID(*key.FallbackGroupID)
+	} else {
+		builder.ClearFallbackGroupID()
 	}
 
 	// Expiration time
@@ -568,8 +574,9 @@ func apiKeyEntityToService(m *dbent.APIKey) *service.APIKey {
 		LastUsedAt:    m.LastUsedAt,
 		CreatedAt:     m.CreatedAt,
 		UpdatedAt:     m.UpdatedAt,
-		GroupID:       m.GroupID,
-		Quota:         m.Quota,
+		GroupID:         m.GroupID,
+		FallbackGroupID: m.FallbackGroupID,
+		Quota:           m.Quota,
 		QuotaUsed:     m.QuotaUsed,
 		ExpiresAt:     m.ExpiresAt,
 		RateLimit5h:   m.RateLimit5h,

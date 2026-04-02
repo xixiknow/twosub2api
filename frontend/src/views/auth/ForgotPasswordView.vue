@@ -11,8 +11,37 @@
         </p>
       </div>
 
+      <!-- Password Reset Disabled State -->
+      <div v-if="passwordResetDisabled" class="space-y-6">
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800/50 dark:bg-amber-900/20">
+          <div class="flex flex-col items-center gap-4 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-800/50">
+              <Icon name="exclamationCircle" size="lg" class="text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-amber-800 dark:text-amber-200">
+                {{ t('auth.passwordResetDisabled') }}
+              </h3>
+              <p class="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                {{ t('auth.passwordResetDisabledHint') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <router-link
+            to="/login"
+            class="inline-flex items-center gap-2 font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            <Icon name="arrowLeft" size="sm" />
+            {{ t('auth.backToLogin') }}
+          </router-link>
+        </div>
+      </div>
+
       <!-- Success State -->
-      <div v-if="isSubmitted" class="space-y-6">
+      <div v-else-if="isSubmitted" class="space-y-6">
         <div class="rounded-xl border border-green-200 bg-green-50 p-6 dark:border-green-800/50 dark:bg-green-900/20">
           <div class="flex flex-col items-center gap-4 text-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-800/50">
@@ -167,6 +196,7 @@ const appStore = useAppStore()
 const isLoading = ref<boolean>(false)
 const isSubmitted = ref<boolean>(false)
 const errorMessage = ref<string>('')
+const passwordResetDisabled = ref<boolean>(false)
 
 // Public settings
 const turnstileEnabled = ref<boolean>(false)
@@ -192,6 +222,10 @@ onMounted(async () => {
     const settings = await getPublicSettings()
     turnstileEnabled.value = settings.turnstile_enabled
     turnstileSiteKey.value = settings.turnstile_site_key || ''
+    // Check if password reset is enabled
+    if (!settings.password_reset_enabled) {
+      passwordResetDisabled.value = true
+    }
   } catch (error) {
     console.error('Failed to load public settings:', error)
   }
@@ -266,11 +300,15 @@ async function handleSubmit(): Promise<void> {
       turnstileToken.value = ''
     }
 
-    const err = error as { message?: string; response?: { data?: { detail?: string } } }
+    const err = error as { status?: number; code?: number | string; message?: string }
 
-    if (err.response?.data?.detail) {
-      errorMessage.value = err.response.data.detail
-    } else if (err.message) {
+    // Map known backend error codes to localized messages
+    if (err.message?.includes('password reset is not enabled') || err.message?.includes('PASSWORD_RESET_DISABLED')) {
+      passwordResetDisabled.value = true
+      return
+    }
+
+    if (err.message) {
       errorMessage.value = err.message
     } else {
       errorMessage.value = t('auth.sendResetLinkFailed')

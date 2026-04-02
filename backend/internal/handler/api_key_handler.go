@@ -32,6 +32,7 @@ func NewAPIKeyHandler(apiKeyService *service.APIKeyService) *APIKeyHandler {
 type CreateAPIKeyRequest struct {
 	Name          string   `json:"name" binding:"required"`
 	GroupID       *int64   `json:"group_id"`        // nullable
+	FallbackGroupID *int64 `json:"fallback_group_id"` // nullable, fallback group
 	CustomKey     *string  `json:"custom_key"`      // 可选的自定义key
 	IPWhitelist   []string `json:"ip_whitelist"`    // IP 白名单
 	IPBlacklist   []string `json:"ip_blacklist"`    // IP 黑名单
@@ -48,6 +49,7 @@ type CreateAPIKeyRequest struct {
 type UpdateAPIKeyRequest struct {
 	Name        string   `json:"name"`
 	GroupID     *int64   `json:"group_id"`
+	FallbackGroupID *int64 `json:"fallback_group_id"` // nullable, fallback group
 	Status      string   `json:"status" binding:"omitempty,oneof=active inactive"`
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
@@ -149,9 +151,10 @@ func (h *APIKeyHandler) Create(c *gin.Context) {
 	}
 
 	svcReq := service.CreateAPIKeyRequest{
-		Name:          req.Name,
-		GroupID:       req.GroupID,
-		CustomKey:     req.CustomKey,
+		Name:            req.Name,
+		GroupID:         req.GroupID,
+		FallbackGroupID: req.FallbackGroupID,
+		CustomKey:       req.CustomKey,
 		IPWhitelist:   req.IPWhitelist,
 		IPBlacklist:   req.IPBlacklist,
 		ExpiresInDays: req.ExpiresInDays,
@@ -213,6 +216,7 @@ func (h *APIKeyHandler) Update(c *gin.Context) {
 		svcReq.Name = &req.Name
 	}
 	svcReq.GroupID = req.GroupID
+	svcReq.FallbackGroupID = req.FallbackGroupID
 	if req.Status != "" {
 		svcReq.Status = &req.Status
 	}

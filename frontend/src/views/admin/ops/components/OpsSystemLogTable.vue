@@ -345,7 +345,7 @@ onMounted(async () => {
         <span v-if="runtimeLoading" class="text-xs text-gray-500">加载中...</span>
       </div>
       <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
-        <label class="text-xs text-gray-600 dark:text-gray-300">
+        <label class="block text-xs text-gray-600 dark:text-gray-300">
           级别
           <select v-model="runtimeConfig.level" class="input mt-1">
             <option value="debug">debug</option>
@@ -354,7 +354,7 @@ onMounted(async () => {
             <option value="error">error</option>
           </select>
         </label>
-        <label class="text-xs text-gray-600 dark:text-gray-300">
+        <label class="block text-xs text-gray-600 dark:text-gray-300">
           堆栈阈值
           <select v-model="runtimeConfig.stacktrace_level" class="input mt-1">
             <option value="none">none</option>
@@ -362,15 +362,15 @@ onMounted(async () => {
             <option value="fatal">fatal</option>
           </select>
         </label>
-        <label class="text-xs text-gray-600 dark:text-gray-300">
+        <label class="block text-xs text-gray-600 dark:text-gray-300">
           采样初始
           <input v-model.number="runtimeConfig.sampling_initial" type="number" min="1" class="input mt-1" />
         </label>
-        <label class="text-xs text-gray-600 dark:text-gray-300">
+        <label class="block text-xs text-gray-600 dark:text-gray-300">
           采样后续
           <input v-model.number="runtimeConfig.sampling_thereafter" type="number" min="1" class="input mt-1" />
         </label>
-        <label class="text-xs text-gray-600 dark:text-gray-300">
+        <label class="block text-xs text-gray-600 dark:text-gray-300">
           保留天数
           <input v-model.number="runtimeConfig.retention_days" type="number" min="1" max="3650" class="input mt-1" />
         </label>
@@ -395,7 +395,7 @@ onMounted(async () => {
     </div>
 
     <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-5">
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         时间范围
         <select v-model="filters.time_range" class="input mt-1">
           <option value="5m">5m</option>
@@ -407,15 +407,15 @@ onMounted(async () => {
           <option value="30d">30d</option>
         </select>
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         开始时间（可选）
         <input v-model="filters.start_time" type="datetime-local" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         结束时间（可选）
         <input v-model="filters.end_time" type="datetime-local" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         级别
         <select v-model="filters.level" class="input mt-1">
           <option value="">全部</option>
@@ -425,35 +425,35 @@ onMounted(async () => {
           <option value="error">error</option>
         </select>
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         组件
         <input v-model="filters.component" type="text" class="input mt-1" placeholder="如 http.access" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         request_id
         <input v-model="filters.request_id" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         client_request_id
         <input v-model="filters.client_request_id" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         user_id
         <input v-model="filters.user_id" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         account_id
         <input v-model="filters.account_id" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         平台
         <input v-model="filters.platform" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         模型
         <input v-model="filters.model" type="text" class="input mt-1" />
       </label>
-      <label class="text-xs text-gray-600 dark:text-gray-300">
+      <label class="block text-xs text-gray-600 dark:text-gray-300">
         关键词
         <input v-model="filters.q" type="text" class="input mt-1" placeholder="消息/request_id" />
       </label>

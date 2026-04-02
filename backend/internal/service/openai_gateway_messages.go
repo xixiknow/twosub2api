@@ -60,6 +60,7 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 
 	// 3. Model mapping
 	mappedModel := resolveOpenAIForwardModel(account, originalModel, defaultMappedModel)
+	accountMappingApplied := mappedModel != originalModel
 	responsesReq.Model = mappedModel
 
 	logger.L().Debug("openai messages: model mapping applied",
@@ -81,6 +82,9 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 			return nil, fmt.Errorf("unmarshal for codex transform: %w", err)
 		}
 		codexResult := applyCodexOAuthTransform(reqBody, false, false)
+		if codexResult.NormalizedModel != "" {
+			mappedModel = codexResult.NormalizedModel
+		}
 		if codexResult.PromptCacheKey != "" {
 			promptCacheKey = codexResult.PromptCacheKey
 		} else if promptCacheKey != "" {
@@ -92,6 +96,18 @@ func (s *OpenAIGatewayService) ForwardAsAnthropic(
 		responsesBody, err = json.Marshal(reqBody)
 		if err != nil {
 			return nil, fmt.Errorf("remarshal after codex transform: %w", err)
+		}
+	} else if !accountMappingApplied {
+		// 非 OAuth 账号：执行 Codex 模型名规范化，确保上游识别一致。
+		// 但如果账号级模型映射已生效，跳过规范化，避免映射结果被覆盖。
+		normalizedModel := normalizeCodexModel(mappedModel)
+		if normalizedModel != "" && normalizedModel != mappedModel {
+			mappedModel = normalizedModel
+			responsesReq.Model = normalizedModel
+			responsesBody, err = json.Marshal(responsesReq)
+			if err != nil {
+				return nil, fmt.Errorf("marshal after codex normalization: %w", err)
+			}
 		}
 	}
 
@@ -335,6 +351,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 	var usage OpenAIUsage
 	var firstTokenMs *int
 	firstChunk := true
+	clientDisconnected := false
 
 	scanner := bufio.NewScanner(resp.Body)
 	maxLineSize := defaultMaxLineSize
@@ -346,13 +363,14 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 	// resultWithUsage builds the final result snapshot.
 	resultWithUsage := func() *OpenAIForwardResult {
 		return &OpenAIForwardResult{
-			RequestID:    requestID,
-			Usage:        usage,
-			Model:        originalModel,
-			BillingModel: mappedModel,
-			Stream:       true,
-			Duration:     time.Since(startTime),
-			FirstTokenMs: firstTokenMs,
+			RequestID:        requestID,
+			Usage:            usage,
+			Model:            originalModel,
+			BillingModel:     mappedModel,
+			Stream:           true,
+			ClientDisconnect: clientDisconnected,
+			Duration:         time.Since(startTime),
+			FirstTokenMs:     firstTokenMs,
 		}
 	}
 
@@ -449,6 +467,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 				continue
 			}
 			if processDataLine(line[6:]) {
+				clientDisconnected = true
 				return resultWithUsage(), nil
 			}
 		}
@@ -505,6 +524,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 				continue
 			}
 			if processDataLine(line[6:]) {
+				clientDisconnected = true
 				return resultWithUsage(), nil
 			}
 
@@ -515,6 +535,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 			// Send Anthropic-format ping event
 			if _, err := fmt.Fprint(c.Writer, "event: ping\ndata: {\"type\":\"ping\"}\n\n"); err != nil {
 				// Client disconnected
+				clientDisconnected = true
 				logger.L().Info("openai messages stream: client disconnected during keepalive",
 					zap.String("request_id", requestID),
 				)

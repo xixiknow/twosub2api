@@ -149,6 +149,7 @@ type APIKeyAuthCacheInvalidator interface {
 type CreateAPIKeyRequest struct {
 	Name        string   `json:"name"`
 	GroupID     *int64   `json:"group_id"`
+	FallbackGroupID *int64 `json:"fallback_group_id"`
 	CustomKey   *string  `json:"custom_key"`   // 可选的自定义key
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
@@ -167,6 +168,7 @@ type CreateAPIKeyRequest struct {
 type UpdateAPIKeyRequest struct {
 	Name        *string  `json:"name"`
 	GroupID     *int64   `json:"group_id"`
+	FallbackGroupID *int64 `json:"fallback_group_id"`
 	Status      *string  `json:"status"`
 	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单（空数组清空）
 	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单（空数组清空）
@@ -395,11 +397,12 @@ func (s *APIKeyService) Create(ctx context.Context, userID int64, req CreateAPIK
 
 	// 创建API Key记录
 	apiKey := &APIKey{
-		UserID:      userID,
-		Key:         key,
-		Name:        req.Name,
-		GroupID:     req.GroupID,
-		Status:      StatusActive,
+		UserID:          userID,
+		Key:             key,
+		Name:            req.Name,
+		GroupID:         req.GroupID,
+		FallbackGroupID: req.FallbackGroupID,
+		Status:          StatusActive,
 		IPWhitelist: req.IPWhitelist,
 		IPBlacklist: req.IPBlacklist,
 		Quota:       req.Quota,
@@ -556,6 +559,18 @@ func (s *APIKeyService) Update(ctx context.Context, id int64, userID int64, req 
 		}
 
 		apiKey.GroupID = req.GroupID
+	}
+
+	if req.FallbackGroupID != nil {
+		if *req.FallbackGroupID == 0 {
+			apiKey.FallbackGroupID = nil // 0 means clear
+		} else {
+			_, err := s.groupRepo.GetByID(ctx, *req.FallbackGroupID)
+			if err != nil {
+				return nil, fmt.Errorf("get fallback group: %w", err)
+			}
+			apiKey.FallbackGroupID = req.FallbackGroupID
+		}
 	}
 
 	if req.Status != nil {

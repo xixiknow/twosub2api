@@ -223,6 +223,7 @@ func (h *SoraGatewayHandler) ChatCompletions(c *gin.Context) {
 	lastFailoverStatus := 0
 	var lastFailoverBody []byte
 	var lastFailoverHeaders http.Header
+	apiKeyFallbackUsed := false
 
 	for {
 		selection, err := h.gatewayService.SelectAccountWithLoadAwareness(c.Request.Context(), apiKey.GroupID, sessionHash, reqModel, failedAccountIDs, "")
@@ -232,6 +233,19 @@ func (h *SoraGatewayHandler) ChatCompletions(c *gin.Context) {
 				zap.Int("excluded_account_count", len(failedAccountIDs)),
 			)
 			if len(failedAccountIDs) == 0 {
+				// API Key 备用分组兜底
+				if !apiKeyFallbackUsed && apiKey.FallbackGroupID != nil && *apiKey.FallbackGroupID > 0 {
+					fallbackGroup, resolveErr := h.gatewayService.ResolveGroupByID(c.Request.Context(), *apiKey.FallbackGroupID)
+					if resolveErr == nil && fallbackGroup.Status == service.StatusActive {
+						fallbackAPIKey := cloneAPIKeyWithGroup(apiKey, fallbackGroup)
+						if billingErr := h.billingCacheService.CheckBillingEligibility(c.Request.Context(), fallbackAPIKey.User, fallbackAPIKey, fallbackGroup, nil); billingErr == nil {
+							apiKey = fallbackAPIKey
+							apiKeyFallbackUsed = true
+							failedAccountIDs = make(map[int64]struct{})
+							continue
+						}
+					}
+				}
 				h.handleStreamingAwareError(c, http.StatusServiceUnavailable, "api_error", "No available accounts: "+err.Error(), streamStarted)
 				return
 			}

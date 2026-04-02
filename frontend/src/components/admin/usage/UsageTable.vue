@@ -63,7 +63,7 @@
               <div class="flex items-center gap-2">
                 <div class="inline-flex items-center gap-1">
                   <Icon name="arrowDown" size="sm" class="h-3.5 w-3.5 text-emerald-500" />
-                  <span class="font-medium text-gray-900 dark:text-white">{{ Math.max(0, (row.input_tokens || 0) - (row.cache_read_tokens || 0)).toLocaleString() }}</span>
+                  <span class="font-medium text-gray-900 dark:text-white">{{ ((row.input_tokens || 0) < (row.cache_read_tokens || 0) ? (row.input_tokens || 0) : (row.input_tokens || 0) - (row.cache_read_tokens || 0)).toLocaleString() }}</span>
                 </div>
                 <div class="inline-flex items-center gap-1">
                   <Icon name="arrowUp" size="sm" class="h-3.5 w-3.5 text-violet-500" />
@@ -161,7 +161,7 @@
             <div class="text-xs font-semibold text-gray-300 mb-1">{{ t('usage.tokenDetails') }}</div>
             <div v-if="tokenTooltipData && tokenTooltipData.input_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('admin.usage.inputTokens') }}</span>
-              <span class="font-medium text-white">{{ Math.max(0, tokenTooltipData.input_tokens - (tokenTooltipData.cache_read_tokens || 0)).toLocaleString() }}</span>
+              <span class="font-medium text-white">{{ (tokenTooltipData.input_tokens < (tokenTooltipData.cache_read_tokens || 0) ? tokenTooltipData.input_tokens : tokenTooltipData.input_tokens - (tokenTooltipData.cache_read_tokens || 0)).toLocaleString() }}</span>
             </div>
             <div v-if="tokenTooltipData && tokenTooltipData.output_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('admin.usage.outputTokens') }}</span>
@@ -238,7 +238,7 @@
             </div>
             <div v-if="tooltipData && tooltipData.input_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('usage.inputTokenPrice') }}</span>
-              <span class="font-medium text-sky-300">{{ formatTokenPricePerMillion(tooltipData.input_cost, tooltipData.input_tokens - (tooltipData.cache_read_tokens || 0)) }} {{ t('usage.perMillionTokens') }}</span>
+              <span class="font-medium text-sky-300">{{ formatTokenPricePerMillion(tooltipData.input_cost, tooltipData.input_tokens < (tooltipData.cache_read_tokens || 0) ? tooltipData.input_tokens : tooltipData.input_tokens - (tooltipData.cache_read_tokens || 0)) }} {{ t('usage.perMillionTokens') }}</span>
             </div>
             <div v-if="tooltipData && tooltipData.output_tokens > 0" class="flex items-center justify-between gap-4">
               <span class="text-gray-400">{{ t('usage.outputTokenPrice') }}</span>
