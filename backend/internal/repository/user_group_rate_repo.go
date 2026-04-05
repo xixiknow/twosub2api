@@ -95,18 +95,23 @@ func (r *userGroupRateRepository) GetByUserIDs(ctx context.Context, userIDs []in
 	return result, nil
 }
 
-// GetByUserAndGroup 获取用户在特定分组的专属倍率
-func (r *userGroupRateRepository) GetByUserAndGroup(ctx context.Context, userID, groupID int64) (*float64, error) {
-	query := `SELECT rate_multiplier FROM user_group_rate_multipliers WHERE user_id = $1 AND group_id = $2`
+// GetByUserAndGroup 获取用户在特定分组的专属倍率（含按次价格）
+func (r *userGroupRateRepository) GetByUserAndGroup(ctx context.Context, userID, groupID int64) (*service.UserGroupRateOverride, error) {
+	query := `SELECT rate_multiplier, per_request_price FROM user_group_rate_multipliers WHERE user_id = $1 AND group_id = $2`
 	var rate float64
-	err := scanSingleRow(ctx, r.sql, query, []any{userID, groupID}, &rate)
+	var perReqPrice sql.NullFloat64
+	err := scanSingleRow(ctx, r.sql, query, []any{userID, groupID}, &rate, &perReqPrice)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &rate, nil
+	result := &service.UserGroupRateOverride{RateMultiplier: rate}
+	if perReqPrice.Valid {
+		result.PerRequestPrice = &perReqPrice.Float64
+	}
+	return result, nil
 }
 
 // SyncUserGroupRates 同步用户的分组专属倍率
@@ -167,7 +172,7 @@ func (r *userGroupRateRepository) SyncUserGroupRates(ctx context.Context, userID
 // GetByGroupID 获取指定分组下所有用户的专属倍率
 func (r *userGroupRateRepository) GetByGroupID(ctx context.Context, groupID int64) ([]service.UserGroupRateEntry, error) {
 	query := `
-		SELECT ugr.user_id, u.username, u.email, COALESCE(u.notes, ''), u.status, ugr.rate_multiplier
+		SELECT ugr.user_id, u.username, u.email, COALESCE(u.notes, ''), u.status, ugr.rate_multiplier, ugr.per_request_price
 		FROM user_group_rate_multipliers ugr
 		JOIN users u ON u.id = ugr.user_id
 		WHERE ugr.group_id = $1
@@ -182,8 +187,12 @@ func (r *userGroupRateRepository) GetByGroupID(ctx context.Context, groupID int6
 	var result []service.UserGroupRateEntry
 	for rows.Next() {
 		var entry service.UserGroupRateEntry
-		if err := rows.Scan(&entry.UserID, &entry.UserName, &entry.UserEmail, &entry.UserNotes, &entry.UserStatus, &entry.RateMultiplier); err != nil {
+		var perReqPrice sql.NullFloat64
+		if err := rows.Scan(&entry.UserID, &entry.UserName, &entry.UserEmail, &entry.UserNotes, &entry.UserStatus, &entry.RateMultiplier, &perReqPrice); err != nil {
 			return nil, err
+		}
+		if perReqPrice.Valid {
+			entry.PerRequestPrice = &perReqPrice.Float64
 		}
 		result = append(result, entry)
 	}
@@ -203,18 +212,27 @@ func (r *userGroupRateRepository) SyncGroupRateMultipliers(ctx context.Context, 
 	}
 	userIDs := make([]int64, len(entries))
 	rates := make([]float64, len(entries))
+	perReqPrices := make([]*float64, len(entries))
 	for i, e := range entries {
 		userIDs[i] = e.UserID
 		rates[i] = e.RateMultiplier
+		perReqPrices[i] = e.PerRequestPrice
+	}
+	// 构建 per_request_price 数组（NULL 用 sql.NullFloat64 表示）
+	priceArr := make([]sql.NullFloat64, len(entries))
+	for i, p := range perReqPrices {
+		if p != nil {
+			priceArr[i] = sql.NullFloat64{Float64: *p, Valid: true}
+		}
 	}
 	now := time.Now()
 	_, err := r.sql.ExecContext(ctx, `
-		INSERT INTO user_group_rate_multipliers (user_id, group_id, rate_multiplier, created_at, updated_at)
-		SELECT data.user_id, $1::bigint, data.rate_multiplier, $2::timestamptz, $2::timestamptz
-		FROM unnest($3::bigint[], $4::double precision[]) AS data(user_id, rate_multiplier)
+		INSERT INTO user_group_rate_multipliers (user_id, group_id, rate_multiplier, per_request_price, created_at, updated_at)
+		SELECT data.user_id, $1::bigint, data.rate_multiplier, data.per_request_price, $2::timestamptz, $2::timestamptz
+		FROM unnest($3::bigint[], $4::double precision[], $5::numeric[]) AS data(user_id, rate_multiplier, per_request_price)
 		ON CONFLICT (user_id, group_id)
-		DO UPDATE SET rate_multiplier = EXCLUDED.rate_multiplier, updated_at = EXCLUDED.updated_at
-	`, groupID, now, pq.Array(userIDs), pq.Array(rates))
+		DO UPDATE SET rate_multiplier = EXCLUDED.rate_multiplier, per_request_price = EXCLUDED.per_request_price, updated_at = EXCLUDED.updated_at
+	`, groupID, now, pq.Array(userIDs), pq.Array(rates), pq.Array(priceArr))
 	return err
 }
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"log/slog"
+	"net/url"
 	"strings"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
@@ -449,6 +450,16 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	}
 
 	frontendBaseURL := strings.TrimSpace(h.cfg.Server.FrontendURL)
+	if frontendBaseURL == "" {
+		// Auto-detect from Origin or Referer header when not configured
+		if origin := c.GetHeader("Origin"); origin != "" {
+			frontendBaseURL = strings.TrimRight(origin, "/")
+		} else if referer := c.GetHeader("Referer"); referer != "" {
+			if u, err := url.Parse(referer); err == nil {
+				frontendBaseURL = u.Scheme + "://" + u.Host
+			}
+		}
+	}
 	if frontendBaseURL == "" {
 		slog.Error("server.frontend_url not configured; cannot build password reset link")
 		response.InternalError(c, "Password reset is not configured")

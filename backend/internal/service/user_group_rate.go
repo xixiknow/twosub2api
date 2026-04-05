@@ -4,18 +4,26 @@ import "context"
 
 // UserGroupRateEntry 分组下用户专属倍率条目
 type UserGroupRateEntry struct {
-	UserID         int64   `json:"user_id"`
-	UserName       string  `json:"user_name"`
-	UserEmail      string  `json:"user_email"`
-	UserNotes      string  `json:"user_notes"`
-	UserStatus     string  `json:"user_status"`
-	RateMultiplier float64 `json:"rate_multiplier"`
+	UserID          int64    `json:"user_id"`
+	UserName        string   `json:"user_name"`
+	UserEmail       string   `json:"user_email"`
+	UserNotes       string   `json:"user_notes"`
+	UserStatus      string   `json:"user_status"`
+	RateMultiplier  float64  `json:"rate_multiplier"`
+	PerRequestPrice *float64 `json:"per_request_price"`
 }
 
 // GroupRateMultiplierInput 批量设置分组倍率的输入条目
 type GroupRateMultiplierInput struct {
-	UserID         int64   `json:"user_id"`
-	RateMultiplier float64 `json:"rate_multiplier"`
+	UserID          int64    `json:"user_id"`
+	RateMultiplier  float64  `json:"rate_multiplier"`
+	PerRequestPrice *float64 `json:"per_request_price"`
+}
+
+// UserGroupRateOverride 用户专属分组倍率覆盖（含按次计费价格）
+type UserGroupRateOverride struct {
+	RateMultiplier  float64
+	PerRequestPrice *float64
 }
 
 // UserGroupRateRepository 用户专属分组倍率仓储接口
@@ -27,7 +35,7 @@ type UserGroupRateRepository interface {
 
 	// GetByUserAndGroup 获取用户在特定分组的专属倍率
 	// 如果未设置专属倍率，返回 nil
-	GetByUserAndGroup(ctx context.Context, userID, groupID int64) (*float64, error)
+	GetByUserAndGroup(ctx context.Context, userID, groupID int64) (*UserGroupRateOverride, error)
 
 	// GetByGroupID 获取指定分组下所有用户的专属倍率
 	GetByGroupID(ctx context.Context, groupID int64) ([]UserGroupRateEntry, error)

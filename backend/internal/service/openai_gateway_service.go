@@ -4359,12 +4359,14 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 
 	// Get rate multiplier
 	multiplier := s.cfg.Default.RateMultiplier
+	var userRateOverride UserGroupRateOverride
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		resolver := s.userGroupRateResolver
 		if resolver == nil {
 			resolver = newUserGroupRateResolver(nil, nil, resolveUserGroupRateCacheTTL(s.cfg), nil, "service.openai_gateway")
 		}
-		multiplier = resolver.Resolve(ctx, user.ID, *apiKey.GroupID, apiKey.Group.RateMultiplier)
+		userRateOverride = resolver.Resolve(ctx, user.ID, *apiKey.GroupID, apiKey.Group.RateMultiplier)
+		multiplier = userRateOverride.RateMultiplier
 	}
 
 	billingModel := result.Model
@@ -4376,7 +4378,15 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	var cost *CostBreakdown
 	if apiKey.Group != nil {
-		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(billingModel); ok {
+		// 优先使用用户专属按次价格
+		if userRateOverride.PerRequestPrice != nil {
+			perReqPrice := *userRateOverride.PerRequestPrice
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.openai_gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", billingModel, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
+		} else if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(billingModel); ok {
 			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
 				logger.LegacyPrintf("service.openai_gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", billingModel, account.ID)
 			} else {

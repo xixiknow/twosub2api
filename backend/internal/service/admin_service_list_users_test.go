@@ -60,7 +60,7 @@ func (s *userGroupRateRepoStubForListUsers) GetByUserID(_ context.Context, userI
 	return map[int64]float64{}, nil
 }
 
-func (s *userGroupRateRepoStubForListUsers) GetByUserAndGroup(_ context.Context, userID, groupID int64) (*float64, error) {
+func (s *userGroupRateRepoStubForListUsers) GetByUserAndGroup(_ context.Context, userID, groupID int64) (*UserGroupRateOverride, error) {
 	panic("unexpected GetByUserAndGroup call")
 }
 

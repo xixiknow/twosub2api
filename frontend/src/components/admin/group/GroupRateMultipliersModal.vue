@@ -60,6 +60,17 @@
               placeholder="1.0"
             />
           </div>
+          <div class="w-28">
+            <input
+              v-model.number="newPerRequestPrice"
+              type="number"
+              step="0.00000001"
+              min="0"
+              autocomplete="off"
+              class="hide-spinner input w-full"
+              :placeholder="t('admin.groups.perRequestPricePlaceholder', '按次价格')"
+            />
+          </div>
           <button
             type="button"
             class="btn btn-primary shrink-0"
@@ -136,6 +147,7 @@
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('admin.groups.columns.userNotes') }}</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('admin.groups.columns.userStatus') }}</th>
                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('admin.groups.columns.rateMultiplier') }}</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('admin.groups.columns.perRequestPrice', '按次价格') }}</th>
                     <th v-if="showFinalRate" class="px-3 py-2 text-left text-xs font-medium text-primary-600 dark:text-primary-400">{{ t('admin.groups.finalRate') }}</th>
                     <th class="w-10 px-2 py-2"></th>
                   </tr>
@@ -171,6 +183,18 @@
                         :value="entry.rate_multiplier"
                         class="hide-spinner w-20 rounded border border-gray-200 bg-white px-2 py-1 text-center text-sm font-medium transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500/20 dark:border-dark-500 dark:bg-dark-700 dark:focus:border-primary-500"
                         @change="updateLocalRate(entry.user_id, ($event.target as HTMLInputElement).value)"
+                      />
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-2">
+                      <input
+                        type="number"
+                        step="0.00000001"
+                        min="0"
+                        autocomplete="off"
+                        :value="entry.per_request_price ?? ''"
+                        class="hide-spinner w-24 rounded border border-gray-200 bg-white px-2 py-1 text-center text-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500/20 dark:border-dark-500 dark:bg-dark-700 dark:focus:border-primary-500"
+                        :placeholder="t('admin.groups.perRequestPricePlaceholder', '留空')"
+                        @change="updateLocalPerRequestPrice(entry.user_id, ($event.target as HTMLInputElement).value)"
                       />
                     </td>
                     <td v-if="showFinalRate" class="whitespace-nowrap px-3 py-2 font-medium text-primary-600 dark:text-primary-400">
@@ -274,6 +298,7 @@ const searchResults = ref<AdminUser[]>([])
 const showDropdown = ref(false)
 const selectedUser = ref<AdminUser | null>(null)
 const newRate = ref<number | null>(null)
+const newPerRequestPrice = ref<number | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const batchFactor = ref<number | null>(null)
@@ -303,10 +328,13 @@ const computeFinalRate = (rate: number) => {
 // 检测是否有未保存的修改
 const isDirty = computed(() => {
   if (localEntries.value.length !== serverEntries.value.length) return true
-  const serverMap = new Map(serverEntries.value.map(e => [e.user_id, e.rate_multiplier]))
+  const serverMap = new Map(serverEntries.value.map(e => [e.user_id, e]))
   return localEntries.value.some(e => {
-    const serverRate = serverMap.get(e.user_id)
-    return serverRate === undefined || serverRate !== e.rate_multiplier
+    const server = serverMap.get(e.user_id)
+    if (!server) return true
+    if (server.rate_multiplier !== e.rate_multiplier) return true
+    if ((server.per_request_price ?? null) !== (e.per_request_price ?? null)) return true
+    return false
   })
 })
 
@@ -349,6 +377,7 @@ watch(() => props.show, (val) => {
     searchResults.value = []
     selectedUser.value = null
     newRate.value = null
+    newPerRequestPrice.value = null
     loadEntries()
   }
 })
@@ -395,7 +424,8 @@ const handleAddLocal = () => {
     user_email: user.email,
     user_notes: user.notes || '',
     user_status: user.status || 'active',
-    rate_multiplier: newRate.value
+    rate_multiplier: newRate.value,
+    per_request_price: newPerRequestPrice.value ?? null
   }
   if (idx >= 0) {
     localEntries.value[idx] = entry
@@ -405,6 +435,7 @@ const handleAddLocal = () => {
   searchQuery.value = ''
   selectedUser.value = null
   newRate.value = null
+  newPerRequestPrice.value = null
   adjustPage()
 }
 
@@ -415,6 +446,18 @@ const updateLocalRate = (userId: number, value: string) => {
   const entry = localEntries.value.find(e => e.user_id === userId)
   if (entry) {
     entry.rate_multiplier = num
+  }
+}
+
+// 本地修改按次价格
+const updateLocalPerRequestPrice = (userId: number, value: string) => {
+  const entry = localEntries.value.find(e => e.user_id === userId)
+  if (!entry) return
+  if (value === '' || value === null || value === undefined) {
+    entry.per_request_price = null
+  } else {
+    const num = parseFloat(value)
+    entry.per_request_price = isNaN(num) ? null : num
   }
 }
 
@@ -452,7 +495,8 @@ const handleSave = async () => {
   try {
     const entries = localEntries.value.map(e => ({
       user_id: e.user_id,
-      rate_multiplier: e.rate_multiplier
+      rate_multiplier: e.rate_multiplier,
+      per_request_price: e.per_request_price ?? null
     }))
     await adminAPI.groups.batchSetGroupRateMultipliers(props.group.id, entries)
     appStore.showSuccess(t('admin.groups.rateSaved'))

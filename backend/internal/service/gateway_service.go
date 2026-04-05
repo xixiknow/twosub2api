@@ -6661,9 +6661,9 @@ func (s *GatewayService) replaceModelInResponseBody(body []byte, fromModel, toMo
 	return body
 }
 
-func (s *GatewayService) getUserGroupRateMultiplier(ctx context.Context, userID, groupID int64, groupDefaultMultiplier float64) float64 {
+func (s *GatewayService) getUserGroupRateMultiplier(ctx context.Context, userID, groupID int64, groupDefaultMultiplier float64) UserGroupRateOverride {
 	if s == nil {
-		return groupDefaultMultiplier
+		return UserGroupRateOverride{RateMultiplier: groupDefaultMultiplier}
 	}
 	resolver := s.userGroupRateResolver
 	if resolver == nil {
@@ -6982,9 +6982,11 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	if s.cfg != nil {
 		multiplier = s.cfg.Default.RateMultiplier
 	}
+	var userRateOverride UserGroupRateOverride
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		groupDefault := apiKey.Group.RateMultiplier
-		multiplier = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
+		userRateOverride = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
+		multiplier = userRateOverride.RateMultiplier
 	}
 
 	var cost *CostBreakdown
@@ -6992,7 +6994,15 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	// 按次计费判断：对普通请求（非 Sora/图片生成）生效
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	if apiKey.Group != nil && result.MediaType == "" && result.ImageCount == 0 {
-		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
+		// 优先使用用户专属按次价格
+		if userRateOverride.PerRequestPrice != nil {
+			perReqPrice := *userRateOverride.PerRequestPrice
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
+		} else if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
 			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
 				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
 			} else {
@@ -7210,9 +7220,11 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	if s.cfg != nil {
 		multiplier = s.cfg.Default.RateMultiplier
 	}
+	var userRateOverride2 UserGroupRateOverride
 	if apiKey.GroupID != nil && apiKey.Group != nil {
 		groupDefault := apiKey.Group.RateMultiplier
-		multiplier = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
+		userRateOverride2 = s.getUserGroupRateMultiplier(ctx, user.ID, *apiKey.GroupID, groupDefault)
+		multiplier = userRateOverride2.RateMultiplier
 	}
 
 	var cost *CostBreakdown
@@ -7220,7 +7232,15 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	// 按次计费判断：对普通请求（非图片生成）生效
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	if apiKey.Group != nil && result.ImageCount == 0 {
-		if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
+		// 优先使用用户专属按次价格
+		if userRateOverride2.PerRequestPrice != nil {
+			perReqPrice := *userRateOverride2.PerRequestPrice
+			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
+				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
+			} else {
+				cost = &CostBreakdown{TotalCost: perReqPrice, ActualCost: perReqPrice * multiplier}
+			}
+		} else if perReqPrice, ok := apiKey.Group.GetPerRequestPrice(result.Model); ok {
 			if result.ClientDisconnect && result.Usage.OutputTokens == 0 {
 				logger.LegacyPrintf("service.gateway", "skip per-request billing: client disconnected with 0 output tokens (model=%s, account=%d)", result.Model, account.ID)
 			} else {
