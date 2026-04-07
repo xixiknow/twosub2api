@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	ErrPaymentDisabled     = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is currently disabled")
+	ErrPaymentDisabled           = infraerrors.Forbidden("PAYMENT_DISABLED", "online payment is currently disabled")
 	ErrPaymentMethodNotAvailable = infraerrors.BadRequest("PAYMENT_METHOD_NOT_AVAILABLE", "the selected payment method is not available")
-	ErrInvalidAmount       = infraerrors.BadRequest("INVALID_AMOUNT", "payment amount is invalid")
-	ErrOrderNotFound       = infraerrors.NotFound("ORDER_NOT_FOUND", "payment order not found")
-	ErrOrderAlreadyPaid    = infraerrors.BadRequest("ORDER_ALREADY_PAID", "payment order has already been paid")
+	ErrInvalidAmount             = infraerrors.BadRequest("INVALID_AMOUNT", "payment amount is invalid")
+	ErrOrderNotFound             = infraerrors.NotFound("ORDER_NOT_FOUND", "payment order not found")
+	ErrOrderAlreadyPaid          = infraerrors.BadRequest("ORDER_ALREADY_PAID", "payment order has already been paid")
 )
 
 // PaymentOrder 支付订单
@@ -49,12 +49,12 @@ type PaymentConfig struct {
 	MinAmount     float64   `json:"min_amount"`
 	MaxAmount     float64   `json:"max_amount"`
 	Methods       struct {
-		Alipay      bool `json:"alipay"`
-		AlipayF2F   bool `json:"alipay_f2f"`
-		Wechat      bool `json:"wechat"`
-		Epay        bool `json:"epay"`         // 向后兼容
-		EpayAlipay  bool `json:"epay_alipay"`  // 易支付-支付宝
-		EpayWechat  bool `json:"epay_wechat"`  // 易支付-微信
+		Alipay     bool `json:"alipay"`
+		AlipayF2F  bool `json:"alipay_f2f"`
+		Wechat     bool `json:"wechat"`
+		Epay       bool `json:"epay"`        // 向后兼容
+		EpayAlipay bool `json:"epay_alipay"` // 易支付-支付宝
+		EpayWechat bool `json:"epay_wechat"` // 易支付-微信
 	} `json:"methods"`
 }
 

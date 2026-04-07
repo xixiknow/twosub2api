@@ -40,7 +40,6 @@ type SystemSettings struct {
 	HideCcsImportButton         bool
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
-	SoraClientEnabled           bool
 	CustomMenuItems             string // JSON array of custom menu items
 
 	DefaultConcurrency   int
@@ -69,6 +68,9 @@ type SystemSettings struct {
 
 	// 分组隔离：允许未分组 Key 调度（默认 false → 403）
 	AllowUngroupedKeyScheduling bool
+
+	// 登录 IP 提醒
+	LoginIPAlertEnabled bool
 }
 
 type DefaultSubscriptionSetting struct {
@@ -97,90 +99,50 @@ type PublicSettings struct {
 
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
-	SoraClientEnabled           bool
 	CustomMenuItems             string // JSON array of custom menu items
 
 	LinuxDoOAuthEnabled bool
 	ReferralEnabled     bool
+	LoginIPAlertEnabled bool
 	Version             string
 }
 
 // PaymentSettings 支付系统配置
 type PaymentSettings struct {
-	PaymentEnabled      bool    `json:"payment_enabled"`
-	PaymentCurrency     string  `json:"payment_currency"`
-	PaymentExchangeRate float64 `json:"payment_exchange_rate"`
-	PaymentPresetAmounts string `json:"payment_preset_amounts"`
-	PaymentMinAmount    float64 `json:"payment_min_amount"`
-	PaymentMaxAmount    float64 `json:"payment_max_amount"`
+	PaymentEnabled       bool    `json:"payment_enabled"`
+	PaymentCurrency      string  `json:"payment_currency"`
+	PaymentExchangeRate  float64 `json:"payment_exchange_rate"`
+	PaymentPresetAmounts string  `json:"payment_preset_amounts"`
+	PaymentMinAmount     float64 `json:"payment_min_amount"`
+	PaymentMaxAmount     float64 `json:"payment_max_amount"`
 
 	// 支付宝
 	AlipayEnabled              bool   `json:"payment_alipay_enabled"`
 	AlipayAppID                string `json:"payment_alipay_app_id"`
-	AlipayPrivateKey           string `json:"-"`                                // 敏感，不直接返回
+	AlipayPrivateKey           string `json:"-"` // 敏感，不直接返回
 	AlipayPrivateKeyConfigured bool   `json:"payment_alipay_private_key_configured"`
-	AlipayPublicKey            string `json:"-"`                                // 敏感，不直接返回
+	AlipayPublicKey            string `json:"-"` // 敏感，不直接返回
 	AlipayPublicKeyConfigured  bool   `json:"payment_alipay_public_key_configured"`
 	AlipayF2FEnabled           bool   `json:"payment_alipay_f2f_enabled"`
 
 	// 微信支付
-	WechatEnabled           bool   `json:"payment_wechat_enabled"`
-	WechatAppID             string `json:"payment_wechat_app_id"`
-	WechatMchID             string `json:"payment_wechat_mch_id"`
-	WechatAPIKey            string `json:"-"`                              // 敏感，不直接返回
-	WechatAPIKeyConfigured  bool   `json:"payment_wechat_api_key_configured"`
+	WechatEnabled          bool   `json:"payment_wechat_enabled"`
+	WechatAppID            string `json:"payment_wechat_app_id"`
+	WechatMchID            string `json:"payment_wechat_mch_id"`
+	WechatAPIKey           string `json:"-"` // 敏感，不直接返回
+	WechatAPIKeyConfigured bool   `json:"payment_wechat_api_key_configured"`
 
 	// 易支付
-	EpayEnabled        bool   `json:"payment_epay_enabled"`
-	EpayAPIURL         string `json:"payment_epay_api_url"`
-	EpayPID            string `json:"payment_epay_pid"`
-	EpayKey            string `json:"-"`                           // 敏感，不直接返回
-	EpayKeyConfigured  bool   `json:"payment_epay_key_configured"`
-	EpayType           string `json:"payment_epay_type"`
+	EpayEnabled       bool   `json:"payment_epay_enabled"`
+	EpayAPIURL        string `json:"payment_epay_api_url"`
+	EpayPID           string `json:"payment_epay_pid"`
+	EpayKey           string `json:"-"` // 敏感，不直接返回
+	EpayKeyConfigured bool   `json:"payment_epay_key_configured"`
+	EpayType          string `json:"payment_epay_type"`
 
 	// 推荐返利
 	ReferralEnabled        bool    `json:"referral_enabled"`
 	ReferralCommissionRate float64 `json:"referral_commission_rate"`
-}
-
-// SoraS3Settings Sora S3 存储配置
-type SoraS3Settings struct {
-	Enabled                   bool   `json:"enabled"`
-	Endpoint                  string `json:"endpoint"`
-	Region                    string `json:"region"`
-	Bucket                    string `json:"bucket"`
-	AccessKeyID               string `json:"access_key_id"`
-	SecretAccessKey           string `json:"secret_access_key"`            // 仅内部使用，不直接返回前端
-	SecretAccessKeyConfigured bool   `json:"secret_access_key_configured"` // 前端展示用
-	Prefix                    string `json:"prefix"`
-	ForcePathStyle            bool   `json:"force_path_style"`
-	CDNURL                    string `json:"cdn_url"`
-	DefaultStorageQuotaBytes  int64  `json:"default_storage_quota_bytes"`
-}
-
-// SoraS3Profile Sora S3 多配置项（服务内部模型）
-type SoraS3Profile struct {
-	ProfileID                 string `json:"profile_id"`
-	Name                      string `json:"name"`
-	IsActive                  bool   `json:"is_active"`
-	Enabled                   bool   `json:"enabled"`
-	Endpoint                  string `json:"endpoint"`
-	Region                    string `json:"region"`
-	Bucket                    string `json:"bucket"`
-	AccessKeyID               string `json:"access_key_id"`
-	SecretAccessKey           string `json:"-"`                            // 仅内部使用，不直接返回前端
-	SecretAccessKeyConfigured bool   `json:"secret_access_key_configured"` // 前端展示用
-	Prefix                    string `json:"prefix"`
-	ForcePathStyle            bool   `json:"force_path_style"`
-	CDNURL                    string `json:"cdn_url"`
-	DefaultStorageQuotaBytes  int64  `json:"default_storage_quota_bytes"`
-	UpdatedAt                 string `json:"updated_at"`
-}
-
-// SoraS3ProfileList Sora S3 多配置列表
-type SoraS3ProfileList struct {
-	ActiveProfileID string          `json:"active_profile_id"`
-	Items           []SoraS3Profile `json:"items"`
 }
 
 // StreamTimeoutSettings 流超时处理配置（仅控制超时后的处理方式，超时判定由网关配置控制）

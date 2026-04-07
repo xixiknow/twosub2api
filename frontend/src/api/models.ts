@@ -40,11 +40,6 @@ export interface ModelSquareGroup {
   image_price_1k: number | null
   image_price_2k: number | null
   image_price_4k: number | null
-  // Sora 按次计费
-  sora_image_price_360: number | null
-  sora_image_price_540: number | null
-  sora_video_price_per_request: number | null
-  sora_video_price_per_request_hd: number | null
   // 分组按次收费
   per_request_price: number | null
   model_per_request_prices: Record<string, number> | null

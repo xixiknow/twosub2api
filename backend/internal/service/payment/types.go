@@ -4,12 +4,12 @@ package payment
 type PaymentMethod string
 
 const (
-	MethodAlipay      PaymentMethod = "alipay"
-	MethodAlipayF2F   PaymentMethod = "alipay_f2f"
-	MethodWechat      PaymentMethod = "wechat"
-	MethodEpay        PaymentMethod = "epay"        // 向后兼容
-	MethodEpayAlipay  PaymentMethod = "epay_alipay"  // 易支付-支付宝
-	MethodEpayWechat  PaymentMethod = "epay_wechat"  // 易支付-微信
+	MethodAlipay     PaymentMethod = "alipay"
+	MethodAlipayF2F  PaymentMethod = "alipay_f2f"
+	MethodWechat     PaymentMethod = "wechat"
+	MethodEpay       PaymentMethod = "epay"        // 向后兼容
+	MethodEpayAlipay PaymentMethod = "epay_alipay" // 易支付-支付宝
+	MethodEpayWechat PaymentMethod = "epay_wechat" // 易支付-微信
 )
 
 // OrderStatus 订单状态

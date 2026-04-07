@@ -73,15 +73,15 @@ func (User) Fields() []ent.Field {
 			Optional().
 			Nillable(),
 
-		// Sora 存储配额
-		field.Int64("sora_storage_quota_bytes").
-			Default(0),
-		field.Int64("sora_storage_used_bytes").
-			Default(0),
-
 		// 推荐返利
 		field.Int64("referrer_id").Optional().Nillable(),
 		field.String("referral_code").MaxLen(20).Optional().Nillable(),
+
+		// 登录 IP 记录
+		field.String("last_login_ip").MaxLen(45).Default("").Optional(),
+		field.Time("last_login_at").Optional().Nillable(),
+		field.String("previous_login_ip").MaxLen(45).Default("").Optional(),
+		field.Time("previous_login_at").Optional().Nillable(),
 	}
 }
 

@@ -312,10 +312,10 @@ func (s *OpenAIGatewayService) handleAnthropicToChatStreamingResponse(
 			if err != nil {
 				continue
 			}
-			fmt.Fprint(c.Writer, sse) //nolint:errcheck
+			fmt.Fprint(c.Writer, sse)
 		}
 	}
-	fmt.Fprint(c.Writer, "data: [DONE]\n\n") //nolint:errcheck
+	fmt.Fprint(c.Writer, "data: [DONE]\n\n")
 	c.Writer.Flush()
 
 	return resultWithUsage(), nil

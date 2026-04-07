@@ -352,11 +352,11 @@ func FinalizeChatToResponsesStream(state *ChatToResponsesStreamState, finishReas
 	if state.SentMsgItem {
 		// Emit output_text.done with full accumulated text
 		events = append(events, ResponsesStreamEvent{
-			Type:         "response.output_text.done",
-			OutputIndex:  intPtr(0),
-			ContentIndex: intPtr(0),
-			ItemID:       state.MsgItemID,
-			Text:         state.AccumulatedText,
+			Type:           "response.output_text.done",
+			OutputIndex:    intPtr(0),
+			ContentIndex:   intPtr(0),
+			ItemID:         state.MsgItemID,
+			Text:           state.AccumulatedText,
 			SequenceNumber: state.nextSeq(),
 		})
 		// Emit content_part.done with part containing full text
@@ -374,8 +374,8 @@ func FinalizeChatToResponsesStream(state *ChatToResponsesStreamState, finishReas
 		})
 		// Emit output_item.done with full message item including content
 		events = append(events, ResponsesStreamEvent{
-			Type:        "response.output_item.done",
-			OutputIndex: intPtr(0),
+			Type:           "response.output_item.done",
+			OutputIndex:    intPtr(0),
 			SequenceNumber: state.nextSeq(),
 			Item: &ResponsesOutput{
 				Type:   "message",

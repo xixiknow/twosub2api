@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
@@ -12,6 +15,74 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// ── Auth failure rate limiter ────────────────────────────────────────────
+
+const (
+	authFailMaxPerMinute = 20
+	authFailWindowSize   = time.Minute
+	authFailCleanupEvery = 5 * time.Minute
+)
+
+type authFailCounter struct {
+	count     atomic.Int64
+	windowEnd atomic.Int64 // unix nano
+}
+
+var (
+	authFailCounters sync.Map // IP → *authFailCounter
+	authFailCleanup  sync.Once
+)
+
+// startAuthFailCleanup periodically removes stale entries.
+func startAuthFailCleanup() {
+	authFailCleanup.Do(func() {
+		go func() {
+			for {
+				time.Sleep(authFailCleanupEvery)
+				now := time.Now().UnixNano()
+				authFailCounters.Range(func(key, value any) bool {
+					c := value.(*authFailCounter)
+					if c.windowEnd.Load() < now {
+						authFailCounters.Delete(key)
+					}
+					return true
+				})
+			}
+		}()
+	})
+}
+
+// recordAuthFailure increments the failure counter for the given IP.
+// Returns true if the IP has exceeded the rate limit.
+func recordAuthFailure(clientIP string) bool {
+	startAuthFailCleanup()
+	now := time.Now()
+	val, _ := authFailCounters.LoadOrStore(clientIP, &authFailCounter{})
+	c := val.(*authFailCounter)
+
+	// If window expired, reset
+	if time.Unix(0, c.windowEnd.Load()).Before(now) {
+		c.count.Store(1)
+		c.windowEnd.Store(now.Add(authFailWindowSize).UnixNano())
+		return false
+	}
+	return c.count.Add(1) > authFailMaxPerMinute
+}
+
+// isAuthRateLimited checks if the IP is currently rate-limited without incrementing.
+func isAuthRateLimited(clientIP string) bool {
+	val, ok := authFailCounters.Load(clientIP)
+	if !ok {
+		return false
+	}
+	c := val.(*authFailCounter)
+	now := time.Now()
+	if time.Unix(0, c.windowEnd.Load()).Before(now) {
+		return false
+	}
+	return c.count.Load() > authFailMaxPerMinute
+}
 
 // NewAPIKeyAuthMiddleware 创建 API Key 认证中间件
 func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) APIKeyAuthMiddleware {
@@ -27,6 +98,13 @@ func NewAPIKeyAuthMiddleware(apiKeyService *service.APIKeyService, subscriptionS
 // /v1/usage 端点只需鉴权，不需要计费执行（允许过期/配额耗尽的 Key 查询自身用量）。
 func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscriptionService *service.SubscriptionService, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// ── 0. 认证失败限速检查 ──────────────────────────────────────
+		clientIP := ip.GetTrustedClientIP(c)
+		if isAuthRateLimited(clientIP) {
+			AbortWithError(c, 429, "RATE_LIMITED", "Too many authentication failures. Please try again later.")
+			return
+		}
+
 		// ── 1. 提取 API Key ──────────────────────────────────────────
 
 		queryKey := strings.TrimSpace(c.Query("key"))
@@ -69,6 +147,7 @@ func apiKeyAuthWithSubscription(apiKeyService *service.APIKeyService, subscripti
 		apiKey, err := apiKeyService.GetByKey(c.Request.Context(), apiKeyString)
 		if err != nil {
 			if errors.Is(err, service.ErrAPIKeyNotFound) {
+				recordAuthFailure(clientIP)
 				AbortWithError(c, 401, "INVALID_API_KEY", "Invalid API key")
 				return
 			}

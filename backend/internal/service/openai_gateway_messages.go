@@ -436,7 +436,7 @@ func (s *OpenAIGatewayService) handleAnthropicStreamingResponse(
 				if err != nil {
 					continue
 				}
-				fmt.Fprint(c.Writer, sse) //nolint:errcheck
+				fmt.Fprint(c.Writer, sse)
 			}
 			c.Writer.Flush()
 		}

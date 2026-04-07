@@ -90,6 +90,11 @@ func GroupID(v int64) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldGroupID, v))
 }
 
+// FallbackGroupID applies equality check predicate on the "fallback_group_id" field. It's identical to FallbackGroupIDEQ.
+func FallbackGroupID(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldEQ(FieldFallbackGroupID, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.APIKey {
 	return predicate.APIKey(sql.FieldEQ(FieldStatus, v))
@@ -488,6 +493,26 @@ func FallbackGroupIDIn(vs ...int64) predicate.APIKey {
 // FallbackGroupIDNotIn applies the NotIn predicate on the "fallback_group_id" field.
 func FallbackGroupIDNotIn(vs ...int64) predicate.APIKey {
 	return predicate.APIKey(sql.FieldNotIn(FieldFallbackGroupID, vs...))
+}
+
+// FallbackGroupIDGT applies the GT predicate on the "fallback_group_id" field.
+func FallbackGroupIDGT(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGT(FieldFallbackGroupID, v))
+}
+
+// FallbackGroupIDGTE applies the GTE predicate on the "fallback_group_id" field.
+func FallbackGroupIDGTE(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldGTE(FieldFallbackGroupID, v))
+}
+
+// FallbackGroupIDLT applies the LT predicate on the "fallback_group_id" field.
+func FallbackGroupIDLT(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLT(FieldFallbackGroupID, v))
+}
+
+// FallbackGroupIDLTE applies the LTE predicate on the "fallback_group_id" field.
+func FallbackGroupIDLTE(v int64) predicate.APIKey {
+	return predicate.APIKey(sql.FieldLTE(FieldFallbackGroupID, v))
 }
 
 // FallbackGroupIDIsNil applies the IsNil predicate on the "fallback_group_id" field.

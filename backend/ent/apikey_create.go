@@ -811,6 +811,12 @@ func (u *APIKeyUpsert) UpdateFallbackGroupID() *APIKeyUpsert {
 	return u
 }
 
+// AddFallbackGroupID adds v to the "fallback_group_id" field.
+func (u *APIKeyUpsert) AddFallbackGroupID(v int64) *APIKeyUpsert {
+	u.Add(apikey.FieldFallbackGroupID, v)
+	return u
+}
+
 // ClearFallbackGroupID clears the value of the "fallback_group_id" field.
 func (u *APIKeyUpsert) ClearFallbackGroupID() *APIKeyUpsert {
 	u.SetNull(apikey.FieldFallbackGroupID)
@@ -1246,6 +1252,13 @@ func (u *APIKeyUpsertOne) ClearGroupID() *APIKeyUpsertOne {
 func (u *APIKeyUpsertOne) SetFallbackGroupID(v int64) *APIKeyUpsertOne {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.SetFallbackGroupID(v)
+	})
+}
+
+// AddFallbackGroupID adds v to the "fallback_group_id" field.
+func (u *APIKeyUpsertOne) AddFallbackGroupID(v int64) *APIKeyUpsertOne {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.AddFallbackGroupID(v)
 	})
 }
 
@@ -1905,6 +1918,13 @@ func (u *APIKeyUpsertBulk) ClearGroupID() *APIKeyUpsertBulk {
 func (u *APIKeyUpsertBulk) SetFallbackGroupID(v int64) *APIKeyUpsertBulk {
 	return u.Update(func(s *APIKeyUpsert) {
 		s.SetFallbackGroupID(v)
+	})
+}
+
+// AddFallbackGroupID adds v to the "fallback_group_id" field.
+func (u *APIKeyUpsertBulk) AddFallbackGroupID(v int64) *APIKeyUpsertBulk {
+	return u.Update(func(s *APIKeyUpsert) {
+		s.AddFallbackGroupID(v)
 	})
 }
 

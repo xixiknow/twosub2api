@@ -242,48 +242,6 @@ func (_u *UserUpdate) ClearTotpEnabledAt() *UserUpdate {
 	return _u
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (_u *UserUpdate) SetSoraStorageQuotaBytes(v int64) *UserUpdate {
-	_u.mutation.ResetSoraStorageQuotaBytes()
-	_u.mutation.SetSoraStorageQuotaBytes(v)
-	return _u
-}
-
-// SetNillableSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableSoraStorageQuotaBytes(v *int64) *UserUpdate {
-	if v != nil {
-		_u.SetSoraStorageQuotaBytes(*v)
-	}
-	return _u
-}
-
-// AddSoraStorageQuotaBytes adds value to the "sora_storage_quota_bytes" field.
-func (_u *UserUpdate) AddSoraStorageQuotaBytes(v int64) *UserUpdate {
-	_u.mutation.AddSoraStorageQuotaBytes(v)
-	return _u
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (_u *UserUpdate) SetSoraStorageUsedBytes(v int64) *UserUpdate {
-	_u.mutation.ResetSoraStorageUsedBytes()
-	_u.mutation.SetSoraStorageUsedBytes(v)
-	return _u
-}
-
-// SetNillableSoraStorageUsedBytes sets the "sora_storage_used_bytes" field if the given value is not nil.
-func (_u *UserUpdate) SetNillableSoraStorageUsedBytes(v *int64) *UserUpdate {
-	if v != nil {
-		_u.SetSoraStorageUsedBytes(*v)
-	}
-	return _u
-}
-
-// AddSoraStorageUsedBytes adds value to the "sora_storage_used_bytes" field.
-func (_u *UserUpdate) AddSoraStorageUsedBytes(v int64) *UserUpdate {
-	_u.mutation.AddSoraStorageUsedBytes(v)
-	return _u
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (_u *UserUpdate) SetReferrerID(v int64) *UserUpdate {
 	_u.mutation.ResetReferrerID()
@@ -328,6 +286,86 @@ func (_u *UserUpdate) SetNillableReferralCode(v *string) *UserUpdate {
 // ClearReferralCode clears the value of the "referral_code" field.
 func (_u *UserUpdate) ClearReferralCode() *UserUpdate {
 	_u.mutation.ClearReferralCode()
+	return _u
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (_u *UserUpdate) SetLastLoginIP(v string) *UserUpdate {
+	_u.mutation.SetLastLoginIP(v)
+	return _u
+}
+
+// SetNillableLastLoginIP sets the "last_login_ip" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableLastLoginIP(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetLastLoginIP(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginIP clears the value of the "last_login_ip" field.
+func (_u *UserUpdate) ClearLastLoginIP() *UserUpdate {
+	_u.mutation.ClearLastLoginIP()
+	return _u
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_u *UserUpdate) SetLastLoginAt(v time.Time) *UserUpdate {
+	_u.mutation.SetLastLoginAt(v)
+	return _u
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableLastLoginAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetLastLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (_u *UserUpdate) ClearLastLoginAt() *UserUpdate {
+	_u.mutation.ClearLastLoginAt()
+	return _u
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (_u *UserUpdate) SetPreviousLoginIP(v string) *UserUpdate {
+	_u.mutation.SetPreviousLoginIP(v)
+	return _u
+}
+
+// SetNillablePreviousLoginIP sets the "previous_login_ip" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePreviousLoginIP(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetPreviousLoginIP(*v)
+	}
+	return _u
+}
+
+// ClearPreviousLoginIP clears the value of the "previous_login_ip" field.
+func (_u *UserUpdate) ClearPreviousLoginIP() *UserUpdate {
+	_u.mutation.ClearPreviousLoginIP()
+	return _u
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (_u *UserUpdate) SetPreviousLoginAt(v time.Time) *UserUpdate {
+	_u.mutation.SetPreviousLoginAt(v)
+	return _u
+}
+
+// SetNillablePreviousLoginAt sets the "previous_login_at" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePreviousLoginAt(v *time.Time) *UserUpdate {
+	if v != nil {
+		_u.SetPreviousLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearPreviousLoginAt clears the value of the "previous_login_at" field.
+func (_u *UserUpdate) ClearPreviousLoginAt() *UserUpdate {
+	_u.mutation.ClearPreviousLoginAt()
 	return _u
 }
 
@@ -729,6 +767,21 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ReferralCode(); ok {
+		if err := user.ReferralCodeValidator(v); err != nil {
+			return &ValidationError{Name: "referral_code", err: fmt.Errorf(`ent: validator failed for field "User.referral_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.LastLoginIP(); ok {
+		if err := user.LastLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "last_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.last_login_ip": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PreviousLoginIP(); ok {
+		if err := user.PreviousLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "previous_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.previous_login_ip": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -798,18 +851,6 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.TotpEnabledAtCleared() {
 		_spec.ClearField(user.FieldTotpEnabledAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.SoraStorageQuotaBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSoraStorageQuotaBytes(); ok {
-		_spec.AddField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.SoraStorageUsedBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSoraStorageUsedBytes(); ok {
-		_spec.AddField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
-	}
 	if value, ok := _u.mutation.ReferrerID(); ok {
 		_spec.SetField(user.FieldReferrerID, field.TypeInt64, value)
 	}
@@ -824,6 +865,30 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ReferralCodeCleared() {
 		_spec.ClearField(user.FieldReferralCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastLoginIP(); ok {
+		_spec.SetField(user.FieldLastLoginIP, field.TypeString, value)
+	}
+	if _u.mutation.LastLoginIPCleared() {
+		_spec.ClearField(user.FieldLastLoginIP, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastLoginAt(); ok {
+		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastLoginAtCleared() {
+		_spec.ClearField(user.FieldLastLoginAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PreviousLoginIP(); ok {
+		_spec.SetField(user.FieldPreviousLoginIP, field.TypeString, value)
+	}
+	if _u.mutation.PreviousLoginIPCleared() {
+		_spec.ClearField(user.FieldPreviousLoginIP, field.TypeString)
+	}
+	if value, ok := _u.mutation.PreviousLoginAt(); ok {
+		_spec.SetField(user.FieldPreviousLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.PreviousLoginAtCleared() {
+		_spec.ClearField(user.FieldPreviousLoginAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1468,48 +1533,6 @@ func (_u *UserUpdateOne) ClearTotpEnabledAt() *UserUpdateOne {
 	return _u
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (_u *UserUpdateOne) SetSoraStorageQuotaBytes(v int64) *UserUpdateOne {
-	_u.mutation.ResetSoraStorageQuotaBytes()
-	_u.mutation.SetSoraStorageQuotaBytes(v)
-	return _u
-}
-
-// SetNillableSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableSoraStorageQuotaBytes(v *int64) *UserUpdateOne {
-	if v != nil {
-		_u.SetSoraStorageQuotaBytes(*v)
-	}
-	return _u
-}
-
-// AddSoraStorageQuotaBytes adds value to the "sora_storage_quota_bytes" field.
-func (_u *UserUpdateOne) AddSoraStorageQuotaBytes(v int64) *UserUpdateOne {
-	_u.mutation.AddSoraStorageQuotaBytes(v)
-	return _u
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (_u *UserUpdateOne) SetSoraStorageUsedBytes(v int64) *UserUpdateOne {
-	_u.mutation.ResetSoraStorageUsedBytes()
-	_u.mutation.SetSoraStorageUsedBytes(v)
-	return _u
-}
-
-// SetNillableSoraStorageUsedBytes sets the "sora_storage_used_bytes" field if the given value is not nil.
-func (_u *UserUpdateOne) SetNillableSoraStorageUsedBytes(v *int64) *UserUpdateOne {
-	if v != nil {
-		_u.SetSoraStorageUsedBytes(*v)
-	}
-	return _u
-}
-
-// AddSoraStorageUsedBytes adds value to the "sora_storage_used_bytes" field.
-func (_u *UserUpdateOne) AddSoraStorageUsedBytes(v int64) *UserUpdateOne {
-	_u.mutation.AddSoraStorageUsedBytes(v)
-	return _u
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (_u *UserUpdateOne) SetReferrerID(v int64) *UserUpdateOne {
 	_u.mutation.ResetReferrerID()
@@ -1554,6 +1577,86 @@ func (_u *UserUpdateOne) SetNillableReferralCode(v *string) *UserUpdateOne {
 // ClearReferralCode clears the value of the "referral_code" field.
 func (_u *UserUpdateOne) ClearReferralCode() *UserUpdateOne {
 	_u.mutation.ClearReferralCode()
+	return _u
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (_u *UserUpdateOne) SetLastLoginIP(v string) *UserUpdateOne {
+	_u.mutation.SetLastLoginIP(v)
+	return _u
+}
+
+// SetNillableLastLoginIP sets the "last_login_ip" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableLastLoginIP(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetLastLoginIP(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginIP clears the value of the "last_login_ip" field.
+func (_u *UserUpdateOne) ClearLastLoginIP() *UserUpdateOne {
+	_u.mutation.ClearLastLoginIP()
+	return _u
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_u *UserUpdateOne) SetLastLoginAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetLastLoginAt(v)
+	return _u
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableLastLoginAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetLastLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (_u *UserUpdateOne) ClearLastLoginAt() *UserUpdateOne {
+	_u.mutation.ClearLastLoginAt()
+	return _u
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (_u *UserUpdateOne) SetPreviousLoginIP(v string) *UserUpdateOne {
+	_u.mutation.SetPreviousLoginIP(v)
+	return _u
+}
+
+// SetNillablePreviousLoginIP sets the "previous_login_ip" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePreviousLoginIP(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetPreviousLoginIP(*v)
+	}
+	return _u
+}
+
+// ClearPreviousLoginIP clears the value of the "previous_login_ip" field.
+func (_u *UserUpdateOne) ClearPreviousLoginIP() *UserUpdateOne {
+	_u.mutation.ClearPreviousLoginIP()
+	return _u
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (_u *UserUpdateOne) SetPreviousLoginAt(v time.Time) *UserUpdateOne {
+	_u.mutation.SetPreviousLoginAt(v)
+	return _u
+}
+
+// SetNillablePreviousLoginAt sets the "previous_login_at" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePreviousLoginAt(v *time.Time) *UserUpdateOne {
+	if v != nil {
+		_u.SetPreviousLoginAt(*v)
+	}
+	return _u
+}
+
+// ClearPreviousLoginAt clears the value of the "previous_login_at" field.
+func (_u *UserUpdateOne) ClearPreviousLoginAt() *UserUpdateOne {
+	_u.mutation.ClearPreviousLoginAt()
 	return _u
 }
 
@@ -1968,6 +2071,21 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ReferralCode(); ok {
+		if err := user.ReferralCodeValidator(v); err != nil {
+			return &ValidationError{Name: "referral_code", err: fmt.Errorf(`ent: validator failed for field "User.referral_code": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.LastLoginIP(); ok {
+		if err := user.LastLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "last_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.last_login_ip": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.PreviousLoginIP(); ok {
+		if err := user.PreviousLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "previous_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.previous_login_ip": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -2054,18 +2172,6 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if _u.mutation.TotpEnabledAtCleared() {
 		_spec.ClearField(user.FieldTotpEnabledAt, field.TypeTime)
 	}
-	if value, ok := _u.mutation.SoraStorageQuotaBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSoraStorageQuotaBytes(); ok {
-		_spec.AddField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.SoraStorageUsedBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
-	}
-	if value, ok := _u.mutation.AddedSoraStorageUsedBytes(); ok {
-		_spec.AddField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
-	}
 	if value, ok := _u.mutation.ReferrerID(); ok {
 		_spec.SetField(user.FieldReferrerID, field.TypeInt64, value)
 	}
@@ -2080,6 +2186,30 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if _u.mutation.ReferralCodeCleared() {
 		_spec.ClearField(user.FieldReferralCode, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastLoginIP(); ok {
+		_spec.SetField(user.FieldLastLoginIP, field.TypeString, value)
+	}
+	if _u.mutation.LastLoginIPCleared() {
+		_spec.ClearField(user.FieldLastLoginIP, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastLoginAt(); ok {
+		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastLoginAtCleared() {
+		_spec.ClearField(user.FieldLastLoginAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.PreviousLoginIP(); ok {
+		_spec.SetField(user.FieldPreviousLoginIP, field.TypeString, value)
+	}
+	if _u.mutation.PreviousLoginIPCleared() {
+		_spec.ClearField(user.FieldPreviousLoginIP, field.TypeString)
+	}
+	if value, ok := _u.mutation.PreviousLoginAt(); ok {
+		_spec.SetField(user.FieldPreviousLoginAt, field.TypeTime, value)
+	}
+	if _u.mutation.PreviousLoginAtCleared() {
+		_spec.ClearField(user.FieldPreviousLoginAt, field.TypeTime)
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{

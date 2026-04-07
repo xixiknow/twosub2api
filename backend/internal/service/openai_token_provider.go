@@ -116,8 +116,8 @@ func (p *OpenAITokenProvider) GetAccessToken(ctx context.Context, account *Accou
 	if account == nil {
 		return "", errors.New("account is nil")
 	}
-	if (account.Platform != PlatformOpenAI && account.Platform != PlatformSora) || account.Type != AccountTypeOAuth {
-		return "", errors.New("not an openai/sora oauth account")
+	if account.Platform != PlatformOpenAI || account.Type != AccountTypeOAuth {
+		return "", errors.New("not an openai oauth account")
 	}
 
 	cacheKey := OpenAITokenCacheKey(account)
@@ -157,11 +157,7 @@ func (p *OpenAITokenProvider) GetAccessToken(ctx context.Context, account *Accou
 			}
 			expiresAt = account.GetCredentialAsTime("expires_at")
 			if expiresAt == nil || time.Until(*expiresAt) <= openAITokenRefreshSkew {
-				if account.Platform == PlatformSora {
-					slog.Debug("openai_token_refresh_skipped_for_sora", "account_id", account.ID)
-					// Sora 账号不走 OpenAI OAuth 刷新，交由 Sora 客户端的 ST/RT 恢复链路处理。
-					refreshFailed = true
-				} else if p.openAIOAuthService == nil {
+				if p.openAIOAuthService == nil {
 					slog.Warn("openai_oauth_service_not_configured", "account_id", account.ID)
 					p.metrics.refreshFailure.Add(1)
 					refreshFailed = true // 无法刷新，标记失败
@@ -210,11 +206,7 @@ func (p *OpenAITokenProvider) GetAccessToken(ctx context.Context, account *Accou
 
 			// 仅在 expires_at 已过期/接近过期时才执行无锁刷新
 			if expiresAt == nil || time.Until(*expiresAt) <= openAITokenRefreshSkew {
-				if account.Platform == PlatformSora {
-					slog.Debug("openai_token_refresh_skipped_for_sora_degraded", "account_id", account.ID)
-					// Sora 账号不走 OpenAI OAuth 刷新，交由 Sora 客户端的 ST/RT 恢复链路处理。
-					refreshFailed = true
-				} else if p.openAIOAuthService == nil {
+				if p.openAIOAuthService == nil {
 					slog.Warn("openai_oauth_service_not_configured", "account_id", account.ID)
 					p.metrics.refreshFailure.Add(1)
 					refreshFailed = true

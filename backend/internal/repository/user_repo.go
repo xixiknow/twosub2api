@@ -61,7 +61,6 @@ func (r *userRepository) Create(ctx context.Context, userIn *service.User) error
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
-		SetSoraStorageQuotaBytes(userIn.SoraStorageQuotaBytes).
 		SetNillableReferrerID(userIn.ReferrerID).
 		SetNillableReferralCode(userIn.ReferralCode).
 		Save(ctx)
@@ -146,8 +145,6 @@ func (r *userRepository) Update(ctx context.Context, userIn *service.User) error
 		SetBalance(userIn.Balance).
 		SetConcurrency(userIn.Concurrency).
 		SetStatus(userIn.Status).
-		SetSoraStorageQuotaBytes(userIn.SoraStorageQuotaBytes).
-		SetSoraStorageUsedBytes(userIn.SoraStorageUsedBytes).
 		Save(ctx)
 	if err != nil {
 		return translatePersistenceError(err, service.ErrUserNotFound, service.ErrEmailExists)
@@ -371,65 +368,6 @@ func (r *userRepository) UpdateConcurrency(ctx context.Context, id int64, amount
 	return nil
 }
 
-// AddSoraStorageUsageWithQuota 原子累加 Sora 存储用量，并在有配额时校验不超额。
-func (r *userRepository) AddSoraStorageUsageWithQuota(ctx context.Context, userID int64, deltaBytes int64, effectiveQuota int64) (int64, error) {
-	if deltaBytes <= 0 {
-		user, err := r.GetByID(ctx, userID)
-		if err != nil {
-			return 0, err
-		}
-		return user.SoraStorageUsedBytes, nil
-	}
-	var newUsed int64
-	err := scanSingleRow(ctx, r.sql, `
-		UPDATE users
-		SET sora_storage_used_bytes = sora_storage_used_bytes + $2
-		WHERE id = $1
-		  AND ($3 = 0 OR sora_storage_used_bytes + $2 <= $3)
-		RETURNING sora_storage_used_bytes
-	`, []any{userID, deltaBytes, effectiveQuota}, &newUsed)
-	if err == nil {
-		return newUsed, nil
-	}
-	if errors.Is(err, sql.ErrNoRows) {
-		// 区分用户不存在和配额冲突
-		exists, existsErr := r.client.User.Query().Where(dbuser.IDEQ(userID)).Exist(ctx)
-		if existsErr != nil {
-			return 0, existsErr
-		}
-		if !exists {
-			return 0, service.ErrUserNotFound
-		}
-		return 0, service.ErrSoraStorageQuotaExceeded
-	}
-	return 0, err
-}
-
-// ReleaseSoraStorageUsageAtomic 原子释放 Sora 存储用量，并保证不低于 0。
-func (r *userRepository) ReleaseSoraStorageUsageAtomic(ctx context.Context, userID int64, deltaBytes int64) (int64, error) {
-	if deltaBytes <= 0 {
-		user, err := r.GetByID(ctx, userID)
-		if err != nil {
-			return 0, err
-		}
-		return user.SoraStorageUsedBytes, nil
-	}
-	var newUsed int64
-	err := scanSingleRow(ctx, r.sql, `
-		UPDATE users
-		SET sora_storage_used_bytes = GREATEST(sora_storage_used_bytes - $2, 0)
-		WHERE id = $1
-		RETURNING sora_storage_used_bytes
-	`, []any{userID, deltaBytes}, &newUsed)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, service.ErrUserNotFound
-		}
-		return 0, err
-	}
-	return newUsed, nil
-}
-
 func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	return r.client.User.Query().Where(dbuser.EmailEQ(email)).Exist(ctx)
 }
@@ -599,4 +537,31 @@ func (r *userRepository) GetByReferralCode(ctx context.Context, code string) (*s
 	}
 	out := userEntityToService(m)
 	return out, nil
+}
+
+// UpdateLoginIP 更新用户登录 IP：将当前 last → previous，新 IP → last
+func (r *userRepository) UpdateLoginIP(ctx context.Context, userID int64, ip string) error {
+	// 先读取当前用户的 last_login_ip 和 last_login_at
+	u, err := r.client.User.Query().Where(dbuser.IDEQ(userID)).Only(ctx)
+	if err != nil {
+		return translatePersistenceError(err, service.ErrUserNotFound, nil)
+	}
+
+	now := time.Now()
+	update := r.client.User.UpdateOneID(userID).
+		SetLastLoginIP(ip).
+		SetLastLoginAt(now).
+		SetPreviousLoginIP(u.LastLoginIP)
+
+	if u.LastLoginAt != nil {
+		update = update.SetPreviousLoginAt(*u.LastLoginAt)
+	} else {
+		update = update.ClearPreviousLoginAt()
+	}
+
+	_, err = update.Save(ctx)
+	if err != nil {
+		return translatePersistenceError(err, service.ErrUserNotFound, nil)
+	}
+	return nil
 }

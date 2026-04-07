@@ -568,6 +568,8 @@ func (s *GeminiMessagesCompatService) Forward(ctx context.Context, c *gin.Contex
 	if account.Type == AccountTypeAPIKey {
 		mappedModel = account.GetMappedModel(req.Model)
 	}
+	// Resolve known aliases (e.g. customtools variants) to canonical upstream names.
+	mappedModel = resolveGeminiModelAlias(mappedModel)
 
 	geminiReq, err := convertClaudeMessagesToGeminiGenerateContent(body)
 	if err != nil {
@@ -1091,6 +1093,8 @@ func (s *GeminiMessagesCompatService) ForwardNative(ctx context.Context, c *gin.
 	if account.Type == AccountTypeAPIKey {
 		mappedModel = account.GetMappedModel(originalModel)
 	}
+	// Resolve known aliases (e.g. customtools variants) to canonical upstream names.
+	mappedModel = resolveGeminiModelAlias(mappedModel)
 
 	proxyURL := ""
 	if account.ProxyID != nil && account.Proxy != nil {
@@ -1591,7 +1595,7 @@ func (s *GeminiMessagesCompatService) shouldRetryGeminiUpstreamError(account *Ac
 
 func (s *GeminiMessagesCompatService) shouldFailoverGeminiUpstreamError(statusCode int) bool {
 	switch statusCode {
-	case 401, 403, 429, 529:
+	case 401, 403, 404, 429, 529:
 		return true
 	default:
 		return statusCode >= 500
@@ -3310,4 +3314,20 @@ func (s *GeminiMessagesCompatService) extractImageSize(body []byte) string {
 	}
 
 	return "2K"
+}
+
+// geminiModelAliases maps known Gemini model aliases/variants to the actual upstream model name.
+// These aliases are published by Google in pricing/documentation but may not be directly
+// addressable on the v1beta REST API — the upstream returns 404 for them.
+var geminiModelAliases = map[string]string{
+	"gemini-3.1-pro-preview-customtools": "gemini-2.5-pro-preview-05-06",
+}
+
+// resolveGeminiModelAlias checks if the model is a known alias and returns the canonical upstream
+// model name. If no alias matches, the original model name is returned unchanged.
+func resolveGeminiModelAlias(model string) string {
+	if canonical, ok := geminiModelAliases[model]; ok {
+		return canonical
+	}
+	return model
 }

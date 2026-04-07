@@ -65,6 +65,7 @@ func SecurityHeaders(cfg config.CSPConfig, getFrameSrcOrigins func() []string) g
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		if isAPIRoutePath(c) {
 			c.Next()
 			return
@@ -94,7 +95,6 @@ func isAPIRoutePath(c *gin.Context) bool {
 	return strings.HasPrefix(path, "/v1/") ||
 		strings.HasPrefix(path, "/v1beta/") ||
 		strings.HasPrefix(path, "/antigravity/") ||
-		strings.HasPrefix(path, "/sora/") ||
 		strings.HasPrefix(path, "/responses")
 }
 

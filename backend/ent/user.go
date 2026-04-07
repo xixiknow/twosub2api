@@ -45,14 +45,18 @@ type User struct {
 	TotpEnabled bool `json:"totp_enabled,omitempty"`
 	// TotpEnabledAt holds the value of the "totp_enabled_at" field.
 	TotpEnabledAt *time.Time `json:"totp_enabled_at,omitempty"`
-	// SoraStorageQuotaBytes holds the value of the "sora_storage_quota_bytes" field.
-	SoraStorageQuotaBytes int64 `json:"sora_storage_quota_bytes,omitempty"`
-	// SoraStorageUsedBytes holds the value of the "sora_storage_used_bytes" field.
-	SoraStorageUsedBytes int64 `json:"sora_storage_used_bytes,omitempty"`
 	// ReferrerID holds the value of the "referrer_id" field.
 	ReferrerID *int64 `json:"referrer_id,omitempty"`
 	// ReferralCode holds the value of the "referral_code" field.
 	ReferralCode *string `json:"referral_code,omitempty"`
+	// LastLoginIP holds the value of the "last_login_ip" field.
+	LastLoginIP string `json:"last_login_ip,omitempty"`
+	// LastLoginAt holds the value of the "last_login_at" field.
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
+	// PreviousLoginIP holds the value of the "previous_login_ip" field.
+	PreviousLoginIP string `json:"previous_login_ip,omitempty"`
+	// PreviousLoginAt holds the value of the "previous_login_at" field.
+	PreviousLoginAt *time.Time `json:"previous_login_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -185,11 +189,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldBalance:
 			values[i] = new(sql.NullFloat64)
-		case user.FieldID, user.FieldConcurrency, user.FieldSoraStorageQuotaBytes, user.FieldSoraStorageUsedBytes, user.FieldReferrerID:
+		case user.FieldID, user.FieldConcurrency, user.FieldReferrerID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldReferralCode:
+		case user.FieldEmail, user.FieldPasswordHash, user.FieldRole, user.FieldStatus, user.FieldUsername, user.FieldNotes, user.FieldTotpSecretEncrypted, user.FieldReferralCode, user.FieldLastLoginIP, user.FieldPreviousLoginIP:
 			values[i] = new(sql.NullString)
-		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldTotpEnabledAt, user.FieldLastLoginAt, user.FieldPreviousLoginAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -299,18 +303,6 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				_m.TotpEnabledAt = new(time.Time)
 				*_m.TotpEnabledAt = value.Time
 			}
-		case user.FieldSoraStorageQuotaBytes:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sora_storage_quota_bytes", values[i])
-			} else if value.Valid {
-				_m.SoraStorageQuotaBytes = value.Int64
-			}
-		case user.FieldSoraStorageUsedBytes:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field sora_storage_used_bytes", values[i])
-			} else if value.Valid {
-				_m.SoraStorageUsedBytes = value.Int64
-			}
 		case user.FieldReferrerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field referrer_id", values[i])
@@ -324,6 +316,32 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ReferralCode = new(string)
 				*_m.ReferralCode = value.String
+			}
+		case user.FieldLastLoginIP:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_login_ip", values[i])
+			} else if value.Valid {
+				_m.LastLoginIP = value.String
+			}
+		case user.FieldLastLoginAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_login_at", values[i])
+			} else if value.Valid {
+				_m.LastLoginAt = new(time.Time)
+				*_m.LastLoginAt = value.Time
+			}
+		case user.FieldPreviousLoginIP:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field previous_login_ip", values[i])
+			} else if value.Valid {
+				_m.PreviousLoginIP = value.String
+			}
+		case user.FieldPreviousLoginAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field previous_login_at", values[i])
+			} else if value.Valid {
+				_m.PreviousLoginAt = new(time.Time)
+				*_m.PreviousLoginAt = value.Time
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -459,12 +477,6 @@ func (_m *User) String() string {
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	builder.WriteString("sora_storage_quota_bytes=")
-	builder.WriteString(fmt.Sprintf("%v", _m.SoraStorageQuotaBytes))
-	builder.WriteString(", ")
-	builder.WriteString("sora_storage_used_bytes=")
-	builder.WriteString(fmt.Sprintf("%v", _m.SoraStorageUsedBytes))
-	builder.WriteString(", ")
 	if v := _m.ReferrerID; v != nil {
 		builder.WriteString("referrer_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
@@ -473,6 +485,22 @@ func (_m *User) String() string {
 	if v := _m.ReferralCode; v != nil {
 		builder.WriteString("referral_code=")
 		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("last_login_ip=")
+	builder.WriteString(_m.LastLoginIP)
+	builder.WriteString(", ")
+	if v := _m.LastLoginAt; v != nil {
+		builder.WriteString("last_login_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("previous_login_ip=")
+	builder.WriteString(_m.PreviousLoginIP)
+	builder.WriteString(", ")
+	if v := _m.PreviousLoginAt; v != nil {
+		builder.WriteString("previous_login_at=")
+		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteByte(')')
 	return builder.String()

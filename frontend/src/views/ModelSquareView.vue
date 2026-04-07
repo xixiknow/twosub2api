@@ -319,11 +319,11 @@
                 </div>
               </div>
 
-              <!-- Per-Usage Pricing (Sora / Image Generation) -->
+              <!-- Per-Usage Pricing (Image Generation) -->
               <div v-if="getModelPerUsagePricing(model)" class="rounded-lg bg-amber-50 dark:bg-amber-900/15 p-2.5 border border-amber-200 dark:border-amber-800/50">
                 <div class="flex items-center gap-1.5 mb-2">
                   <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-200 text-amber-800 dark:bg-amber-800/40 dark:text-amber-300">{{ t('modelSquare.perUsage') }}</span>
-                  <span class="text-[9px] text-amber-600 dark:text-amber-400">{{ getModelPerUsagePricing(model)!.type === 'sora' ? 'Sora' : getModelPerUsagePricing(model)!.type === 'per_request' ? t('modelSquare.perRequest') : t('modelSquare.perImage') }}</span>
+                  <span class="text-[9px] text-amber-600 dark:text-amber-400">{{ getModelPerUsagePricing(model)!.type === 'per_request' ? t('modelSquare.perRequest') : t('modelSquare.perImage') }}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5">
                   <div v-for="item in getModelPerUsagePricing(model)!.items" :key="item.label" class="flex items-center justify-between gap-1 rounded bg-amber-100/60 dark:bg-amber-900/20 px-2 py-1">
@@ -711,25 +711,6 @@ let copyTimer: ReturnType<typeof setTimeout> | null = null
 const animatedModelCount = ref(0)
 let countAnimFrame: number | null = null
 
-watch(() => filteredModels.value.length, (newVal) => {
-  const start = animatedModelCount.value
-  const diff = newVal - start
-  if (diff === 0) return
-  const duration = 400
-  const startTime = performance.now()
-  const animate = (now: number) => {
-    const elapsed = now - startTime
-    const progress = Math.min(elapsed / duration, 1)
-    const eased = 1 - Math.pow(1 - progress, 3) // easeOutCubic
-    animatedModelCount.value = Math.round(start + diff * eased)
-    if (progress < 1) {
-      countAnimFrame = requestAnimationFrame(animate)
-    }
-  }
-  if (countAnimFrame) cancelAnimationFrame(countAnimFrame)
-  countAnimFrame = requestAnimationFrame(animate)
-})
-
 // Card hover tilt effect
 function handleCardHover(e: MouseEvent, entering: boolean) {
   const card = e.currentTarget as HTMLElement
@@ -781,7 +762,7 @@ const groupMap = computed(() => {
 
 // Per-usage pricing info for a model
 interface PerUsagePricing {
-  type: 'sora' | 'image' | 'per_request'
+  type: 'image' | 'per_request'
   items: { label: string; price: number }[]
 }
 
@@ -816,14 +797,6 @@ function getModelPerUsagePricing(model: ModelSquareItem): PerUsagePricing | null
       items.push({ label: t('modelSquare.perRequest'), price: g.per_request_price })
       return { type: 'per_request', items }
     }
-
-    // Sora pricing
-    const soraItems: { label: string; price: number }[] = []
-    if (g.sora_image_price_360 != null) soraItems.push({ label: t('modelSquare.imageSize360'), price: g.sora_image_price_360 })
-    if (g.sora_image_price_540 != null) soraItems.push({ label: t('modelSquare.imageSize540'), price: g.sora_image_price_540 })
-    if (g.sora_video_price_per_request != null) soraItems.push({ label: t('modelSquare.perVideo'), price: g.sora_video_price_per_request })
-    if (g.sora_video_price_per_request_hd != null) soraItems.push({ label: t('modelSquare.perVideoHd'), price: g.sora_video_price_per_request_hd })
-    if (soraItems.length > 0) return { type: 'sora', items: soraItems }
 
     // Image generation pricing
     const imgItems: { label: string; price: number }[] = []
@@ -969,6 +942,26 @@ const filteredModels = computed(() => {
   })
 
   return list
+})
+
+// Animated model count watcher (must be after filteredModels definition)
+watch(() => filteredModels.value.length, (newVal) => {
+  const start = animatedModelCount.value
+  const diff = newVal - start
+  if (diff === 0) return
+  const duration = 400
+  const startTime = performance.now()
+  const animate = (now: number) => {
+    const elapsed = now - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    const eased = 1 - Math.pow(1 - progress, 3) // easeOutCubic
+    animatedModelCount.value = Math.round(start + diff * eased)
+    if (progress < 1) {
+      countAnimFrame = requestAnimationFrame(animate)
+    }
+  }
+  if (countAnimFrame) cancelAnimationFrame(countAnimFrame)
+  countAnimFrame = requestAnimationFrame(animate)
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredModels.value.length / pageSize)))

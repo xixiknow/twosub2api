@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"strconv"
 	"time"
+
+	middleware2 "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/response"
@@ -61,8 +64,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                  dto.ParseUserVisibleMenuItems(settings.CustomMenuItems),
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
-		SoraClientEnabled:                settings.SoraClientEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
+		LoginIPAlertEnabled:              settings.LoginIPAlertEnabled,
 		Version:                          h.version,
 	})
 }
@@ -87,14 +90,9 @@ type modelSquareGroup struct {
 	ImagePrice1K *float64 `json:"image_price_1k"`
 	ImagePrice2K *float64 `json:"image_price_2k"`
 	ImagePrice4K *float64 `json:"image_price_4k"`
-	// Sora 按次计费
-	SoraImagePrice360          *float64 `json:"sora_image_price_360"`
-	SoraImagePrice540          *float64 `json:"sora_image_price_540"`
-	SoraVideoPricePerRequest   *float64 `json:"sora_video_price_per_request"`
-	SoraVideoPricePerRequestHD *float64 `json:"sora_video_price_per_request_hd"`
 	// 分组按次收费
 	PerRequestPrice       *float64           `json:"per_request_price"`
-	ModelPerRequestPrices map[string]float64  `json:"model_per_request_prices"`
+	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices"`
 }
 
 // modelSquareItem 模型广场模型项
@@ -134,19 +132,15 @@ func (h *SettingHandler) GetModelSquare(c *gin.Context) {
 
 	for _, g := range groups {
 		groupList = append(groupList, modelSquareGroup{
-			ID:                         g.ID,
-			Name:                       g.Name,
-			Platform:                   g.Platform,
-			RateMultiplier:             g.RateMultiplier,
-			ImagePrice1K:               g.ImagePrice1K,
-			ImagePrice2K:               g.ImagePrice2K,
-			ImagePrice4K:               g.ImagePrice4K,
-			SoraImagePrice360:          g.SoraImagePrice360,
-			SoraImagePrice540:          g.SoraImagePrice540,
-			SoraVideoPricePerRequest:   g.SoraVideoPricePerRequest,
-			SoraVideoPricePerRequestHD: g.SoraVideoPricePerRequestHD,
-			PerRequestPrice:            g.PerRequestPrice,
-			ModelPerRequestPrices:      g.ModelPerRequestPrices,
+			ID:                    g.ID,
+			Name:                  g.Name,
+			Platform:              g.Platform,
+			RateMultiplier:        g.RateMultiplier,
+			ImagePrice1K:          g.ImagePrice1K,
+			ImagePrice2K:          g.ImagePrice2K,
+			ImagePrice4K:          g.ImagePrice4K,
+			PerRequestPrice:       g.PerRequestPrice,
+			ModelPerRequestPrices: g.ModelPerRequestPrices,
 		})
 
 		gID := g.ID
@@ -241,4 +235,27 @@ func (h *SettingHandler) GetGroupAvailability(c *gin.Context) {
 
 	availability := h.gatewayService.GetGroupsAvailability(ctx, groups)
 	response.Success(c, availability)
+}
+
+func getUserIDFromContext(c *gin.Context) int64 {
+	if subject, ok := middleware2.GetAuthSubjectFromContext(c); ok && subject.UserID > 0 {
+		return subject.UserID
+	}
+	if id, ok := c.Get("user_id"); ok {
+		switch v := id.(type) {
+		case int64:
+			return v
+		case float64:
+			return int64(v)
+		case string:
+			n, _ := strconv.ParseInt(v, 10, 64)
+			return n
+		}
+	}
+	if id, ok := c.Get("userID"); ok {
+		if v, ok := id.(int64); ok {
+			return v
+		}
+	}
+	return 0
 }

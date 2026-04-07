@@ -400,11 +400,11 @@ func (s *OpenAIGatewayService) handleChatStreamingResponse(
 				if err != nil {
 					continue
 				}
-				fmt.Fprint(c.Writer, sse) //nolint:errcheck
+				fmt.Fprint(c.Writer, sse)
 			}
 		}
 		// Send [DONE] sentinel
-		fmt.Fprint(c.Writer, "data: [DONE]\n\n") //nolint:errcheck
+		fmt.Fprint(c.Writer, "data: [DONE]\n\n")
 		c.Writer.Flush()
 		return resultWithUsage(), nil
 	}

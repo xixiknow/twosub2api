@@ -41,13 +41,17 @@ func ProvideSessionLimitCache(rdb *redis.Client, cfg *config.Config) service.Ses
 	return NewSessionLimitCache(rdb, defaultIdleTimeoutMinutes)
 }
 
+// ProvideGitHubReleaseClient creates GitHub release client from config
+func ProvideGitHubReleaseClient(cfg *config.Config) service.GitHubReleaseClient {
+	return NewGitHubReleaseClient(cfg.Update.ProxyURL, cfg.Security.ProxyFallback.AllowDirectOnError)
+}
+
 // ProviderSet is the Wire provider set for all repositories
 var ProviderSet = wire.NewSet(
 	NewUserRepository,
 	NewAPIKeyRepository,
 	NewGroupRepository,
 	NewAccountRepository,
-	NewSoraAccountRepository,         // Sora 账号扩展表仓储
 	NewScheduledTestPlanRepository,   // 定时测试计划仓储
 	NewScheduledTestResultRepository, // 定时测试结果仓储
 	NewProxyRepository,
@@ -104,6 +108,8 @@ var ProviderSet = wire.NewSet(
 	NewGeminiOAuthClient,
 	NewGeminiCliCodeAssistClient,
 	NewGeminiDriveClient,
+	NewUpdateCache,
+	ProvideGitHubReleaseClient,
 
 	ProvideEnt,
 	ProvideSQLDB,

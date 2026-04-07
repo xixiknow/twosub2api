@@ -128,10 +128,10 @@ type AnthropicEventToChatState struct {
 	Finalized   bool
 
 	// Tracks content block index → tool call sequential index mapping
-	NextToolCallIndex      int
-	BlockIndexToToolIndex  map[int]int
-	CurrentBlockIndex      int
-	CurrentBlockType       string
+	NextToolCallIndex     int
+	BlockIndexToToolIndex map[int]int
+	CurrentBlockIndex     int
+	CurrentBlockType      string
 
 	IncludeUsage bool
 	Usage        *ChatUsage

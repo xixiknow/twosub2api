@@ -3,10 +3,63 @@ package dto
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
 )
+
+// sensitiveKeywords lists substrings that identify credential fields needing masking.
+var sensitiveKeywords = []string{"key", "token", "secret", "password", "authorization", "cookie", "session"}
+
+// MaskString masks a string value, showing only the first 4 and last 4 characters.
+// Strings shorter than 12 characters are fully masked.
+func MaskString(s string) string {
+	if len(s) <= 8 {
+		return "****"
+	}
+	if len(s) < 12 {
+		return s[:2] + "****" + s[len(s)-2:]
+	}
+	return s[:4] + "****" + s[len(s)-4:]
+}
+
+// MaskAPIKey masks an API key, showing the first 8 and last 4 characters.
+func MaskAPIKey(key string) string {
+	if len(key) <= 12 {
+		return "****"
+	}
+	return key[:8] + "****" + key[len(key)-4:]
+}
+
+// isSensitiveKey returns true if the field name looks like a credential.
+func isSensitiveKey(fieldName string) bool {
+	lower := strings.ToLower(fieldName)
+	for _, kw := range sensitiveKeywords {
+		if strings.Contains(lower, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+// MaskCredentials returns a copy of the credentials map with sensitive values masked.
+func MaskCredentials(creds map[string]any) map[string]any {
+	if creds == nil {
+		return nil
+	}
+	masked := make(map[string]any, len(creds))
+	for k, v := range creds {
+		if isSensitiveKey(k) {
+			if s, ok := v.(string); ok && s != "" {
+				masked[k] = MaskString(s)
+				continue
+			}
+		}
+		masked[k] = v
+	}
+	return masked
+}
 
 func UserFromServiceShallow(u *service.User) *User {
 	if u == nil {
@@ -59,45 +112,64 @@ func UserFromServiceAdmin(u *service.User) *AdminUser {
 		return nil
 	}
 	return &AdminUser{
-		User:                  *base,
-		Notes:                 u.Notes,
-		GroupRates:            u.GroupRates,
-		SoraStorageQuotaBytes: u.SoraStorageQuotaBytes,
-		SoraStorageUsedBytes:  u.SoraStorageUsedBytes,
+		User:            *base,
+		Notes:           u.Notes,
+		GroupRates:      u.GroupRates,
+		LastLoginIP:     u.LastLoginIP,
+		LastLoginAt:     u.LastLoginAt,
+		PreviousLoginIP: u.PreviousLoginIP,
+		PreviousLoginAt: u.PreviousLoginAt,
 	}
+}
+
+// APIKeyFromServiceFull converts a service APIKey to DTO with the full key visible.
+// Use ONLY when the user needs to copy the key (e.g. right after creation).
+func APIKeyFromServiceFull(k *service.APIKey) *APIKey {
+	if k == nil {
+		return nil
+	}
+	out := apiKeyFromServiceBase(k)
+	out.Key = k.Key
+	return out
 }
 
 func APIKeyFromService(k *service.APIKey) *APIKey {
 	if k == nil {
 		return nil
 	}
+	out := apiKeyFromServiceBase(k)
+	out.Key = MaskAPIKey(k.Key)
+	return out
+}
+
+func apiKeyFromServiceBase(k *service.APIKey) *APIKey {
 	out := &APIKey{
-		ID:            k.ID,
-		UserID:        k.UserID,
-		Key:           k.Key,
-		Name:          k.Name,
+		ID:              k.ID,
+		UserID:          k.UserID,
+		Key:             k.Key, // caller overrides
+		Name:            k.Name,
 		GroupID:         k.GroupID,
 		FallbackGroupID: k.FallbackGroupID,
 		Status:          k.Status,
-		IPWhitelist:   k.IPWhitelist,
-		IPBlacklist:   k.IPBlacklist,
-		LastUsedAt:    k.LastUsedAt,
-		Quota:         k.Quota,
-		QuotaUsed:     k.QuotaUsed,
-		ExpiresAt:     k.ExpiresAt,
-		CreatedAt:     k.CreatedAt,
-		UpdatedAt:     k.UpdatedAt,
-		RateLimit5h:   k.RateLimit5h,
-		RateLimit1d:   k.RateLimit1d,
-		RateLimit7d:   k.RateLimit7d,
-		Usage5h:       k.EffectiveUsage5h(),
-		Usage1d:       k.EffectiveUsage1d(),
-		Usage7d:       k.EffectiveUsage7d(),
-		Window5hStart: k.Window5hStart,
-		Window1dStart: k.Window1dStart,
-		Window7dStart: k.Window7dStart,
-		User:          UserFromServiceShallow(k.User),
-		Group:         GroupFromServiceShallow(k.Group),
+		IPWhitelist:     k.IPWhitelist,
+		IPBlacklist:     k.IPBlacklist,
+		LastUsedAt:      k.LastUsedAt,
+		Quota:           k.Quota,
+		QuotaUsed:       k.QuotaUsed,
+		ExpiresAt:       k.ExpiresAt,
+		CreatedAt:       k.CreatedAt,
+		UpdatedAt:       k.UpdatedAt,
+		RateLimit5h:     k.RateLimit5h,
+		RateLimit1d:     k.RateLimit1d,
+		RateLimit7d:     k.RateLimit7d,
+		Usage5h:         k.EffectiveUsage5h(),
+		Usage1d:         k.EffectiveUsage1d(),
+		Usage7d:         k.EffectiveUsage7d(),
+		Window5hStart:   k.Window5hStart,
+		Window1dStart:   k.Window1dStart,
+		Window7dStart:   k.Window7dStart,
+		User:            UserFromServiceShallow(k.User),
+		Group:           GroupFromServiceShallow(k.Group),
 	}
 	if k.Window5hStart != nil && !service.IsWindowExpired(k.Window5hStart, service.RateLimitWindow5h) {
 		t := k.Window5hStart.Add(service.RateLimitWindow5h)
@@ -173,14 +245,9 @@ func groupFromServiceBase(g *service.Group) Group {
 		ImagePrice1K:                    g.ImagePrice1K,
 		ImagePrice2K:                    g.ImagePrice2K,
 		ImagePrice4K:                    g.ImagePrice4K,
-		SoraImagePrice360:               g.SoraImagePrice360,
-		SoraImagePrice540:               g.SoraImagePrice540,
-		SoraVideoPricePerRequest:        g.SoraVideoPricePerRequest,
-		SoraVideoPricePerRequestHD:      g.SoraVideoPricePerRequestHD,
 		ClaudeCodeOnly:                  g.ClaudeCodeOnly,
 		FallbackGroupID:                 g.FallbackGroupID,
 		FallbackGroupIDOnInvalidRequest: g.FallbackGroupIDOnInvalidRequest,
-		SoraStorageQuotaBytes:           g.SoraStorageQuotaBytes,
 		AllowMessagesDispatch:           g.AllowMessagesDispatch,
 		PerRequestPrice:                 g.PerRequestPrice,
 		ModelPerRequestPrices:           g.ModelPerRequestPrices,
@@ -199,7 +266,7 @@ func AccountFromServiceShallow(a *service.Account) *Account {
 		Notes:                   a.Notes,
 		Platform:                a.Platform,
 		Type:                    a.Type,
-		Credentials:             a.Credentials,
+		Credentials:             MaskCredentials(a.Credentials),
 		Extra:                   a.Extra,
 		ProxyID:                 a.ProxyID,
 		Concurrency:             a.Concurrency,

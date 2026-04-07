@@ -14,7 +14,6 @@ func ProvideAdminHandlers(
 	groupHandler *admin.GroupHandler,
 	accountHandler *admin.AccountHandler,
 	announcementHandler *admin.AnnouncementHandler,
-	dataManagementHandler *admin.DataManagementHandler,
 	oauthHandler *admin.OAuthHandler,
 	openaiOAuthHandler *admin.OpenAIOAuthHandler,
 	geminiOAuthHandler *admin.GeminiOAuthHandler,
@@ -39,7 +38,6 @@ func ProvideAdminHandlers(
 		Group:            groupHandler,
 		Account:          accountHandler,
 		Announcement:     announcementHandler,
-		DataManagement:   dataManagementHandler,
 		OAuth:            oauthHandler,
 		OpenAIOAuth:      openaiOAuthHandler,
 		GeminiOAuth:      geminiOAuthHandler,
@@ -61,8 +59,8 @@ func ProvideAdminHandlers(
 }
 
 // ProvideSystemHandler creates admin.SystemHandler with version from BuildInfo
-func ProvideSystemHandler(buildInfo BuildInfo, lockService *service.SystemOperationLockService) *admin.SystemHandler {
-	return admin.NewSystemHandler(buildInfo.Version, lockService)
+func ProvideSystemHandler(buildInfo BuildInfo, lockService *service.SystemOperationLockService, updateService *service.UpdateService) *admin.SystemHandler {
+	return admin.NewSystemHandler(buildInfo.Version, lockService, updateService)
 }
 
 // ProvideSettingHandler creates SettingHandler with version from BuildInfo
@@ -83,8 +81,6 @@ func ProvideHandlers(
 	adminHandlers *AdminHandlers,
 	gatewayHandler *GatewayHandler,
 	openaiGatewayHandler *OpenAIGatewayHandler,
-	soraGatewayHandler *SoraGatewayHandler,
-	soraClientHandler *SoraClientHandler,
 	settingHandler *SettingHandler,
 	totpHandler *TotpHandler,
 	referralHandler *ReferralHandler,
@@ -103,8 +99,6 @@ func ProvideHandlers(
 		Admin:         adminHandlers,
 		Gateway:       gatewayHandler,
 		OpenAIGateway: openaiGatewayHandler,
-		SoraGateway:   soraGatewayHandler,
-		SoraClient:    soraClientHandler,
 		Setting:       settingHandler,
 		Totp:          totpHandler,
 		Referral:      referralHandler,
@@ -124,7 +118,6 @@ var ProviderSet = wire.NewSet(
 	NewPaymentHandler,
 	NewGatewayHandler,
 	NewOpenAIGatewayHandler,
-	NewSoraGatewayHandler,
 	NewTotpHandler,
 	NewReferralHandler,
 	ProvideSettingHandler,
@@ -135,7 +128,6 @@ var ProviderSet = wire.NewSet(
 	admin.NewGroupHandler,
 	admin.NewAccountHandler,
 	admin.NewAnnouncementHandler,
-	admin.NewDataManagementHandler,
 	admin.NewOAuthHandler,
 	admin.NewOpenAIOAuthHandler,
 	admin.NewGeminiOAuthHandler,

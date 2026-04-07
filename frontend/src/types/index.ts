@@ -45,9 +45,11 @@ export interface AdminUser extends User {
   group_rates?: Record<number, number>
   // 当前并发数（仅管理员列表接口返回）
   current_concurrency?: number
-  // Sora 存储配额（字节）
-  sora_storage_quota_bytes: number
-  sora_storage_used_bytes: number
+  // 登录 IP 记录
+  last_login_ip?: string
+  last_login_at?: string
+  previous_login_ip?: string
+  previous_login_at?: string
 }
 
 export interface LoginRequest {
@@ -106,8 +108,8 @@ export interface PublicSettings {
   purchase_subscription_url: string
   custom_menu_items: CustomMenuItem[]
   linuxdo_oauth_enabled: boolean
-  sora_client_enabled: boolean
   referral_enabled: boolean
+  login_ip_alert_enabled: boolean
   backend_mode_enabled: boolean
   version: string
 }
@@ -118,6 +120,13 @@ export interface AuthResponse {
   expires_in?: number     // New: Access Token expiry time in seconds
   token_type: string
   user: User & { run_mode?: 'standard' | 'simple' }
+  login_info?: LoginIPInfo // 登录 IP 信息（开启提醒时返回）
+}
+
+export interface LoginIPInfo {
+  current_ip: string
+  last_login_ip?: string
+  last_login_at?: string
 }
 
 export interface CurrentUserResponse extends User {
@@ -361,7 +370,7 @@ export interface PaginationConfig {
 
 // ==================== API Key & Group Types ====================
 
-export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity' | 'sora'
+export type GroupPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity'
 
 export type SubscriptionType = 'standard' | 'subscription'
 
@@ -381,13 +390,6 @@ export interface Group {
   image_price_1k: number | null
   image_price_2k: number | null
   image_price_4k: number | null
-  // Sora 按次计费配置
-  sora_image_price_360: number | null
-  sora_image_price_540: number | null
-  sora_video_price_per_request: number | null
-  sora_video_price_per_request_hd: number | null
-  // Sora 存储配额（字节）
-  sora_storage_quota_bytes: number
   // Claude Code 客户端限制
   claude_code_only: boolean
   fallback_group_id: number | null
@@ -496,11 +498,6 @@ export interface CreateGroupRequest {
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
-  sora_image_price_360?: number | null
-  sora_image_price_540?: number | null
-  sora_video_price_per_request?: number | null
-  sora_video_price_per_request_hd?: number | null
-  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
@@ -527,11 +524,6 @@ export interface UpdateGroupRequest {
   image_price_1k?: number | null
   image_price_2k?: number | null
   image_price_4k?: number | null
-  sora_image_price_360?: number | null
-  sora_image_price_540?: number | null
-  sora_video_price_per_request?: number | null
-  sora_video_price_per_request_hd?: number | null
-  sora_storage_quota_bytes?: number
   claude_code_only?: boolean
   fallback_group_id?: number | null
   fallback_group_id_on_invalid_request?: number | null
@@ -545,7 +537,7 @@ export interface UpdateGroupRequest {
 
 // ==================== Account & Proxy Types ====================
 
-export type AccountPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity' | 'sora'
+export type AccountPlatform = 'anthropic' | 'openai' | 'gemini' | 'antigravity'
 export type AccountType = 'oauth' | 'setup-token' | 'apikey' | 'upstream' | 'bedrock'
 export type OAuthAddMethod = 'oauth' | 'setup-token'
 export type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks5h'

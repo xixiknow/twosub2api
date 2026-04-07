@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/handler/dto"
@@ -71,16 +73,45 @@ type LoginRequest struct {
 
 // AuthResponse 认证响应格式（匹配前端期望）
 type AuthResponse struct {
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token,omitempty"` // 新增：Refresh Token
-	ExpiresIn    int       `json:"expires_in,omitempty"`    // 新增：Access Token有效期（秒）
-	TokenType    string    `json:"token_type"`
-	User         *dto.User `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token,omitempty"` // 新增：Refresh Token
+	ExpiresIn    int          `json:"expires_in,omitempty"`    // 新增：Access Token有效期（秒）
+	TokenType    string       `json:"token_type"`
+	User         *dto.User    `json:"user"`
+	LoginInfo    *LoginIPInfo `json:"login_info,omitempty"` // 登录 IP 信息（开关开启时返回）
+}
+
+// LoginIPInfo 登录 IP 信息
+type LoginIPInfo struct {
+	CurrentIP   string     `json:"current_ip"`
+	LastLoginIP string     `json:"last_login_ip,omitempty"`
+	LastLoginAt *time.Time `json:"last_login_at,omitempty"`
 }
 
 // respondWithTokenPair 生成 Token 对并返回认证响应
 // 如果 Token 对生成失败，回退到只返回 Access Token（向后兼容）
 func (h *AuthHandler) respondWithTokenPair(c *gin.Context, user *service.User) {
+	loginIP := ip.GetClientIP(c)
+
+	// 在更新 IP 前，先保存"上次"登录信息用于弹窗
+	var loginInfo *LoginIPInfo
+	if h.settingSvc != nil && h.settingSvc.IsLoginIPAlertEnabled(c.Request.Context()) {
+		loginInfo = &LoginIPInfo{
+			CurrentIP:   loginIP,
+			LastLoginIP: user.LastLoginIP,
+			LastLoginAt: user.LastLoginAt,
+		}
+	}
+
+	// 更新登录 IP（使用独立 context，避免请求结束后 context 被取消）
+	go func() {
+		bgCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := h.userService.UpdateLoginIP(bgCtx, user.ID, loginIP); err != nil {
+			slog.Error("failed to update login ip", "error", err, "user_id", user.ID)
+		}
+	}()
+
 	tokenPair, err := h.authService.GenerateTokenPair(c.Request.Context(), user, "")
 	if err != nil {
 		slog.Error("failed to generate token pair", "error", err, "user_id", user.ID)
@@ -94,6 +125,7 @@ func (h *AuthHandler) respondWithTokenPair(c *gin.Context, user *service.User) {
 			AccessToken: token,
 			TokenType:   "Bearer",
 			User:        dto.UserFromService(user),
+			LoginInfo:   loginInfo,
 		})
 		return
 	}
@@ -103,6 +135,7 @@ func (h *AuthHandler) respondWithTokenPair(c *gin.Context, user *service.User) {
 		ExpiresIn:    tokenPair.ExpiresIn,
 		TokenType:    "Bearer",
 		User:         dto.UserFromService(user),
+		LoginInfo:    loginInfo,
 	})
 }
 

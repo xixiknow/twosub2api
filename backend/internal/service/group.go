@@ -26,15 +26,6 @@ type Group struct {
 	ImagePrice2K *float64
 	ImagePrice4K *float64
 
-	// Sora 按次计费配置（阶段 1）
-	SoraImagePrice360          *float64
-	SoraImagePrice540          *float64
-	SoraVideoPricePerRequest   *float64
-	SoraVideoPricePerRequestHD *float64
-
-	// Sora 存储配额
-	SoraStorageQuotaBytes int64
-
 	// Claude Code 客户端限制
 	ClaudeCodeOnly  bool
 	FallbackGroupID *int64
@@ -63,12 +54,12 @@ type Group struct {
 
 	// 分组按次收费配置
 	PerRequestPrice       *float64           // 分组默认每次请求价格，非 nil 表示开启按次计费
-	ModelPerRequestPrices map[string]float64  // 模型级按次价格覆盖，支持通配符
+	ModelPerRequestPrices map[string]float64 // 模型级按次价格覆盖，支持通配符
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	AccountGroups []AccountGroup
+	AccountGroups           []AccountGroup
 	AccountCount            int64
 	ActiveAccountCount      int64
 	RateLimitedAccountCount int64
@@ -111,18 +102,6 @@ func (g *Group) GetImagePrice(imageSize string) *float64 {
 	default:
 		// 未知尺寸默认按 2K 计费
 		return g.ImagePrice2K
-	}
-}
-
-// GetSoraImagePrice 根据 Sora 图片尺寸返回价格（360/540）
-func (g *Group) GetSoraImagePrice(imageSize string) *float64 {
-	switch imageSize {
-	case "360":
-		return g.SoraImagePrice360
-	case "540":
-		return g.SoraImagePrice540
-	default:
-		return g.SoraImagePrice360
 	}
 }
 

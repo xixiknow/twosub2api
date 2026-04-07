@@ -870,7 +870,6 @@ const platformModelPrefix: Record<string, string[]> = {
   antigravity: ['claude-', 'gemini-', 'gpt-oss-', 'tab_'],
   openai: ['gpt-'],
   gemini: ['gemini-'],
-  sora: []
 }
 
 const filteredModels = computed(() => {

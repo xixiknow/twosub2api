@@ -122,6 +122,7 @@ func (_u *APIKeyUpdate) ClearGroupID() *APIKeyUpdate {
 
 // SetFallbackGroupID sets the "fallback_group_id" field.
 func (_u *APIKeyUpdate) SetFallbackGroupID(v int64) *APIKeyUpdate {
+	_u.mutation.ResetFallbackGroupID()
 	_u.mutation.SetFallbackGroupID(v)
 	return _u
 }
@@ -131,6 +132,12 @@ func (_u *APIKeyUpdate) SetNillableFallbackGroupID(v *int64) *APIKeyUpdate {
 	if v != nil {
 		_u.SetFallbackGroupID(*v)
 	}
+	return _u
+}
+
+// AddFallbackGroupID adds value to the "fallback_group_id" field.
+func (_u *APIKeyUpdate) AddFallbackGroupID(v int64) *APIKeyUpdate {
+	_u.mutation.AddFallbackGroupID(v)
 	return _u
 }
 
@@ -616,6 +623,9 @@ func (_u *APIKeyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.FallbackGroupID(); ok {
 		_spec.SetField(apikey.FieldFallbackGroupID, field.TypeInt64, value)
 	}
+	if value, ok := _u.mutation.AddedFallbackGroupID(); ok {
+		_spec.AddField(apikey.FieldFallbackGroupID, field.TypeInt64, value)
+	}
 	if _u.mutation.FallbackGroupIDCleared() {
 		_spec.ClearField(apikey.FieldFallbackGroupID, field.TypeInt64)
 	}
@@ -935,6 +945,7 @@ func (_u *APIKeyUpdateOne) ClearGroupID() *APIKeyUpdateOne {
 
 // SetFallbackGroupID sets the "fallback_group_id" field.
 func (_u *APIKeyUpdateOne) SetFallbackGroupID(v int64) *APIKeyUpdateOne {
+	_u.mutation.ResetFallbackGroupID()
 	_u.mutation.SetFallbackGroupID(v)
 	return _u
 }
@@ -944,6 +955,12 @@ func (_u *APIKeyUpdateOne) SetNillableFallbackGroupID(v *int64) *APIKeyUpdateOne
 	if v != nil {
 		_u.SetFallbackGroupID(*v)
 	}
+	return _u
+}
+
+// AddFallbackGroupID adds value to the "fallback_group_id" field.
+func (_u *APIKeyUpdateOne) AddFallbackGroupID(v int64) *APIKeyUpdateOne {
+	_u.mutation.AddFallbackGroupID(v)
 	return _u
 }
 
@@ -1458,6 +1475,9 @@ func (_u *APIKeyUpdateOne) sqlSave(ctx context.Context) (_node *APIKey, err erro
 	}
 	if value, ok := _u.mutation.FallbackGroupID(); ok {
 		_spec.SetField(apikey.FieldFallbackGroupID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedFallbackGroupID(); ok {
+		_spec.AddField(apikey.FieldFallbackGroupID, field.TypeInt64, value)
 	}
 	if _u.mutation.FallbackGroupIDCleared() {
 		_spec.ClearField(apikey.FieldFallbackGroupID, field.TypeInt64)

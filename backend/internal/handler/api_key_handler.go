@@ -30,14 +30,14 @@ func NewAPIKeyHandler(apiKeyService *service.APIKeyService) *APIKeyHandler {
 
 // CreateAPIKeyRequest represents the create API key request payload
 type CreateAPIKeyRequest struct {
-	Name          string   `json:"name" binding:"required"`
-	GroupID       *int64   `json:"group_id"`        // nullable
-	FallbackGroupID *int64 `json:"fallback_group_id"` // nullable, fallback group
-	CustomKey     *string  `json:"custom_key"`      // 可选的自定义key
-	IPWhitelist   []string `json:"ip_whitelist"`    // IP 白名单
-	IPBlacklist   []string `json:"ip_blacklist"`    // IP 黑名单
-	Quota         *float64 `json:"quota"`           // 配额限制 (USD)
-	ExpiresInDays *int     `json:"expires_in_days"` // 过期天数
+	Name            string   `json:"name" binding:"required"`
+	GroupID         *int64   `json:"group_id"`          // nullable
+	FallbackGroupID *int64   `json:"fallback_group_id"` // nullable, fallback group
+	CustomKey       *string  `json:"custom_key"`        // 可选的自定义key
+	IPWhitelist     []string `json:"ip_whitelist"`      // IP 白名单
+	IPBlacklist     []string `json:"ip_blacklist"`      // IP 黑名单
+	Quota           *float64 `json:"quota"`             // 配额限制 (USD)
+	ExpiresInDays   *int     `json:"expires_in_days"`   // 过期天数
 
 	// Rate limit fields (0 = unlimited)
 	RateLimit5h *float64 `json:"rate_limit_5h"`
@@ -47,15 +47,15 @@ type CreateAPIKeyRequest struct {
 
 // UpdateAPIKeyRequest represents the update API key request payload
 type UpdateAPIKeyRequest struct {
-	Name        string   `json:"name"`
-	GroupID     *int64   `json:"group_id"`
-	FallbackGroupID *int64 `json:"fallback_group_id"` // nullable, fallback group
-	Status      string   `json:"status" binding:"omitempty,oneof=active inactive"`
-	IPWhitelist []string `json:"ip_whitelist"` // IP 白名单
-	IPBlacklist []string `json:"ip_blacklist"` // IP 黑名单
-	Quota       *float64 `json:"quota"`        // 配额限制 (USD), 0=无限制
-	ExpiresAt   *string  `json:"expires_at"`   // 过期时间 (ISO 8601)
-	ResetQuota  *bool    `json:"reset_quota"`  // 重置已用配额
+	Name            string   `json:"name"`
+	GroupID         *int64   `json:"group_id"`
+	FallbackGroupID *int64   `json:"fallback_group_id"` // nullable, fallback group
+	Status          string   `json:"status" binding:"omitempty,oneof=active inactive"`
+	IPWhitelist     []string `json:"ip_whitelist"` // IP 白名单
+	IPBlacklist     []string `json:"ip_blacklist"` // IP 黑名单
+	Quota           *float64 `json:"quota"`        // 配额限制 (USD), 0=无限制
+	ExpiresAt       *string  `json:"expires_at"`   // 过期时间 (ISO 8601)
+	ResetQuota      *bool    `json:"reset_quota"`  // 重置已用配额
 
 	// Rate limit fields (nil = no change, 0 = unlimited)
 	RateLimit5h         *float64 `json:"rate_limit_5h"`
@@ -100,7 +100,7 @@ func (h *APIKeyHandler) List(c *gin.Context) {
 
 	out := make([]dto.APIKey, 0, len(keys))
 	for i := range keys {
-		out = append(out, *dto.APIKeyFromService(&keys[i]))
+		out = append(out, *dto.APIKeyFromServiceFull(&keys[i]))
 	}
 	response.Paginated(c, out, result.Total, page, pageSize)
 }
@@ -132,7 +132,7 @@ func (h *APIKeyHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.APIKeyFromService(key))
+	response.Success(c, dto.APIKeyFromServiceFull(key))
 }
 
 // Create handles creating a new API key
@@ -155,9 +155,9 @@ func (h *APIKeyHandler) Create(c *gin.Context) {
 		GroupID:         req.GroupID,
 		FallbackGroupID: req.FallbackGroupID,
 		CustomKey:       req.CustomKey,
-		IPWhitelist:   req.IPWhitelist,
-		IPBlacklist:   req.IPBlacklist,
-		ExpiresInDays: req.ExpiresInDays,
+		IPWhitelist:     req.IPWhitelist,
+		IPBlacklist:     req.IPBlacklist,
+		ExpiresInDays:   req.ExpiresInDays,
 	}
 	if req.Quota != nil {
 		svcReq.Quota = *req.Quota
@@ -177,7 +177,7 @@ func (h *APIKeyHandler) Create(c *gin.Context) {
 		if err != nil {
 			return nil, err
 		}
-		return dto.APIKeyFromService(key), nil
+		return dto.APIKeyFromServiceFull(key), nil
 	})
 }
 
@@ -242,7 +242,7 @@ func (h *APIKeyHandler) Update(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.APIKeyFromService(key))
+	response.Success(c, dto.APIKeyFromServiceFull(key))
 }
 
 // Delete handles deleting an API key

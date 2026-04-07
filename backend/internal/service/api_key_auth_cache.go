@@ -4,15 +4,15 @@ import "time"
 
 // APIKeyAuthSnapshot API Key 认证缓存快照（仅包含认证所需字段）
 type APIKeyAuthSnapshot struct {
-	APIKeyID    int64                    `json:"api_key_id"`
-	UserID      int64                    `json:"user_id"`
+	APIKeyID        int64                    `json:"api_key_id"`
+	UserID          int64                    `json:"user_id"`
 	GroupID         *int64                   `json:"group_id,omitempty"`
 	FallbackGroupID *int64                   `json:"fallback_group_id,omitempty"`
 	Status          string                   `json:"status"`
-	IPWhitelist []string                 `json:"ip_whitelist,omitempty"`
-	IPBlacklist []string                 `json:"ip_blacklist,omitempty"`
-	User        APIKeyAuthUserSnapshot   `json:"user"`
-	Group       *APIKeyAuthGroupSnapshot `json:"group,omitempty"`
+	IPWhitelist     []string                 `json:"ip_whitelist,omitempty"`
+	IPBlacklist     []string                 `json:"ip_blacklist,omitempty"`
+	User            APIKeyAuthUserSnapshot   `json:"user"`
+	Group           *APIKeyAuthGroupSnapshot `json:"group,omitempty"`
 
 	// Quota fields for API Key independent quota feature
 	Quota     float64 `json:"quota"`      // Quota limit in USD (0 = unlimited)
@@ -50,10 +50,6 @@ type APIKeyAuthGroupSnapshot struct {
 	ImagePrice1K                    *float64 `json:"image_price_1k,omitempty"`
 	ImagePrice2K                    *float64 `json:"image_price_2k,omitempty"`
 	ImagePrice4K                    *float64 `json:"image_price_4k,omitempty"`
-	SoraImagePrice360               *float64 `json:"sora_image_price_360,omitempty"`
-	SoraImagePrice540               *float64 `json:"sora_image_price_540,omitempty"`
-	SoraVideoPricePerRequest        *float64 `json:"sora_video_price_per_request,omitempty"`
-	SoraVideoPricePerRequestHD      *float64 `json:"sora_video_price_per_request_hd,omitempty"`
 	ClaudeCodeOnly                  bool     `json:"claude_code_only"`
 	FallbackGroupID                 *int64   `json:"fallback_group_id,omitempty"`
 	FallbackGroupIDOnInvalidRequest *int64   `json:"fallback_group_id_on_invalid_request,omitempty"`
@@ -73,7 +69,7 @@ type APIKeyAuthGroupSnapshot struct {
 
 	// 分组按次收费配置
 	PerRequestPrice       *float64           `json:"per_request_price,omitempty"`
-	ModelPerRequestPrices map[string]float64  `json:"model_per_request_prices,omitempty"`
+	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices,omitempty"`
 }
 
 // APIKeyAuthCacheEntry 缓存条目，支持负缓存

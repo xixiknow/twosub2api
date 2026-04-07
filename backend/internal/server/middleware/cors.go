@@ -70,17 +70,15 @@ func CORS(cfg config.CORSConfig) gin.HandlerFunc {
 		// 网关 API 路径允许所有来源（供第三方应用跨域调用）
 		path := c.Request.URL.Path
 		isGatewayPath := strings.HasPrefix(path, "/v1/") || strings.HasPrefix(path, "/v1beta/") ||
-			strings.HasPrefix(path, "/antigravity/") || strings.HasPrefix(path, "/sora/") ||
+			strings.HasPrefix(path, "/antigravity/") ||
 			strings.HasPrefix(path, "/responses")
 
 		if isGatewayPath && origin != "" {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "*")
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
 			c.Writer.Header().Set("Access-Control-Expose-Headers", "X-Request-ID, ETag")
 			c.Writer.Header().Set("Access-Control-Max-Age", "86400")
-			c.Writer.Header().Add("Vary", "Origin")
 
 			if c.Request.Method == http.MethodOptions {
 				c.AbortWithStatus(http.StatusNoContent)

@@ -34,9 +34,6 @@ func RegisterAdminRoutes(
 
 		// OpenAI OAuth
 		registerOpenAIOAuthRoutes(admin, h)
-		// Sora OAuth（实现复用 OpenAI OAuth 服务，入口独立）
-		registerSoraOAuthRoutes(admin, h)
-
 		// Gemini OAuth
 		registerGeminiOAuthRoutes(admin, h)
 
@@ -54,9 +51,6 @@ func RegisterAdminRoutes(
 
 		// 系统设置
 		registerSettingsRoutes(admin, h)
-
-		// 数据管理
-		registerDataManagementRoutes(admin, h)
 
 		// 运维监控（Ops）
 		registerOpsRoutes(admin, h)
@@ -311,19 +305,6 @@ func registerOpenAIOAuthRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	}
 }
 
-func registerSoraOAuthRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
-	sora := admin.Group("/sora")
-	{
-		sora.POST("/generate-auth-url", h.Admin.OpenAIOAuth.GenerateAuthURL)
-		sora.POST("/exchange-code", h.Admin.OpenAIOAuth.ExchangeCode)
-		sora.POST("/refresh-token", h.Admin.OpenAIOAuth.RefreshToken)
-		sora.POST("/st2at", h.Admin.OpenAIOAuth.ExchangeSoraSessionToken)
-		sora.POST("/rt2at", h.Admin.OpenAIOAuth.RefreshToken)
-		sora.POST("/accounts/:id/refresh", h.Admin.OpenAIOAuth.RefreshAccountToken)
-		sora.POST("/create-from-oauth", h.Admin.OpenAIOAuth.CreateAccountFromOAuth)
-	}
-}
-
 func registerGeminiOAuthRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	gemini := admin.Group("/gemini")
 	{
@@ -412,38 +393,6 @@ func registerSettingsRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 		// 支付设置
 		adminSettings.GET("/payment", h.Admin.Setting.GetPaymentSettings)
 		adminSettings.PUT("/payment", h.Admin.Setting.UpdatePaymentSettings)
-		// Sora S3 存储配置
-		adminSettings.GET("/sora-s3", h.Admin.Setting.GetSoraS3Settings)
-		adminSettings.PUT("/sora-s3", h.Admin.Setting.UpdateSoraS3Settings)
-		adminSettings.POST("/sora-s3/test", h.Admin.Setting.TestSoraS3Connection)
-		adminSettings.GET("/sora-s3/profiles", h.Admin.Setting.ListSoraS3Profiles)
-		adminSettings.POST("/sora-s3/profiles", h.Admin.Setting.CreateSoraS3Profile)
-		adminSettings.PUT("/sora-s3/profiles/:profile_id", h.Admin.Setting.UpdateSoraS3Profile)
-		adminSettings.DELETE("/sora-s3/profiles/:profile_id", h.Admin.Setting.DeleteSoraS3Profile)
-		adminSettings.POST("/sora-s3/profiles/:profile_id/activate", h.Admin.Setting.SetActiveSoraS3Profile)
-	}
-}
-
-func registerDataManagementRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
-	dataManagement := admin.Group("/data-management")
-	{
-		dataManagement.GET("/agent/health", h.Admin.DataManagement.GetAgentHealth)
-		dataManagement.GET("/config", h.Admin.DataManagement.GetConfig)
-		dataManagement.PUT("/config", h.Admin.DataManagement.UpdateConfig)
-		dataManagement.GET("/sources/:source_type/profiles", h.Admin.DataManagement.ListSourceProfiles)
-		dataManagement.POST("/sources/:source_type/profiles", h.Admin.DataManagement.CreateSourceProfile)
-		dataManagement.PUT("/sources/:source_type/profiles/:profile_id", h.Admin.DataManagement.UpdateSourceProfile)
-		dataManagement.DELETE("/sources/:source_type/profiles/:profile_id", h.Admin.DataManagement.DeleteSourceProfile)
-		dataManagement.POST("/sources/:source_type/profiles/:profile_id/activate", h.Admin.DataManagement.SetActiveSourceProfile)
-		dataManagement.POST("/s3/test", h.Admin.DataManagement.TestS3)
-		dataManagement.GET("/s3/profiles", h.Admin.DataManagement.ListS3Profiles)
-		dataManagement.POST("/s3/profiles", h.Admin.DataManagement.CreateS3Profile)
-		dataManagement.PUT("/s3/profiles/:profile_id", h.Admin.DataManagement.UpdateS3Profile)
-		dataManagement.DELETE("/s3/profiles/:profile_id", h.Admin.DataManagement.DeleteS3Profile)
-		dataManagement.POST("/s3/profiles/:profile_id/activate", h.Admin.DataManagement.SetActiveS3Profile)
-		dataManagement.POST("/backups", h.Admin.DataManagement.CreateBackupJob)
-		dataManagement.GET("/backups", h.Admin.DataManagement.ListBackupJobs)
-		dataManagement.GET("/backups/:job_id", h.Admin.DataManagement.GetBackupJob)
 	}
 }
 
@@ -451,6 +400,9 @@ func registerSystemRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	system := admin.Group("/system")
 	{
 		system.GET("/version", h.Admin.System.GetVersion)
+		system.GET("/check-updates", h.Admin.System.CheckUpdates)
+		system.POST("/update", h.Admin.System.PerformUpdate)
+		system.POST("/rollback", h.Admin.System.Rollback)
 		system.POST("/restart", h.Admin.System.RestartService)
 	}
 }

@@ -281,19 +281,19 @@ const filteredGroups = computed(() => {
 
 const PLATFORM_COLORS: Record<string, string> = {
   anthropic: '#d97706', openai: '#6366f1', gemini: '#4285f4',
-  antigravity: '#8b5cf6', sora: '#ec4899', qwen: '#615eff',
+  antigravity: '#8b5cf6', qwen: '#615eff',
   deepseek: '#4d6bfe', glm: '#3859ff', kimi: '#a855f7', iflow: '#10b981'
 }
 const PLATFORM_MODEL_MAP: Record<string, string> = {
   anthropic: 'claude-3', openai: 'gpt-4', gemini: 'gemini-pro',
-  antigravity: 'antigravity', sora: 'sora', qwen: 'qwen-max',
+  antigravity: 'antigravity', qwen: 'qwen-max',
   deepseek: 'deepseek-chat', glm: 'glm-4', kimi: 'moonshot-v1', iflow: 'iflow'
 }
 
 function platformDisplayName(p: string): string {
   const m: Record<string, string> = {
     anthropic:'Anthropic', openai:'OpenAI', gemini:'Gemini', antigravity:'Antigravity',
-    sora:'Sora', qwen:'Qwen', deepseek:'DeepSeek', glm:'GLM', kimi:'Kimi', iflow:'iFlow'
+    qwen:'Qwen', deepseek:'DeepSeek', glm:'GLM', kimi:'Kimi', iflow:'iFlow'
   }
   return m[p] || p
 }

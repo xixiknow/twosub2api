@@ -125,16 +125,6 @@ func TotpEnabledAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldTotpEnabledAt, v))
 }
 
-// SoraStorageQuotaBytes applies equality check predicate on the "sora_storage_quota_bytes" field. It's identical to SoraStorageQuotaBytesEQ.
-func SoraStorageQuotaBytes(v int64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageUsedBytes applies equality check predicate on the "sora_storage_used_bytes" field. It's identical to SoraStorageUsedBytesEQ.
-func SoraStorageUsedBytes(v int64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSoraStorageUsedBytes, v))
-}
-
 // ReferrerID applies equality check predicate on the "referrer_id" field. It's identical to ReferrerIDEQ.
 func ReferrerID(v int64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldReferrerID, v))
@@ -143,6 +133,26 @@ func ReferrerID(v int64) predicate.User {
 // ReferralCode applies equality check predicate on the "referral_code" field. It's identical to ReferralCodeEQ.
 func ReferralCode(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldReferralCode, v))
+}
+
+// LastLoginIP applies equality check predicate on the "last_login_ip" field. It's identical to LastLoginIPEQ.
+func LastLoginIP(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastLoginIP, v))
+}
+
+// LastLoginAt applies equality check predicate on the "last_login_at" field. It's identical to LastLoginAtEQ.
+func LastLoginAt(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastLoginAt, v))
+}
+
+// PreviousLoginIP applies equality check predicate on the "previous_login_ip" field. It's identical to PreviousLoginIPEQ.
+func PreviousLoginIP(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginAt applies equality check predicate on the "previous_login_at" field. It's identical to PreviousLoginAtEQ.
+func PreviousLoginAt(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPreviousLoginAt, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -880,86 +890,6 @@ func TotpEnabledAtNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldTotpEnabledAt))
 }
 
-// SoraStorageQuotaBytesEQ applies the EQ predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesEQ(v int64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageQuotaBytesNEQ applies the NEQ predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesNEQ(v int64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageQuotaBytesIn applies the In predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesIn(vs ...int64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldSoraStorageQuotaBytes, vs...))
-}
-
-// SoraStorageQuotaBytesNotIn applies the NotIn predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesNotIn(vs ...int64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldSoraStorageQuotaBytes, vs...))
-}
-
-// SoraStorageQuotaBytesGT applies the GT predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesGT(v int64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageQuotaBytesGTE applies the GTE predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesGTE(v int64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageQuotaBytesLT applies the LT predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesLT(v int64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageQuotaBytesLTE applies the LTE predicate on the "sora_storage_quota_bytes" field.
-func SoraStorageQuotaBytesLTE(v int64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldSoraStorageQuotaBytes, v))
-}
-
-// SoraStorageUsedBytesEQ applies the EQ predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesEQ(v int64) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSoraStorageUsedBytes, v))
-}
-
-// SoraStorageUsedBytesNEQ applies the NEQ predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesNEQ(v int64) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldSoraStorageUsedBytes, v))
-}
-
-// SoraStorageUsedBytesIn applies the In predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesIn(vs ...int64) predicate.User {
-	return predicate.User(sql.FieldIn(FieldSoraStorageUsedBytes, vs...))
-}
-
-// SoraStorageUsedBytesNotIn applies the NotIn predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesNotIn(vs ...int64) predicate.User {
-	return predicate.User(sql.FieldNotIn(FieldSoraStorageUsedBytes, vs...))
-}
-
-// SoraStorageUsedBytesGT applies the GT predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesGT(v int64) predicate.User {
-	return predicate.User(sql.FieldGT(FieldSoraStorageUsedBytes, v))
-}
-
-// SoraStorageUsedBytesGTE applies the GTE predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesGTE(v int64) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldSoraStorageUsedBytes, v))
-}
-
-// SoraStorageUsedBytesLT applies the LT predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesLT(v int64) predicate.User {
-	return predicate.User(sql.FieldLT(FieldSoraStorageUsedBytes, v))
-}
-
-// SoraStorageUsedBytesLTE applies the LTE predicate on the "sora_storage_used_bytes" field.
-func SoraStorageUsedBytesLTE(v int64) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldSoraStorageUsedBytes, v))
-}
-
 // ReferrerIDEQ applies the EQ predicate on the "referrer_id" field.
 func ReferrerIDEQ(v int64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldReferrerID, v))
@@ -1083,6 +1013,256 @@ func ReferralCodeEqualFold(v string) predicate.User {
 // ReferralCodeContainsFold applies the ContainsFold predicate on the "referral_code" field.
 func ReferralCodeContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldReferralCode, v))
+}
+
+// LastLoginIPEQ applies the EQ predicate on the "last_login_ip" field.
+func LastLoginIPEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastLoginIP, v))
+}
+
+// LastLoginIPNEQ applies the NEQ predicate on the "last_login_ip" field.
+func LastLoginIPNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldLastLoginIP, v))
+}
+
+// LastLoginIPIn applies the In predicate on the "last_login_ip" field.
+func LastLoginIPIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldLastLoginIP, vs...))
+}
+
+// LastLoginIPNotIn applies the NotIn predicate on the "last_login_ip" field.
+func LastLoginIPNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldLastLoginIP, vs...))
+}
+
+// LastLoginIPGT applies the GT predicate on the "last_login_ip" field.
+func LastLoginIPGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldLastLoginIP, v))
+}
+
+// LastLoginIPGTE applies the GTE predicate on the "last_login_ip" field.
+func LastLoginIPGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldLastLoginIP, v))
+}
+
+// LastLoginIPLT applies the LT predicate on the "last_login_ip" field.
+func LastLoginIPLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldLastLoginIP, v))
+}
+
+// LastLoginIPLTE applies the LTE predicate on the "last_login_ip" field.
+func LastLoginIPLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldLastLoginIP, v))
+}
+
+// LastLoginIPContains applies the Contains predicate on the "last_login_ip" field.
+func LastLoginIPContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldLastLoginIP, v))
+}
+
+// LastLoginIPHasPrefix applies the HasPrefix predicate on the "last_login_ip" field.
+func LastLoginIPHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldLastLoginIP, v))
+}
+
+// LastLoginIPHasSuffix applies the HasSuffix predicate on the "last_login_ip" field.
+func LastLoginIPHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldLastLoginIP, v))
+}
+
+// LastLoginIPIsNil applies the IsNil predicate on the "last_login_ip" field.
+func LastLoginIPIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldLastLoginIP))
+}
+
+// LastLoginIPNotNil applies the NotNil predicate on the "last_login_ip" field.
+func LastLoginIPNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldLastLoginIP))
+}
+
+// LastLoginIPEqualFold applies the EqualFold predicate on the "last_login_ip" field.
+func LastLoginIPEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldLastLoginIP, v))
+}
+
+// LastLoginIPContainsFold applies the ContainsFold predicate on the "last_login_ip" field.
+func LastLoginIPContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldLastLoginIP, v))
+}
+
+// LastLoginAtEQ applies the EQ predicate on the "last_login_at" field.
+func LastLoginAtEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldLastLoginAt, v))
+}
+
+// LastLoginAtNEQ applies the NEQ predicate on the "last_login_at" field.
+func LastLoginAtNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldLastLoginAt, v))
+}
+
+// LastLoginAtIn applies the In predicate on the "last_login_at" field.
+func LastLoginAtIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldLastLoginAt, vs...))
+}
+
+// LastLoginAtNotIn applies the NotIn predicate on the "last_login_at" field.
+func LastLoginAtNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldLastLoginAt, vs...))
+}
+
+// LastLoginAtGT applies the GT predicate on the "last_login_at" field.
+func LastLoginAtGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldLastLoginAt, v))
+}
+
+// LastLoginAtGTE applies the GTE predicate on the "last_login_at" field.
+func LastLoginAtGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldLastLoginAt, v))
+}
+
+// LastLoginAtLT applies the LT predicate on the "last_login_at" field.
+func LastLoginAtLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldLastLoginAt, v))
+}
+
+// LastLoginAtLTE applies the LTE predicate on the "last_login_at" field.
+func LastLoginAtLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldLastLoginAt, v))
+}
+
+// LastLoginAtIsNil applies the IsNil predicate on the "last_login_at" field.
+func LastLoginAtIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldLastLoginAt))
+}
+
+// LastLoginAtNotNil applies the NotNil predicate on the "last_login_at" field.
+func LastLoginAtNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldLastLoginAt))
+}
+
+// PreviousLoginIPEQ applies the EQ predicate on the "previous_login_ip" field.
+func PreviousLoginIPEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPNEQ applies the NEQ predicate on the "previous_login_ip" field.
+func PreviousLoginIPNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPIn applies the In predicate on the "previous_login_ip" field.
+func PreviousLoginIPIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldPreviousLoginIP, vs...))
+}
+
+// PreviousLoginIPNotIn applies the NotIn predicate on the "previous_login_ip" field.
+func PreviousLoginIPNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldPreviousLoginIP, vs...))
+}
+
+// PreviousLoginIPGT applies the GT predicate on the "previous_login_ip" field.
+func PreviousLoginIPGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPGTE applies the GTE predicate on the "previous_login_ip" field.
+func PreviousLoginIPGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPLT applies the LT predicate on the "previous_login_ip" field.
+func PreviousLoginIPLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPLTE applies the LTE predicate on the "previous_login_ip" field.
+func PreviousLoginIPLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPContains applies the Contains predicate on the "previous_login_ip" field.
+func PreviousLoginIPContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPHasPrefix applies the HasPrefix predicate on the "previous_login_ip" field.
+func PreviousLoginIPHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPHasSuffix applies the HasSuffix predicate on the "previous_login_ip" field.
+func PreviousLoginIPHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPIsNil applies the IsNil predicate on the "previous_login_ip" field.
+func PreviousLoginIPIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldPreviousLoginIP))
+}
+
+// PreviousLoginIPNotNil applies the NotNil predicate on the "previous_login_ip" field.
+func PreviousLoginIPNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldPreviousLoginIP))
+}
+
+// PreviousLoginIPEqualFold applies the EqualFold predicate on the "previous_login_ip" field.
+func PreviousLoginIPEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginIPContainsFold applies the ContainsFold predicate on the "previous_login_ip" field.
+func PreviousLoginIPContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldPreviousLoginIP, v))
+}
+
+// PreviousLoginAtEQ applies the EQ predicate on the "previous_login_at" field.
+func PreviousLoginAtEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtNEQ applies the NEQ predicate on the "previous_login_at" field.
+func PreviousLoginAtNEQ(v time.Time) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtIn applies the In predicate on the "previous_login_at" field.
+func PreviousLoginAtIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldIn(FieldPreviousLoginAt, vs...))
+}
+
+// PreviousLoginAtNotIn applies the NotIn predicate on the "previous_login_at" field.
+func PreviousLoginAtNotIn(vs ...time.Time) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldPreviousLoginAt, vs...))
+}
+
+// PreviousLoginAtGT applies the GT predicate on the "previous_login_at" field.
+func PreviousLoginAtGT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGT(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtGTE applies the GTE predicate on the "previous_login_at" field.
+func PreviousLoginAtGTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtLT applies the LT predicate on the "previous_login_at" field.
+func PreviousLoginAtLT(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLT(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtLTE applies the LTE predicate on the "previous_login_at" field.
+func PreviousLoginAtLTE(v time.Time) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldPreviousLoginAt, v))
+}
+
+// PreviousLoginAtIsNil applies the IsNil predicate on the "previous_login_at" field.
+func PreviousLoginAtIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldPreviousLoginAt))
+}
+
+// PreviousLoginAtNotNil applies the NotNil predicate on the "previous_login_at" field.
+func PreviousLoginAtNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldPreviousLoginAt))
 }
 
 // HasAPIKeys applies the HasEdge predicate on the "api_keys" edge.

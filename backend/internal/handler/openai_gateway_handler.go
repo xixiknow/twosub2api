@@ -809,7 +809,7 @@ func (h *OpenAIGatewayHandler) anthropicStreamingAwareError(c *gin.Context, stat
 					"message": message,
 				},
 			})
-			fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", errPayload) //nolint:errcheck
+			fmt.Fprintf(c.Writer, "event: error\ndata: %s\n\n", errPayload)
 			flusher.Flush()
 		}
 		return

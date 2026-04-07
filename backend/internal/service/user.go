@@ -25,10 +25,6 @@ type User struct {
 	// map[groupID]rateMultiplier
 	GroupRates map[int64]float64
 
-	// Sora 存储配额
-	SoraStorageQuotaBytes int64 // 用户级 Sora 存储配额（0 表示使用分组或系统默认值）
-	SoraStorageUsedBytes  int64 // Sora 存储已用量
-
 	// TOTP 双因素认证字段
 	TotpSecretEncrypted *string    // AES-256-GCM 加密的 TOTP 密钥
 	TotpEnabled         bool       // 是否启用 TOTP
@@ -37,6 +33,12 @@ type User struct {
 	// 推荐返利
 	ReferrerID   *int64  // 推荐人用户ID
 	ReferralCode *string // 用户推荐码
+
+	// 登录 IP 记录
+	LastLoginIP     string
+	LastLoginAt     *time.Time
+	PreviousLoginIP string
+	PreviousLoginAt *time.Time
 
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription

@@ -21,7 +21,7 @@ import antigravityAPI from './antigravity'
 import userAttributesAPI from './userAttributes'
 import opsAPI from './ops'
 import errorPassthroughAPI from './errorPassthrough'
-import dataManagementAPI from './dataManagement'
+
 import apiKeysAPI from './apiKeys'
 import scheduledTestsAPI from './scheduledTests'
 import paymentOrdersAPI from './paymentOrders'
@@ -47,7 +47,6 @@ export const adminAPI = {
   userAttributes: userAttributesAPI,
   ops: opsAPI,
   errorPassthrough: errorPassthroughAPI,
-  dataManagement: dataManagementAPI,
   apiKeys: apiKeysAPI,
   scheduledTests: scheduledTestsAPI,
   paymentOrders: paymentOrdersAPI,
@@ -72,7 +71,6 @@ export {
   userAttributesAPI,
   opsAPI,
   errorPassthroughAPI,
-  dataManagementAPI,
   apiKeysAPI,
   scheduledTestsAPI,
   paymentOrdersAPI,
@@ -84,4 +82,3 @@ export default adminAPI
 // Re-export types used by components
 export type { BalanceHistoryItem } from './users'
 export type { ErrorPassthroughRule, CreateRuleRequest, UpdateRuleRequest } from './errorPassthrough'
-export type { BackupAgentHealth, DataManagementConfig } from './dataManagement'

@@ -64,7 +64,7 @@
       </div>
 
       <!-- Model Selection -->
-      <div v-if="!isSoraAccount" class="space-y-1.5">
+      <div  class="space-y-1.5">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
           {{ t('admin.accounts.selectTestModel') }}
         </label>
@@ -76,12 +76,6 @@
           label-key="display_name"
           :placeholder="loadingModels ? t('common.loading') + '...' : t('admin.accounts.selectTestModel')"
         />
-      </div>
-      <div
-        v-else
-        class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-      >
-        {{ t('admin.accounts.soraTestHint') }}
       </div>
 
       <!-- Gemini Image Prompt -->
@@ -107,7 +101,7 @@
               <span class="h-3 w-3 rounded-full" :class="status === 'success' ? 'bg-green-500' : 'bg-green-400/60'" />
             </div>
             <span class="ml-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-              {{ isSoraAccount ? 'sora-test' : selectedModelId || 'terminal' }}
+              {{ selectedModelId || 'terminal' }}
             </span>
           </div>
           <!-- Copy Button in header -->
@@ -215,15 +209,13 @@
         <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
           <span class="flex items-center gap-1.5">
             <Icon name="cpu" size="sm" :stroke-width="2" />
-            {{ isSoraAccount ? t('admin.accounts.soraTestTarget') : t('admin.accounts.testModel') }}
+            {{ t('admin.accounts.testModel') }}
           </span>
         </div>
         <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
           <Icon name="bolt" size="sm" :stroke-width="2" />
           {{
-            isSoraAccount
-              ? t('admin.accounts.soraTestMode')
-              : supportsGeminiImageTest
+            supportsGeminiImageTest
                 ? t('admin.accounts.geminiImageTestMode')
                 : t('admin.accounts.testPrompt')
           }}
@@ -242,10 +234,10 @@
         </button>
         <button
           @click="startTest"
-          :disabled="status === 'connecting' || (!isSoraAccount && !selectedModelId)"
+          :disabled="status === 'connecting' || !selectedModelId"
           :class="[
             'flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-medium shadow-sm transition-all duration-300',
-            status === 'connecting' || (!isSoraAccount && !selectedModelId)
+            status === 'connecting' || !selectedModelId
               ? 'cursor-not-allowed bg-gray-400 text-white shadow-none'
               : status === 'success'
                 ? 'bg-emerald-500 text-white shadow-emerald-500/25 hover:bg-emerald-600 hover:shadow-emerald-500/40'
@@ -323,11 +315,9 @@ const selectedModelId = ref('')
 const testPrompt = ref('')
 const loadingModels = ref(false)
 let eventSource: EventSource | null = null
-const isSoraAccount = computed(() => props.account?.platform === 'sora')
 const generatedImages = ref<PreviewImage[]>([])
 const prioritizedGeminiModels = ['gemini-3.1-flash-image', 'gemini-2.5-flash-image', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-2.0-flash']
 const supportsGeminiImageTest = computed(() => {
-  if (isSoraAccount.value) return false
   const modelID = selectedModelId.value.toLowerCase()
   if (!modelID.startsWith('gemini-') || !modelID.includes('-image')) return false
   return props.account?.platform === 'gemini' || (props.account?.platform === 'antigravity' && props.account?.type === 'apikey')
@@ -448,12 +438,6 @@ watch(selectedModelId, () => {
 
 const loadAvailableModels = async () => {
   if (!props.account) return
-  if (props.account.platform === 'sora') {
-    availableModels.value = []
-    selectedModelId.value = ''
-    loadingModels.value = false
-    return
-  }
   loadingModels.value = true
   selectedModelId.value = ''
   try {
@@ -515,7 +499,7 @@ const scrollToBottom = async () => {
 }
 
 const startTest = async () => {
-  if (!props.account || (!isSoraAccount.value && !selectedModelId.value)) return
+  if (!props.account || !selectedModelId.value) return
   resetState()
   status.value = 'connecting'
   startTimer()
@@ -535,9 +519,7 @@ const startTest = async () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(
-        isSoraAccount.value
-          ? {}
-          : {
+        {
               model_id: selectedModelId.value,
               prompt: supportsGeminiImageTest.value ? testPrompt.value.trim() : ''
             }
@@ -602,9 +584,7 @@ const handleEvent = (event: {
         addLine(event.model, 'text-cyan-600 dark:text-cyan-400', '#', 'text-cyan-500')
       }
       addLine(
-        isSoraAccount.value
-          ? t('admin.accounts.soraTestingFlow')
-          : supportsGeminiImageTest.value
+        supportsGeminiImageTest.value
             ? t('admin.accounts.sendingGeminiImageRequest')
             : t('admin.accounts.sendingTestMessage'),
         'text-gray-500 dark:text-gray-500',

@@ -34,8 +34,8 @@ type BalanceInfo struct {
 // BatchBalanceResult is the response for batch balance queries.
 type BatchBalanceResult struct {
 	Results map[int64]*BalanceInfo `json:"results"`
-	Success int                   `json:"success"`
-	Failed  int                   `json:"failed"`
+	Success int                    `json:"success"`
+	Failed  int                    `json:"failed"`
 }
 
 // AccountBalanceService queries upstream panel balance for apikey/upstream accounts.

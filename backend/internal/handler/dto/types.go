@@ -26,27 +26,31 @@ type AdminUser struct {
 	Notes string `json:"notes"`
 	// GroupRates 用户专属分组倍率配置
 	// map[groupID]rateMultiplier
-	GroupRates            map[int64]float64 `json:"group_rates,omitempty"`
-	SoraStorageQuotaBytes int64             `json:"sora_storage_quota_bytes"`
-	SoraStorageUsedBytes  int64             `json:"sora_storage_used_bytes"`
+	GroupRates map[int64]float64 `json:"group_rates,omitempty"`
+
+	// 登录 IP 记录
+	LastLoginIP     string     `json:"last_login_ip,omitempty"`
+	LastLoginAt     *time.Time `json:"last_login_at,omitempty"`
+	PreviousLoginIP string     `json:"previous_login_ip,omitempty"`
+	PreviousLoginAt *time.Time `json:"previous_login_at,omitempty"`
 }
 
 type APIKey struct {
-	ID          int64      `json:"id"`
-	UserID      int64      `json:"user_id"`
-	Key         string     `json:"key"`
-	Name        string     `json:"name"`
+	ID              int64      `json:"id"`
+	UserID          int64      `json:"user_id"`
+	Key             string     `json:"key"`
+	Name            string     `json:"name"`
 	GroupID         *int64     `json:"group_id"`
 	FallbackGroupID *int64     `json:"fallback_group_id"`
 	Status          string     `json:"status"`
-	IPWhitelist []string   `json:"ip_whitelist"`
-	IPBlacklist []string   `json:"ip_blacklist"`
-	LastUsedAt  *time.Time `json:"last_used_at"`
-	Quota       float64    `json:"quota"`      // Quota limit in USD (0 = unlimited)
-	QuotaUsed   float64    `json:"quota_used"` // Used quota amount in USD
-	ExpiresAt   *time.Time `json:"expires_at"` // Expiration time (nil = never expires)
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	IPWhitelist     []string   `json:"ip_whitelist"`
+	IPBlacklist     []string   `json:"ip_blacklist"`
+	LastUsedAt      *time.Time `json:"last_used_at"`
+	Quota           float64    `json:"quota"`      // Quota limit in USD (0 = unlimited)
+	QuotaUsed       float64    `json:"quota_used"` // Used quota amount in USD
+	ExpiresAt       *time.Time `json:"expires_at"` // Expiration time (nil = never expires)
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
 
 	// Rate limit fields
 	RateLimit5h   float64    `json:"rate_limit_5h"`
@@ -85,27 +89,18 @@ type Group struct {
 	ImagePrice2K *float64 `json:"image_price_2k"`
 	ImagePrice4K *float64 `json:"image_price_4k"`
 
-	// Sora 按次计费配置
-	SoraImagePrice360          *float64 `json:"sora_image_price_360"`
-	SoraImagePrice540          *float64 `json:"sora_image_price_540"`
-	SoraVideoPricePerRequest   *float64 `json:"sora_video_price_per_request"`
-	SoraVideoPricePerRequestHD *float64 `json:"sora_video_price_per_request_hd"`
-
 	// Claude Code 客户端限制
 	ClaudeCodeOnly  bool   `json:"claude_code_only"`
 	FallbackGroupID *int64 `json:"fallback_group_id"`
 	// 无效请求兜底分组
 	FallbackGroupIDOnInvalidRequest *int64 `json:"fallback_group_id_on_invalid_request"`
 
-	// Sora 存储配额
-	SoraStorageQuotaBytes int64 `json:"sora_storage_quota_bytes"`
-
 	// OpenAI Messages 调度开关（用户侧需要此字段判断是否展示 Claude Code 教程）
 	AllowMessagesDispatch bool `json:"allow_messages_dispatch"`
 
 	// 分组按次收费配置
 	PerRequestPrice       *float64           `json:"per_request_price"`
-	ModelPerRequestPrices map[string]float64  `json:"model_per_request_prices"`
+	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -127,11 +122,11 @@ type AdminGroup struct {
 	DefaultMappedModel string `json:"default_mapped_model"`
 
 	// 支持的模型系列（仅 antigravity 平台使用）
-	SupportedModelScopes []string       `json:"supported_model_scopes"`
-	AccountGroups        []AccountGroup `json:"account_groups,omitempty"`
-	AccountCount            int64 `json:"account_count,omitempty"`
-	ActiveAccountCount      int64 `json:"active_account_count,omitempty"`
-	RateLimitedAccountCount int64 `json:"rate_limited_account_count,omitempty"`
+	SupportedModelScopes    []string       `json:"supported_model_scopes"`
+	AccountGroups           []AccountGroup `json:"account_groups,omitempty"`
+	AccountCount            int64          `json:"account_count,omitempty"`
+	ActiveAccountCount      int64          `json:"active_account_count,omitempty"`
+	RateLimitedAccountCount int64          `json:"rate_limited_account_count,omitempty"`
 
 	// 分组排序
 	SortOrder int `json:"sort_order"`

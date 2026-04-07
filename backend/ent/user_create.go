@@ -210,34 +210,6 @@ func (_c *UserCreate) SetNillableTotpEnabledAt(v *time.Time) *UserCreate {
 	return _c
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (_c *UserCreate) SetSoraStorageQuotaBytes(v int64) *UserCreate {
-	_c.mutation.SetSoraStorageQuotaBytes(v)
-	return _c
-}
-
-// SetNillableSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field if the given value is not nil.
-func (_c *UserCreate) SetNillableSoraStorageQuotaBytes(v *int64) *UserCreate {
-	if v != nil {
-		_c.SetSoraStorageQuotaBytes(*v)
-	}
-	return _c
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (_c *UserCreate) SetSoraStorageUsedBytes(v int64) *UserCreate {
-	_c.mutation.SetSoraStorageUsedBytes(v)
-	return _c
-}
-
-// SetNillableSoraStorageUsedBytes sets the "sora_storage_used_bytes" field if the given value is not nil.
-func (_c *UserCreate) SetNillableSoraStorageUsedBytes(v *int64) *UserCreate {
-	if v != nil {
-		_c.SetSoraStorageUsedBytes(*v)
-	}
-	return _c
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (_c *UserCreate) SetReferrerID(v int64) *UserCreate {
 	_c.mutation.SetReferrerID(v)
@@ -262,6 +234,62 @@ func (_c *UserCreate) SetReferralCode(v string) *UserCreate {
 func (_c *UserCreate) SetNillableReferralCode(v *string) *UserCreate {
 	if v != nil {
 		_c.SetReferralCode(*v)
+	}
+	return _c
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (_c *UserCreate) SetLastLoginIP(v string) *UserCreate {
+	_c.mutation.SetLastLoginIP(v)
+	return _c
+}
+
+// SetNillableLastLoginIP sets the "last_login_ip" field if the given value is not nil.
+func (_c *UserCreate) SetNillableLastLoginIP(v *string) *UserCreate {
+	if v != nil {
+		_c.SetLastLoginIP(*v)
+	}
+	return _c
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (_c *UserCreate) SetLastLoginAt(v time.Time) *UserCreate {
+	_c.mutation.SetLastLoginAt(v)
+	return _c
+}
+
+// SetNillableLastLoginAt sets the "last_login_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillableLastLoginAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetLastLoginAt(*v)
+	}
+	return _c
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (_c *UserCreate) SetPreviousLoginIP(v string) *UserCreate {
+	_c.mutation.SetPreviousLoginIP(v)
+	return _c
+}
+
+// SetNillablePreviousLoginIP sets the "previous_login_ip" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePreviousLoginIP(v *string) *UserCreate {
+	if v != nil {
+		_c.SetPreviousLoginIP(*v)
+	}
+	return _c
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (_c *UserCreate) SetPreviousLoginAt(v time.Time) *UserCreate {
+	_c.mutation.SetPreviousLoginAt(v)
+	return _c
+}
+
+// SetNillablePreviousLoginAt sets the "previous_login_at" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePreviousLoginAt(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetPreviousLoginAt(*v)
 	}
 	return _c
 }
@@ -480,13 +508,13 @@ func (_c *UserCreate) defaults() error {
 		v := user.DefaultTotpEnabled
 		_c.mutation.SetTotpEnabled(v)
 	}
-	if _, ok := _c.mutation.SoraStorageQuotaBytes(); !ok {
-		v := user.DefaultSoraStorageQuotaBytes
-		_c.mutation.SetSoraStorageQuotaBytes(v)
+	if _, ok := _c.mutation.LastLoginIP(); !ok {
+		v := user.DefaultLastLoginIP
+		_c.mutation.SetLastLoginIP(v)
 	}
-	if _, ok := _c.mutation.SoraStorageUsedBytes(); !ok {
-		v := user.DefaultSoraStorageUsedBytes
-		_c.mutation.SetSoraStorageUsedBytes(v)
+	if _, ok := _c.mutation.PreviousLoginIP(); !ok {
+		v := user.DefaultPreviousLoginIP
+		_c.mutation.SetPreviousLoginIP(v)
 	}
 	return nil
 }
@@ -551,15 +579,19 @@ func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.TotpEnabled(); !ok {
 		return &ValidationError{Name: "totp_enabled", err: errors.New(`ent: missing required field "User.totp_enabled"`)}
 	}
-	if _, ok := _c.mutation.SoraStorageQuotaBytes(); !ok {
-		return &ValidationError{Name: "sora_storage_quota_bytes", err: errors.New(`ent: missing required field "User.sora_storage_quota_bytes"`)}
-	}
-	if _, ok := _c.mutation.SoraStorageUsedBytes(); !ok {
-		return &ValidationError{Name: "sora_storage_used_bytes", err: errors.New(`ent: missing required field "User.sora_storage_used_bytes"`)}
-	}
 	if v, ok := _c.mutation.ReferralCode(); ok {
 		if err := user.ReferralCodeValidator(v); err != nil {
 			return &ValidationError{Name: "referral_code", err: fmt.Errorf(`ent: validator failed for field "User.referral_code": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.LastLoginIP(); ok {
+		if err := user.LastLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "last_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.last_login_ip": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.PreviousLoginIP(); ok {
+		if err := user.PreviousLoginIPValidator(v); err != nil {
+			return &ValidationError{Name: "previous_login_ip", err: fmt.Errorf(`ent: validator failed for field "User.previous_login_ip": %w`, err)}
 		}
 	}
 	return nil
@@ -645,14 +677,6 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldTotpEnabledAt, field.TypeTime, value)
 		_node.TotpEnabledAt = &value
 	}
-	if value, ok := _c.mutation.SoraStorageQuotaBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageQuotaBytes, field.TypeInt64, value)
-		_node.SoraStorageQuotaBytes = value
-	}
-	if value, ok := _c.mutation.SoraStorageUsedBytes(); ok {
-		_spec.SetField(user.FieldSoraStorageUsedBytes, field.TypeInt64, value)
-		_node.SoraStorageUsedBytes = value
-	}
 	if value, ok := _c.mutation.ReferrerID(); ok {
 		_spec.SetField(user.FieldReferrerID, field.TypeInt64, value)
 		_node.ReferrerID = &value
@@ -660,6 +684,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.ReferralCode(); ok {
 		_spec.SetField(user.FieldReferralCode, field.TypeString, value)
 		_node.ReferralCode = &value
+	}
+	if value, ok := _c.mutation.LastLoginIP(); ok {
+		_spec.SetField(user.FieldLastLoginIP, field.TypeString, value)
+		_node.LastLoginIP = value
+	}
+	if value, ok := _c.mutation.LastLoginAt(); ok {
+		_spec.SetField(user.FieldLastLoginAt, field.TypeTime, value)
+		_node.LastLoginAt = &value
+	}
+	if value, ok := _c.mutation.PreviousLoginIP(); ok {
+		_spec.SetField(user.FieldPreviousLoginIP, field.TypeString, value)
+		_node.PreviousLoginIP = value
+	}
+	if value, ok := _c.mutation.PreviousLoginAt(); ok {
+		_spec.SetField(user.FieldPreviousLoginAt, field.TypeTime, value)
+		_node.PreviousLoginAt = &value
 	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -1047,42 +1087,6 @@ func (u *UserUpsert) ClearTotpEnabledAt() *UserUpsert {
 	return u
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (u *UserUpsert) SetSoraStorageQuotaBytes(v int64) *UserUpsert {
-	u.Set(user.FieldSoraStorageQuotaBytes, v)
-	return u
-}
-
-// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
-func (u *UserUpsert) UpdateSoraStorageQuotaBytes() *UserUpsert {
-	u.SetExcluded(user.FieldSoraStorageQuotaBytes)
-	return u
-}
-
-// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
-func (u *UserUpsert) AddSoraStorageQuotaBytes(v int64) *UserUpsert {
-	u.Add(user.FieldSoraStorageQuotaBytes, v)
-	return u
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (u *UserUpsert) SetSoraStorageUsedBytes(v int64) *UserUpsert {
-	u.Set(user.FieldSoraStorageUsedBytes, v)
-	return u
-}
-
-// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
-func (u *UserUpsert) UpdateSoraStorageUsedBytes() *UserUpsert {
-	u.SetExcluded(user.FieldSoraStorageUsedBytes)
-	return u
-}
-
-// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
-func (u *UserUpsert) AddSoraStorageUsedBytes(v int64) *UserUpsert {
-	u.Add(user.FieldSoraStorageUsedBytes, v)
-	return u
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (u *UserUpsert) SetReferrerID(v int64) *UserUpsert {
 	u.Set(user.FieldReferrerID, v)
@@ -1122,6 +1126,78 @@ func (u *UserUpsert) UpdateReferralCode() *UserUpsert {
 // ClearReferralCode clears the value of the "referral_code" field.
 func (u *UserUpsert) ClearReferralCode() *UserUpsert {
 	u.SetNull(user.FieldReferralCode)
+	return u
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (u *UserUpsert) SetLastLoginIP(v string) *UserUpsert {
+	u.Set(user.FieldLastLoginIP, v)
+	return u
+}
+
+// UpdateLastLoginIP sets the "last_login_ip" field to the value that was provided on create.
+func (u *UserUpsert) UpdateLastLoginIP() *UserUpsert {
+	u.SetExcluded(user.FieldLastLoginIP)
+	return u
+}
+
+// ClearLastLoginIP clears the value of the "last_login_ip" field.
+func (u *UserUpsert) ClearLastLoginIP() *UserUpsert {
+	u.SetNull(user.FieldLastLoginIP)
+	return u
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (u *UserUpsert) SetLastLoginAt(v time.Time) *UserUpsert {
+	u.Set(user.FieldLastLoginAt, v)
+	return u
+}
+
+// UpdateLastLoginAt sets the "last_login_at" field to the value that was provided on create.
+func (u *UserUpsert) UpdateLastLoginAt() *UserUpsert {
+	u.SetExcluded(user.FieldLastLoginAt)
+	return u
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (u *UserUpsert) ClearLastLoginAt() *UserUpsert {
+	u.SetNull(user.FieldLastLoginAt)
+	return u
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (u *UserUpsert) SetPreviousLoginIP(v string) *UserUpsert {
+	u.Set(user.FieldPreviousLoginIP, v)
+	return u
+}
+
+// UpdatePreviousLoginIP sets the "previous_login_ip" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePreviousLoginIP() *UserUpsert {
+	u.SetExcluded(user.FieldPreviousLoginIP)
+	return u
+}
+
+// ClearPreviousLoginIP clears the value of the "previous_login_ip" field.
+func (u *UserUpsert) ClearPreviousLoginIP() *UserUpsert {
+	u.SetNull(user.FieldPreviousLoginIP)
+	return u
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (u *UserUpsert) SetPreviousLoginAt(v time.Time) *UserUpsert {
+	u.Set(user.FieldPreviousLoginAt, v)
+	return u
+}
+
+// UpdatePreviousLoginAt sets the "previous_login_at" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePreviousLoginAt() *UserUpsert {
+	u.SetExcluded(user.FieldPreviousLoginAt)
+	return u
+}
+
+// ClearPreviousLoginAt clears the value of the "previous_login_at" field.
+func (u *UserUpsert) ClearPreviousLoginAt() *UserUpsert {
+	u.SetNull(user.FieldPreviousLoginAt)
 	return u
 }
 
@@ -1387,48 +1463,6 @@ func (u *UserUpsertOne) ClearTotpEnabledAt() *UserUpsertOne {
 	})
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (u *UserUpsertOne) SetSoraStorageQuotaBytes(v int64) *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.SetSoraStorageQuotaBytes(v)
-	})
-}
-
-// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
-func (u *UserUpsertOne) AddSoraStorageQuotaBytes(v int64) *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.AddSoraStorageQuotaBytes(v)
-	})
-}
-
-// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
-func (u *UserUpsertOne) UpdateSoraStorageQuotaBytes() *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.UpdateSoraStorageQuotaBytes()
-	})
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (u *UserUpsertOne) SetSoraStorageUsedBytes(v int64) *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.SetSoraStorageUsedBytes(v)
-	})
-}
-
-// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
-func (u *UserUpsertOne) AddSoraStorageUsedBytes(v int64) *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.AddSoraStorageUsedBytes(v)
-	})
-}
-
-// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
-func (u *UserUpsertOne) UpdateSoraStorageUsedBytes() *UserUpsertOne {
-	return u.Update(func(s *UserUpsert) {
-		s.UpdateSoraStorageUsedBytes()
-	})
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (u *UserUpsertOne) SetReferrerID(v int64) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
@@ -1475,6 +1509,90 @@ func (u *UserUpsertOne) UpdateReferralCode() *UserUpsertOne {
 func (u *UserUpsertOne) ClearReferralCode() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearReferralCode()
+	})
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (u *UserUpsertOne) SetLastLoginIP(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastLoginIP(v)
+	})
+}
+
+// UpdateLastLoginIP sets the "last_login_ip" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateLastLoginIP() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastLoginIP()
+	})
+}
+
+// ClearLastLoginIP clears the value of the "last_login_ip" field.
+func (u *UserUpsertOne) ClearLastLoginIP() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearLastLoginIP()
+	})
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (u *UserUpsertOne) SetLastLoginAt(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastLoginAt(v)
+	})
+}
+
+// UpdateLastLoginAt sets the "last_login_at" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateLastLoginAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastLoginAt()
+	})
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (u *UserUpsertOne) ClearLastLoginAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearLastLoginAt()
+	})
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (u *UserUpsertOne) SetPreviousLoginIP(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPreviousLoginIP(v)
+	})
+}
+
+// UpdatePreviousLoginIP sets the "previous_login_ip" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePreviousLoginIP() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePreviousLoginIP()
+	})
+}
+
+// ClearPreviousLoginIP clears the value of the "previous_login_ip" field.
+func (u *UserUpsertOne) ClearPreviousLoginIP() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPreviousLoginIP()
+	})
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (u *UserUpsertOne) SetPreviousLoginAt(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPreviousLoginAt(v)
+	})
+}
+
+// UpdatePreviousLoginAt sets the "previous_login_at" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePreviousLoginAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePreviousLoginAt()
+	})
+}
+
+// ClearPreviousLoginAt clears the value of the "previous_login_at" field.
+func (u *UserUpsertOne) ClearPreviousLoginAt() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPreviousLoginAt()
 	})
 }
 
@@ -1906,48 +2024,6 @@ func (u *UserUpsertBulk) ClearTotpEnabledAt() *UserUpsertBulk {
 	})
 }
 
-// SetSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field.
-func (u *UserUpsertBulk) SetSoraStorageQuotaBytes(v int64) *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.SetSoraStorageQuotaBytes(v)
-	})
-}
-
-// AddSoraStorageQuotaBytes adds v to the "sora_storage_quota_bytes" field.
-func (u *UserUpsertBulk) AddSoraStorageQuotaBytes(v int64) *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.AddSoraStorageQuotaBytes(v)
-	})
-}
-
-// UpdateSoraStorageQuotaBytes sets the "sora_storage_quota_bytes" field to the value that was provided on create.
-func (u *UserUpsertBulk) UpdateSoraStorageQuotaBytes() *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.UpdateSoraStorageQuotaBytes()
-	})
-}
-
-// SetSoraStorageUsedBytes sets the "sora_storage_used_bytes" field.
-func (u *UserUpsertBulk) SetSoraStorageUsedBytes(v int64) *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.SetSoraStorageUsedBytes(v)
-	})
-}
-
-// AddSoraStorageUsedBytes adds v to the "sora_storage_used_bytes" field.
-func (u *UserUpsertBulk) AddSoraStorageUsedBytes(v int64) *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.AddSoraStorageUsedBytes(v)
-	})
-}
-
-// UpdateSoraStorageUsedBytes sets the "sora_storage_used_bytes" field to the value that was provided on create.
-func (u *UserUpsertBulk) UpdateSoraStorageUsedBytes() *UserUpsertBulk {
-	return u.Update(func(s *UserUpsert) {
-		s.UpdateSoraStorageUsedBytes()
-	})
-}
-
 // SetReferrerID sets the "referrer_id" field.
 func (u *UserUpsertBulk) SetReferrerID(v int64) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
@@ -1994,6 +2070,90 @@ func (u *UserUpsertBulk) UpdateReferralCode() *UserUpsertBulk {
 func (u *UserUpsertBulk) ClearReferralCode() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.ClearReferralCode()
+	})
+}
+
+// SetLastLoginIP sets the "last_login_ip" field.
+func (u *UserUpsertBulk) SetLastLoginIP(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastLoginIP(v)
+	})
+}
+
+// UpdateLastLoginIP sets the "last_login_ip" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateLastLoginIP() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastLoginIP()
+	})
+}
+
+// ClearLastLoginIP clears the value of the "last_login_ip" field.
+func (u *UserUpsertBulk) ClearLastLoginIP() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearLastLoginIP()
+	})
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (u *UserUpsertBulk) SetLastLoginAt(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastLoginAt(v)
+	})
+}
+
+// UpdateLastLoginAt sets the "last_login_at" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateLastLoginAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastLoginAt()
+	})
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (u *UserUpsertBulk) ClearLastLoginAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearLastLoginAt()
+	})
+}
+
+// SetPreviousLoginIP sets the "previous_login_ip" field.
+func (u *UserUpsertBulk) SetPreviousLoginIP(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPreviousLoginIP(v)
+	})
+}
+
+// UpdatePreviousLoginIP sets the "previous_login_ip" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePreviousLoginIP() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePreviousLoginIP()
+	})
+}
+
+// ClearPreviousLoginIP clears the value of the "previous_login_ip" field.
+func (u *UserUpsertBulk) ClearPreviousLoginIP() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPreviousLoginIP()
+	})
+}
+
+// SetPreviousLoginAt sets the "previous_login_at" field.
+func (u *UserUpsertBulk) SetPreviousLoginAt(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPreviousLoginAt(v)
+	})
+}
+
+// UpdatePreviousLoginAt sets the "previous_login_at" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePreviousLoginAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePreviousLoginAt()
+	})
+}
+
+// ClearPreviousLoginAt clears the value of the "previous_login_at" field.
+func (u *UserUpsertBulk) ClearPreviousLoginAt() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPreviousLoginAt()
 	})
 }
 

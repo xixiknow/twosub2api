@@ -367,6 +367,14 @@
             <span class="text-sm text-gray-500 dark:text-dark-400">{{ formatDateTime(value) }}</span>
           </template>
 
+          <template #cell-last_login_ip="{ row }">
+            <span class="font-mono text-xs text-gray-500 dark:text-dark-400">{{ (row as AdminUser).last_login_ip || '-' }}</span>
+          </template>
+
+          <template #cell-last_login_at="{ row }">
+            <span class="text-sm text-gray-500 dark:text-dark-400">{{ (row as AdminUser).last_login_at ? formatDateTime((row as AdminUser).last_login_at!) : '-' }}</span>
+          </template>
+
           <template #cell-actions="{ row }">
             <div class="flex items-center gap-1">
               <!-- Edit Button -->
@@ -608,6 +616,8 @@ const allColumns = computed<Column[]>(() => [
   { key: 'usage', label: t('admin.users.columns.usage'), sortable: false },
   { key: 'concurrency', label: t('admin.users.columns.concurrency'), sortable: true },
   { key: 'status', label: t('admin.users.columns.status'), sortable: true },
+  { key: 'last_login_ip', label: t('admin.users.columns.lastLoginIP'), sortable: false },
+  { key: 'last_login_at', label: t('admin.users.columns.lastLoginAt'), sortable: true },
   { key: 'created_at', label: t('admin.users.columns.created'), sortable: true },
   { key: 'actions', label: t('admin.users.columns.actions'), sortable: false }
 ])
@@ -622,7 +632,7 @@ const toggleableColumns = computed(() =>
 const hiddenColumns = reactive<Set<string>>(new Set())
 
 // Default hidden columns (columns hidden by default on first load)
-const DEFAULT_HIDDEN_COLUMNS = ['notes', 'subscriptions', 'usage', 'concurrency']
+const DEFAULT_HIDDEN_COLUMNS = ['notes', 'subscriptions', 'usage', 'concurrency', 'last_login_ip', 'last_login_at']
 
 // localStorage key for column settings
 const HIDDEN_COLUMNS_KEY = 'user-hidden-columns'

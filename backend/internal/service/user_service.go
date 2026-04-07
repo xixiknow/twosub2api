@@ -54,6 +54,9 @@ type UserRepository interface {
 
 	// 推荐返利
 	GetByReferralCode(ctx context.Context, code string) (*User, error)
+
+	// 登录 IP 记录
+	UpdateLoginIP(ctx context.Context, userID int64, ip string) error
 }
 
 // UpdateProfileRequest 更新用户资料请求
@@ -245,6 +248,14 @@ func (s *UserService) Delete(ctx context.Context, userID int64) error {
 	}
 	if err := s.userRepo.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("delete user: %w", err)
+	}
+	return nil
+}
+
+// UpdateLoginIP 更新用户登录 IP（将当前 last → previous，新 IP → last）
+func (s *UserService) UpdateLoginIP(ctx context.Context, userID int64, ip string) error {
+	if err := s.userRepo.UpdateLoginIP(ctx, userID, ip); err != nil {
+		return fmt.Errorf("update login ip: %w", err)
 	}
 	return nil
 }

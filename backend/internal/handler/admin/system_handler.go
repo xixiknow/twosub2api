@@ -16,15 +16,17 @@ import (
 
 // SystemHandler handles system-related operations
 type SystemHandler struct {
-	version string
-	lockSvc *service.SystemOperationLockService
+	version   string
+	lockSvc   *service.SystemOperationLockService
+	updateSvc *service.UpdateService
 }
 
 // NewSystemHandler creates a new SystemHandler
-func NewSystemHandler(version string, lockSvc *service.SystemOperationLockService) *SystemHandler {
+func NewSystemHandler(version string, lockSvc *service.SystemOperationLockService, updateSvc *service.UpdateService) *SystemHandler {
 	return &SystemHandler{
-		version: version,
-		lockSvc: lockSvc,
+		version:   version,
+		lockSvc:   lockSvc,
+		updateSvc: updateSvc,
 	}
 }
 
@@ -61,6 +63,82 @@ func (h *SystemHandler) RestartService(c *gin.Context) {
 		succeeded = true
 		return gin.H{
 			"message":      "Service restart initiated",
+			"operation_id": lock.OperationID(),
+		}, nil
+	})
+}
+
+// CheckUpdates checks for available updates
+// GET /api/v1/admin/system/check-updates
+func (h *SystemHandler) CheckUpdates(c *gin.Context) {
+	if h.updateSvc == nil {
+		response.Error(c, 503, "Update service is not configured")
+		return
+	}
+	force := c.Query("force") == "true"
+	info, err := h.updateSvc.CheckUpdate(c.Request.Context(), force)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, info)
+}
+
+// PerformUpdate downloads and applies the latest update
+// POST /api/v1/admin/system/update
+func (h *SystemHandler) PerformUpdate(c *gin.Context) {
+	if h.updateSvc == nil {
+		response.Error(c, 503, "Update service is not configured")
+		return
+	}
+	operationID := buildSystemOperationID(c, "update")
+	payload := gin.H{"operation_id": operationID}
+	executeAdminIdempotentJSON(c, "admin.system.update", payload, service.DefaultSystemOperationIdempotencyTTL(), func(ctx context.Context) (any, error) {
+		lock, release, err := h.acquireSystemLock(ctx, operationID)
+		if err != nil {
+			return nil, err
+		}
+		succeeded := false
+		defer func() {
+			release("", succeeded)
+		}()
+		if err := h.updateSvc.PerformUpdate(ctx); err != nil {
+			return nil, err
+		}
+		succeeded = true
+		return gin.H{
+			"message":      "Update applied successfully",
+			"need_restart": true,
+			"operation_id": lock.OperationID(),
+		}, nil
+	})
+}
+
+// Rollback restores the previous version
+// POST /api/v1/admin/system/rollback
+func (h *SystemHandler) Rollback(c *gin.Context) {
+	if h.updateSvc == nil {
+		response.Error(c, 503, "Update service is not configured")
+		return
+	}
+	operationID := buildSystemOperationID(c, "rollback")
+	payload := gin.H{"operation_id": operationID}
+	executeAdminIdempotentJSON(c, "admin.system.rollback", payload, service.DefaultSystemOperationIdempotencyTTL(), func(ctx context.Context) (any, error) {
+		lock, release, err := h.acquireSystemLock(ctx, operationID)
+		if err != nil {
+			return nil, err
+		}
+		succeeded := false
+		defer func() {
+			release("", succeeded)
+		}()
+		if err := h.updateSvc.Rollback(); err != nil {
+			return nil, err
+		}
+		succeeded = true
+		return gin.H{
+			"message":      "Rollback completed successfully",
+			"need_restart": true,
 			"operation_id": lock.OperationID(),
 		}, nil
 	})

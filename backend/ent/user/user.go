@@ -43,14 +43,18 @@ const (
 	FieldTotpEnabled = "totp_enabled"
 	// FieldTotpEnabledAt holds the string denoting the totp_enabled_at field in the database.
 	FieldTotpEnabledAt = "totp_enabled_at"
-	// FieldSoraStorageQuotaBytes holds the string denoting the sora_storage_quota_bytes field in the database.
-	FieldSoraStorageQuotaBytes = "sora_storage_quota_bytes"
-	// FieldSoraStorageUsedBytes holds the string denoting the sora_storage_used_bytes field in the database.
-	FieldSoraStorageUsedBytes = "sora_storage_used_bytes"
 	// FieldReferrerID holds the string denoting the referrer_id field in the database.
 	FieldReferrerID = "referrer_id"
 	// FieldReferralCode holds the string denoting the referral_code field in the database.
 	FieldReferralCode = "referral_code"
+	// FieldLastLoginIP holds the string denoting the last_login_ip field in the database.
+	FieldLastLoginIP = "last_login_ip"
+	// FieldLastLoginAt holds the string denoting the last_login_at field in the database.
+	FieldLastLoginAt = "last_login_at"
+	// FieldPreviousLoginIP holds the string denoting the previous_login_ip field in the database.
+	FieldPreviousLoginIP = "previous_login_ip"
+	// FieldPreviousLoginAt holds the string denoting the previous_login_at field in the database.
+	FieldPreviousLoginAt = "previous_login_at"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -160,10 +164,12 @@ var Columns = []string{
 	FieldTotpSecretEncrypted,
 	FieldTotpEnabled,
 	FieldTotpEnabledAt,
-	FieldSoraStorageQuotaBytes,
-	FieldSoraStorageUsedBytes,
 	FieldReferrerID,
 	FieldReferralCode,
+	FieldLastLoginIP,
+	FieldLastLoginAt,
+	FieldPreviousLoginIP,
+	FieldPreviousLoginAt,
 }
 
 var (
@@ -220,12 +226,16 @@ var (
 	DefaultNotes string
 	// DefaultTotpEnabled holds the default value on creation for the "totp_enabled" field.
 	DefaultTotpEnabled bool
-	// DefaultSoraStorageQuotaBytes holds the default value on creation for the "sora_storage_quota_bytes" field.
-	DefaultSoraStorageQuotaBytes int64
-	// DefaultSoraStorageUsedBytes holds the default value on creation for the "sora_storage_used_bytes" field.
-	DefaultSoraStorageUsedBytes int64
 	// ReferralCodeValidator is a validator for the "referral_code" field. It is called by the builders before save.
 	ReferralCodeValidator func(string) error
+	// DefaultLastLoginIP holds the default value on creation for the "last_login_ip" field.
+	DefaultLastLoginIP string
+	// LastLoginIPValidator is a validator for the "last_login_ip" field. It is called by the builders before save.
+	LastLoginIPValidator func(string) error
+	// DefaultPreviousLoginIP holds the default value on creation for the "previous_login_ip" field.
+	DefaultPreviousLoginIP string
+	// PreviousLoginIPValidator is a validator for the "previous_login_ip" field. It is called by the builders before save.
+	PreviousLoginIPValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the User queries.
@@ -306,16 +316,6 @@ func ByTotpEnabledAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTotpEnabledAt, opts...).ToFunc()
 }
 
-// BySoraStorageQuotaBytes orders the results by the sora_storage_quota_bytes field.
-func BySoraStorageQuotaBytes(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSoraStorageQuotaBytes, opts...).ToFunc()
-}
-
-// BySoraStorageUsedBytes orders the results by the sora_storage_used_bytes field.
-func BySoraStorageUsedBytes(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSoraStorageUsedBytes, opts...).ToFunc()
-}
-
 // ByReferrerID orders the results by the referrer_id field.
 func ByReferrerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReferrerID, opts...).ToFunc()
@@ -324,6 +324,26 @@ func ByReferrerID(opts ...sql.OrderTermOption) OrderOption {
 // ByReferralCode orders the results by the referral_code field.
 func ByReferralCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldReferralCode, opts...).ToFunc()
+}
+
+// ByLastLoginIP orders the results by the last_login_ip field.
+func ByLastLoginIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastLoginIP, opts...).ToFunc()
+}
+
+// ByLastLoginAt orders the results by the last_login_at field.
+func ByLastLoginAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastLoginAt, opts...).ToFunc()
+}
+
+// ByPreviousLoginIP orders the results by the previous_login_ip field.
+func ByPreviousLoginIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPreviousLoginIP, opts...).ToFunc()
+}
+
+// ByPreviousLoginAt orders the results by the previous_login_at field.
+func ByPreviousLoginAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPreviousLoginAt, opts...).ToFunc()
 }
 
 // ByAPIKeysCount orders the results by api_keys count.

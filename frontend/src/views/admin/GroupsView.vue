@@ -572,81 +572,6 @@
           </div>
         </div>
 
-        <!-- Sora 按次计费配置 -->
-        <div v-if="createForm.platform === 'sora'" class="border-t pt-4">
-          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-            {{ t('admin.groups.soraPricing.title') }}
-          </label>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t('admin.groups.soraPricing.description') }}
-          </p>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image360') }}</label>
-              <input
-                v-model.number="createForm.sora_image_price_360"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.05"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image540') }}</label>
-              <input
-                v-model.number="createForm.sora_image_price_540"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.08"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.video') }}</label>
-              <input
-                v-model.number="createForm.sora_video_price_per_request"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.5"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.videoHd') }}</label>
-              <input
-                v-model.number="createForm.sora_video_price_per_request_hd"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.8"
-              />
-            </div>
-          </div>
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.soraPricing.storageQuota') }}</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model.number="createForm.sora_storage_quota_gb"
-                type="number"
-                step="0.1"
-                min="0"
-                class="input"
-                placeholder="10"
-              />
-              <span class="shrink-0 text-sm text-gray-500">GB</span>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.groups.soraPricing.storageQuotaHint') }}
-            </p>
-          </div>
-        </div>
-
         <!-- 支持的模型系列（仅 antigravity 平台） -->
         <div v-if="createForm.platform === 'antigravity'" class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
@@ -1387,81 +1312,6 @@
           </div>
         </div>
 
-        <!-- Sora 按次计费配置 -->
-        <div v-if="editForm.platform === 'sora'" class="border-t pt-4">
-          <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300">
-            {{ t('admin.groups.soraPricing.title') }}
-          </label>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t('admin.groups.soraPricing.description') }}
-          </p>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image360') }}</label>
-              <input
-                v-model.number="editForm.sora_image_price_360"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.05"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.image540') }}</label>
-              <input
-                v-model.number="editForm.sora_image_price_540"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.08"
-              />
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.video') }}</label>
-              <input
-                v-model.number="editForm.sora_video_price_per_request"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.5"
-              />
-            </div>
-            <div>
-              <label class="input-label">{{ t('admin.groups.soraPricing.videoHd') }}</label>
-              <input
-                v-model.number="editForm.sora_video_price_per_request_hd"
-                type="number"
-                step="0.001"
-                min="0"
-                class="input"
-                placeholder="0.8"
-              />
-            </div>
-          </div>
-          <div class="mt-3">
-            <label class="input-label">{{ t('admin.groups.soraPricing.storageQuota') }}</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model.number="editForm.sora_storage_quota_gb"
-                type="number"
-                step="0.1"
-                min="0"
-                class="input"
-                placeholder="10"
-              />
-              <span class="shrink-0 text-sm text-gray-500">GB</span>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ t('admin.groups.soraPricing.storageQuotaHint') }}
-            </p>
-          </div>
-        </div>
-
         <!-- 支持的模型系列（仅 antigravity 平台） -->
         <div v-if="editForm.platform === 'antigravity'" class="border-t pt-4">
           <div class="mb-1.5 flex items-center gap-1">
@@ -2018,7 +1868,6 @@ const platformOptions = computed(() => [
   { value: 'openai', label: 'OpenAI' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'antigravity', label: 'Antigravity' },
-  { value: 'sora', label: 'Sora' }
 ])
 
 const platformFilterOptions = computed(() => [
@@ -2027,7 +1876,6 @@ const platformFilterOptions = computed(() => [
   { value: 'openai', label: 'OpenAI' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'antigravity', label: 'Antigravity' },
-  { value: 'sora', label: 'Sora' }
 ])
 
 const editStatusOptions = computed(() => [
@@ -2173,12 +2021,6 @@ const createForm = reactive({
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Sora 按次计费配置
-  sora_image_price_360: null as number | null,
-  sora_image_price_540: null as number | null,
-  sora_video_price_per_request: null as number | null,
-  sora_video_price_per_request_hd: null as number | null,
-  sora_storage_quota_gb: null as number | null,
   // 按次计费配置
   per_request_pricing_enabled: false,
   per_request_price: null as number | null,
@@ -2421,12 +2263,6 @@ const editForm = reactive({
   image_price_1k: null as number | null,
   image_price_2k: null as number | null,
   image_price_4k: null as number | null,
-  // Sora 按次计费配置
-  sora_image_price_360: null as number | null,
-  sora_image_price_540: null as number | null,
-  sora_video_price_per_request: null as number | null,
-  sora_video_price_per_request_hd: null as number | null,
-  sora_storage_quota_gb: null as number | null,
   // 按次计费配置
   per_request_pricing_enabled: false,
   per_request_price: null as number | null,
@@ -2529,11 +2365,6 @@ const closeCreateModal = () => {
   createForm.image_price_1k = null
   createForm.image_price_2k = null
   createForm.image_price_4k = null
-  createForm.sora_image_price_360 = null
-  createForm.sora_image_price_540 = null
-  createForm.sora_video_price_per_request = null
-  createForm.sora_video_price_per_request_hd = null
-  createForm.sora_storage_quota_gb = null
   createForm.per_request_pricing_enabled = false
   createForm.per_request_price = null
   createForm.model_per_request_prices = []
@@ -2556,7 +2387,7 @@ const handleCreateGroup = async () => {
   submitting.value = true
   try {
     // 构建请求数据，包含模型路由配置
-    const { sora_storage_quota_gb: createQuotaGb, per_request_pricing_enabled: _prEnabled, model_per_request_prices: createModelPrices, ...createRest } = createForm
+    const { per_request_pricing_enabled: _prEnabled, model_per_request_prices: createModelPrices, ...createRest } = createForm
     // 构建按次计费数据
     const perRequestPrice = createForm.per_request_pricing_enabled ? createForm.per_request_price : null
     const modelPerRequestPrices: Record<string, number> | null = createForm.per_request_pricing_enabled && createModelPrices.length > 0
@@ -2564,7 +2395,6 @@ const handleCreateGroup = async () => {
       : null
     const requestData = {
       ...createRest,
-      sora_storage_quota_bytes: createQuotaGb ? Math.round(createQuotaGb * 1024 * 1024 * 1024) : 0,
       model_routing: convertRoutingRulesToApiFormat(createModelRoutingRules.value),
       per_request_price: perRequestPrice,
       model_per_request_prices: modelPerRequestPrices
@@ -2601,11 +2431,6 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.image_price_1k = group.image_price_1k
   editForm.image_price_2k = group.image_price_2k
   editForm.image_price_4k = group.image_price_4k
-  editForm.sora_image_price_360 = group.sora_image_price_360
-  editForm.sora_image_price_540 = group.sora_image_price_540
-  editForm.sora_video_price_per_request = group.sora_video_price_per_request
-  editForm.sora_video_price_per_request_hd = group.sora_video_price_per_request_hd
-  editForm.sora_storage_quota_gb = group.sora_storage_quota_bytes ? Number((group.sora_storage_quota_bytes / (1024 * 1024 * 1024)).toFixed(2)) : null
   editForm.per_request_pricing_enabled = group.per_request_price != null
   editForm.per_request_price = group.per_request_price
   editForm.model_per_request_prices = group.model_per_request_prices
@@ -2646,7 +2471,7 @@ const handleUpdateGroup = async () => {
   submitting.value = true
   try {
     // 转换 fallback_group_id: null -> 0 (后端使用 0 表示清除)
-    const { sora_storage_quota_gb: editQuotaGb, per_request_pricing_enabled: _prEditEnabled, model_per_request_prices: editModelPrices, ...editRest } = editForm
+    const { per_request_pricing_enabled: _prEditEnabled, model_per_request_prices: editModelPrices, ...editRest } = editForm
     // 构建按次计费数据
     const editPerRequestPrice = editForm.per_request_pricing_enabled ? editForm.per_request_price : -1  // -1 triggers normalizePrice to nil
     const editModelPerRequestPrices: Record<string, number> | null = editForm.per_request_pricing_enabled && editModelPrices.length > 0
@@ -2654,7 +2479,6 @@ const handleUpdateGroup = async () => {
       : null
     const payload = {
       ...editRest,
-      sora_storage_quota_bytes: editQuotaGb ? Math.round(editQuotaGb * 1024 * 1024 * 1024) : 0,
       fallback_group_id: editForm.fallback_group_id === null ? 0 : editForm.fallback_group_id,
       fallback_group_id_on_invalid_request:
         editForm.fallback_group_id_on_invalid_request === null

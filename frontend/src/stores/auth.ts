@@ -7,6 +7,8 @@ import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
 import { authAPI, isTotp2FARequired, type LoginResponse } from '@/api'
 import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'
+import { useAppStore } from './app'
+import { i18n } from '@/i18n'
 
 const AUTH_TOKEN_KEY = 'auth_token'
 const AUTH_USER_KEY = 'auth_user'
@@ -251,6 +253,26 @@ export const useAuthStore = defineStore('auth', () => {
     // scheduleTokenRefresh will also store the expiry timestamp
     if (response.refresh_token && response.expires_in) {
       scheduleTokenRefresh(response.expires_in)
+    }
+
+    // 登录 IP 弹窗提醒
+    if (response.login_info) {
+      const appStore = useAppStore()
+      const t = i18n.global.t as (key: string, ...args: any[]) => string
+      const info = response.login_info
+      let message = `${t('auth.loginIP.currentIP')}: ${info.current_ip}`
+      if (info.last_login_ip) {
+        const timeStr = info.last_login_at
+          ? new Date(info.last_login_at).toLocaleString()
+          : ''
+        message += `\n${t('auth.loginIP.lastIP')}: ${info.last_login_ip}`
+        if (timeStr) {
+          message += ` (${timeStr})`
+        }
+      } else {
+        message += `\n${t('auth.loginIP.firstLogin')}`
+      }
+      appStore.showInfo(message, 8000)
     }
   }
 
