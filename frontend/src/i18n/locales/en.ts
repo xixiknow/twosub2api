@@ -2643,7 +2643,8 @@ export default {
         invitation: 'Invitation',
         // Admin adjustment types (created when admin modifies user balance/concurrency)
         admin_balance: 'Balance (Admin)',
-        admin_concurrency: 'Concurrency (Admin)'
+        admin_concurrency: 'Concurrency (Admin)',
+        payment_balance: 'Balance (Payment)'
       },
       selectGroup: 'Select Group',
       selectGroupPlaceholder: 'Choose a subscription group',
