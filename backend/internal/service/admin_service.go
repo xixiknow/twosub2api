@@ -423,6 +423,7 @@ type adminServiceImpl struct {
 	proxyLatencyCache      ProxyLatencyCache
 	authCacheInvalidator   APIKeyAuthCacheInvalidator
 	modelsCacheInvalidator ModelsCacheInvalidator // 用于在账号变更时失效模型列表缓存
+	tokenCacheInvalidator  TokenCacheInvalidator  // 用于在账号凭据变更/删除时清除 token 缓存
 	entClient              *dbent.Client          // 用于开启数据库事务
 	settingService         *SettingService
 	defaultSubAssigner     DefaultSubscriptionAssigner
@@ -452,6 +453,7 @@ func NewAdminService(
 	proxyLatencyCache ProxyLatencyCache,
 	authCacheInvalidator APIKeyAuthCacheInvalidator,
 	modelsCacheInvalidator ModelsCacheInvalidator,
+	tokenCacheInvalidator TokenCacheInvalidator,
 	entClient *dbent.Client,
 	settingService *SettingService,
 	defaultSubAssigner DefaultSubscriptionAssigner,
@@ -471,6 +473,7 @@ func NewAdminService(
 		proxyLatencyCache:      proxyLatencyCache,
 		authCacheInvalidator:   authCacheInvalidator,
 		modelsCacheInvalidator: modelsCacheInvalidator,
+		tokenCacheInvalidator:  tokenCacheInvalidator,
 		entClient:              entClient,
 		settingService:         settingService,
 		defaultSubAssigner:     defaultSubAssigner,
@@ -1560,6 +1563,11 @@ func (s *adminServiceImpl) UpdateAccount(ctx context.Context, id int64, input *U
 		return nil, err
 	}
 
+	// 凭据变更时清除 token 缓存，避免使用旧的失效 token
+	if len(input.Credentials) > 0 && s.tokenCacheInvalidator != nil {
+		_ = s.tokenCacheInvalidator.InvalidateToken(ctx, account)
+	}
+
 	// 绑定分组
 	if input.GroupIDs != nil {
 		if err := s.accountRepo.BindGroups(ctx, account.ID, *input.GroupIDs); err != nil {
@@ -1687,6 +1695,18 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 		return nil, err
 	}
 
+	// 凭据变更时批量清除 token 缓存
+	if len(input.Credentials) > 0 && s.tokenCacheInvalidator != nil {
+		accounts, err := s.accountRepo.GetByIDs(ctx, input.AccountIDs)
+		if err == nil {
+			for _, account := range accounts {
+				if account != nil {
+					_ = s.tokenCacheInvalidator.InvalidateToken(ctx, account)
+				}
+			}
+		}
+	}
+
 	// Handle group bindings per account (requires individual operations).
 	for _, accountID := range input.AccountIDs {
 		entry := BulkUpdateAccountResult{AccountID: accountID}
@@ -1712,6 +1732,13 @@ func (s *adminServiceImpl) BulkUpdateAccounts(ctx context.Context, input *BulkUp
 }
 
 func (s *adminServiceImpl) DeleteAccount(ctx context.Context, id int64) error {
+	// 删除前获取账号信息，用于清除 token 缓存
+	if s.tokenCacheInvalidator != nil {
+		if account, err := s.accountRepo.GetByID(ctx, id); err == nil && account != nil {
+			_ = s.tokenCacheInvalidator.InvalidateToken(ctx, account)
+		}
+	}
+
 	if err := s.accountRepo.Delete(ctx, id); err != nil {
 		return err
 	}
