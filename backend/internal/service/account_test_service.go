@@ -263,14 +263,9 @@ func createTestPayload(modelID string) (map[string]any, error) {
 }
 
 func buildModelAwareTestPrompt(platform, modelID string) string {
-	model := strings.TrimSpace(modelID)
-	if model == "" {
-		model = "unknown"
-	}
 	return fmt.Sprintf(
-		"[%s connectivity test] Reply briefly in Chinese and include marker [MODEL:%s].",
+		"[%s connectivity test] Reply briefly in Chinese confirming the connection is working.",
 		platform,
-		model,
 	)
 }
 
