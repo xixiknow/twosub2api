@@ -785,8 +785,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPromoCodeEnabled:                 "true", // 默认启用优惠码功能
 		SettingKeySiteName:                         "Sub2API",
 		SettingKeySiteLogo:                         "",
-		SettingKeyModelSquareEnabled:              "true",
-		SettingKeyAvailabilityCheckEnabled:        "true",
+		SettingKeyModelSquareEnabled:               "true",
+		SettingKeyAvailabilityCheckEnabled:         "true",
 		SettingKeyPurchaseSubscriptionEnabled:      "false",
 		SettingKeyPurchaseSubscriptionURL:          "",
 		SettingKeyCustomMenuItems:                  "[]",

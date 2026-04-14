@@ -643,11 +643,30 @@ func newContractDeps(t *testing.T) *contractDeps {
 	settingRepo := newStubSettingRepo()
 	settingService := service.NewSettingService(settingRepo, cfg)
 
-	adminService := service.NewAdminService(userRepo, groupRepo, &accountRepo, nil, proxyRepo, apiKeyRepo, redeemRepo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	adminService := service.NewAdminService(
+		userRepo,
+		groupRepo,
+		&accountRepo,
+		proxyRepo,
+		apiKeyRepo,
+		redeemRepo,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		settingService,
+		nil,
+		userSubRepo,
+		nil,
+	)
 	authHandler := handler.NewAuthHandler(cfg, nil, userService, settingService, nil, redeemService, nil)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	usageHandler := handler.NewUsageHandler(usageService, apiKeyService)
-	adminSettingHandler := adminhandler.NewSettingHandler(settingService, nil, nil, nil, nil)
+	adminSettingHandler := adminhandler.NewSettingHandler(settingService, nil, nil, nil)
 	adminAccountHandler := adminhandler.NewAccountHandler(adminService, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	jwtAuth := func(c *gin.Context) {
@@ -768,59 +787,101 @@ func (r *stubUserRepo) GetFirstAdmin(ctx context.Context) (*service.User, error)
 }
 
 func (r *stubUserRepo) Update(ctx context.Context, user *service.User) error {
-	return errors.New("not implemented")
+	if user == nil {
+		return errors.New("user is required")
+	}
+	clone := *user
+	r.users[user.ID] = &clone
+	return nil
 }
 
 func (r *stubUserRepo) Delete(ctx context.Context, id int64) error {
-	return errors.New("not implemented")
+	delete(r.users, id)
+	return nil
 }
 
 func (r *stubUserRepo) List(ctx context.Context, params pagination.PaginationParams) ([]service.User, *pagination.PaginationResult, error) {
-	return nil, nil, errors.New("not implemented")
+	items := make([]service.User, 0, len(r.users))
+	for _, user := range r.users {
+		items = append(items, *user)
+	}
+	return items, paginationResult(int64(len(items)), params), nil
 }
 
 func (r *stubUserRepo) ListWithFilters(ctx context.Context, params pagination.PaginationParams, filters service.UserListFilters) ([]service.User, *pagination.PaginationResult, error) {
-	return nil, nil, errors.New("not implemented")
+	return r.List(ctx, params)
 }
 
 func (r *stubUserRepo) UpdateBalance(ctx context.Context, id int64, amount float64) error {
-	return errors.New("not implemented")
+	user, ok := r.users[id]
+	if !ok {
+		return service.ErrUserNotFound
+	}
+	clone := *user
+	clone.Balance += amount
+	r.users[id] = &clone
+	return nil
 }
 
 func (r *stubUserRepo) DeductBalance(ctx context.Context, id int64, amount float64) error {
-	return errors.New("not implemented")
+	return r.UpdateBalance(ctx, id, -amount)
 }
 
 func (r *stubUserRepo) UpdateConcurrency(ctx context.Context, id int64, amount int) error {
-	return errors.New("not implemented")
+	user, ok := r.users[id]
+	if !ok {
+		return service.ErrUserNotFound
+	}
+	clone := *user
+	clone.Concurrency = amount
+	r.users[id] = &clone
+	return nil
 }
 
 func (r *stubUserRepo) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	return false, errors.New("not implemented")
+	for _, user := range r.users {
+		if user.Email == email {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (r *stubUserRepo) RemoveGroupFromAllowedGroups(ctx context.Context, groupID int64) (int64, error) {
-	return 0, errors.New("not implemented")
+	return 0, nil
 }
 
 func (r *stubUserRepo) AddGroupToAllowedGroups(ctx context.Context, userID int64, groupID int64) error {
-	return errors.New("not implemented")
+	return nil
 }
 
 func (r *stubUserRepo) UpdateTotpSecret(ctx context.Context, userID int64, encryptedSecret *string) error {
-	return errors.New("not implemented")
+	return nil
 }
 
 func (r *stubUserRepo) EnableTotp(ctx context.Context, userID int64) error {
-	return errors.New("not implemented")
+	return nil
 }
 
 func (r *stubUserRepo) DisableTotp(ctx context.Context, userID int64) error {
-	return errors.New("not implemented")
+	return nil
 }
 
 func (r *stubUserRepo) GetByReferralCode(ctx context.Context, code string) (*service.User, error) {
 	return nil, service.ErrUserNotFound
+}
+
+func (r *stubUserRepo) UpdateLoginIP(ctx context.Context, userID int64, ip string) error {
+	user, ok := r.users[userID]
+	if !ok {
+		return service.ErrUserNotFound
+	}
+	clone := *user
+	clone.LastLoginIP = ip
+	now := time.Now()
+	clone.LastLoginAt = &now
+	r.users[userID] = &clone
+	return nil
 }
 
 type stubApiKeyCache struct{}
@@ -1638,6 +1699,12 @@ func (r *stubUsageLogRepo) GetAPIKeyUsageTrend(ctx context.Context, startTime, e
 
 func (r *stubUsageLogRepo) GetUserUsageTrend(ctx context.Context, startTime, endTime time.Time, granularity string, limit int) ([]usagestats.UserUsageTrendPoint, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (r *stubUsageLogRepo) GetUserSpendingRanking(ctx context.Context, startTime, endTime time.Time, limit int) (*usagestats.UserSpendingRankingResponse, error) {
+	return &usagestats.UserSpendingRankingResponse{
+		Ranking: []usagestats.UserSpendingRankingItem{},
+	}, nil
 }
 
 func (r *stubUsageLogRepo) GetUserStatsAggregated(ctx context.Context, userID int64, startTime, endTime time.Time) (*usagestats.UsageStats, error) {
