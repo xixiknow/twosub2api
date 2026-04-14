@@ -603,9 +603,10 @@ func (s *GroupRepoSuite) TestGetAccountCount() {
 	_, err = s.tx.ExecContext(s.ctx, "INSERT INTO account_groups (account_id, group_id, priority, created_at) VALUES ($1, $2, $3, NOW())", a2, group.ID, 2)
 	s.Require().NoError(err)
 
-	count, err := s.repo.GetAccountCount(s.ctx, group.ID)
+	count, active, err := s.repo.GetAccountCount(s.ctx, group.ID)
 	s.Require().NoError(err, "GetAccountCount")
 	s.Require().Equal(int64(2), count)
+	s.Require().Equal(int64(0), active)
 }
 
 func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
@@ -619,9 +620,10 @@ func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
 	}
 	s.Require().NoError(s.repo.Create(s.ctx, group))
 
-	count, err := s.repo.GetAccountCount(s.ctx, group.ID)
+	count, active, err := s.repo.GetAccountCount(s.ctx, group.ID)
 	s.Require().NoError(err)
 	s.Require().Zero(count)
+	s.Require().Zero(active)
 }
 
 // --- DeleteAccountGroupsByGroupID ---
@@ -651,9 +653,10 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID() {
 	s.Require().NoError(err, "DeleteAccountGroupsByGroupID")
 	s.Require().Equal(int64(1), affected, "expected 1 affected row")
 
-	count, err := s.repo.GetAccountCount(s.ctx, g.ID)
+	count, active, err := s.repo.GetAccountCount(s.ctx, g.ID)
 	s.Require().NoError(err, "GetAccountCount")
 	s.Require().Equal(int64(0), count, "expected 0 account groups")
+	s.Require().Equal(int64(0), active, "expected 0 active account groups")
 }
 
 func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID_MultipleAccounts() {
@@ -692,8 +695,9 @@ func (s *GroupRepoSuite) TestDeleteAccountGroupsByGroupID_MultipleAccounts() {
 	s.Require().NoError(err)
 	s.Require().Equal(int64(3), affected)
 
-	count, _ := s.repo.GetAccountCount(s.ctx, g.ID)
+	count, active, _ := s.repo.GetAccountCount(s.ctx, g.ID)
 	s.Require().Zero(count)
+	s.Require().Zero(active)
 }
 
 // --- 软删除过滤测试 ---
