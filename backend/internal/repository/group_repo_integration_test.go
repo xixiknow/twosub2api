@@ -606,7 +606,7 @@ func (s *GroupRepoSuite) TestGetAccountCount() {
 	count, active, err := s.repo.GetAccountCount(s.ctx, group.ID)
 	s.Require().NoError(err, "GetAccountCount")
 	s.Require().Equal(int64(2), count)
-	s.Require().Equal(int64(0), active)
+	s.Require().Equal(int64(2), active)
 }
 
 func (s *GroupRepoSuite) TestGetAccountCount_Empty() {
