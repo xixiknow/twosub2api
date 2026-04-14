@@ -1045,7 +1045,7 @@ func (s *stubAccountRepo) List(ctx context.Context, params pagination.Pagination
 	return nil, nil, errors.New("not implemented")
 }
 
-func (s *stubAccountRepo) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64) ([]service.Account, *pagination.PaginationResult, error) {
+func (s *stubAccountRepo) ListWithFilters(ctx context.Context, params pagination.PaginationParams, platform, accountType, status, search string, groupID int64, ungrouped bool) ([]service.Account, *pagination.PaginationResult, error) {
 	return nil, nil, errors.New("not implemented")
 }
 
@@ -1087,6 +1087,10 @@ func (s *stubAccountRepo) AutoPauseExpiredAccounts(ctx context.Context, now time
 
 func (s *stubAccountRepo) BindGroups(ctx context.Context, accountID int64, groupIDs []int64) error {
 	return errors.New("not implemented")
+}
+
+func (s *stubAccountRepo) GetGroupIDsByAccountID(ctx context.Context, accountID int64) ([]int64, error) {
+	return nil, errors.New("not implemented")
 }
 
 func (s *stubAccountRepo) ListSchedulable(ctx context.Context) ([]service.Account, error) {

@@ -113,6 +113,16 @@ func (m *mockAccountRepoForGemini) AutoPauseExpiredAccounts(ctx context.Context,
 func (m *mockAccountRepoForGemini) BindGroups(ctx context.Context, accountID int64, groupIDs []int64) error {
 	return nil
 }
+func (m *mockAccountRepoForGemini) GetGroupIDsByAccountID(ctx context.Context, accountID int64) ([]int64, error) {
+	if acc, ok := m.accountsByID[accountID]; ok {
+		groupIDs := make([]int64, 0, len(acc.AccountGroups))
+		for _, group := range acc.AccountGroups {
+			groupIDs = append(groupIDs, group.GroupID)
+		}
+		return groupIDs, nil
+	}
+	return nil, nil
+}
 func (m *mockAccountRepoForGemini) ListSchedulable(ctx context.Context) ([]Account, error) {
 	return nil, nil
 }

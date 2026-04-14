@@ -200,3 +200,7 @@ func (s *stubUserRepo) DisableTotp(ctx context.Context, userID int64) error {
 func (s *stubUserRepo) GetByReferralCode(ctx context.Context, code string) (*service.User, error) {
 	return nil, service.ErrUserNotFound
 }
+
+func (s *stubUserRepo) UpdateLoginIP(ctx context.Context, userID int64, ip string) error {
+	return nil
+}
