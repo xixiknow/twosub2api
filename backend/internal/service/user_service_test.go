@@ -52,6 +52,7 @@ func (m *mockUserRepo) DisableTotp(context.Context, int64) error                
 func (m *mockUserRepo) GetByReferralCode(context.Context, string) (*User, error) {
 	return nil, ErrUserNotFound
 }
+func (m *mockUserRepo) UpdateLoginIP(context.Context, int64, string) error { return nil }
 
 // --- mock: APIKeyAuthCacheInvalidator ---
 
