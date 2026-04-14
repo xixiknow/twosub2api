@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -60,6 +61,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		DocURL:                           settings.DocURL,
 		HomeContent:                      settings.HomeContent,
 		HideCcsImportButton:              settings.HideCcsImportButton,
+		ModelSquareEnabled:               settings.ModelSquareEnabled,
+		AvailabilityCheckEnabled:         settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                  dto.ParseUserVisibleMenuItems(settings.CustomMenuItems),
@@ -112,6 +115,10 @@ type modelSquareItem struct {
 // GET /api/v1/model-square
 func (h *SettingHandler) GetModelSquare(c *gin.Context) {
 	ctx := c.Request.Context()
+	if !h.isUserFeatureEnabled(ctx, c, func(settings *service.PublicSettings) bool { return settings.ModelSquareEnabled }) {
+		response.Forbidden(c, "Model Square is disabled")
+		return
+	}
 	userID := getUserIDFromContext(c)
 	if userID == 0 {
 		response.Error(c, 401, "unauthorized")
@@ -221,6 +228,10 @@ func (h *SettingHandler) GetModelSquare(c *gin.Context) {
 // GET /api/v1/groups/availability
 func (h *SettingHandler) GetGroupAvailability(c *gin.Context) {
 	ctx := c.Request.Context()
+	if !h.isUserFeatureEnabled(ctx, c, func(settings *service.PublicSettings) bool { return settings.AvailabilityCheckEnabled }) {
+		response.Forbidden(c, "Availability check is disabled")
+		return
+	}
 	userID := getUserIDFromContext(c)
 	if userID == 0 {
 		response.Error(c, 401, "unauthorized")
@@ -258,4 +269,18 @@ func getUserIDFromContext(c *gin.Context) int64 {
 		}
 	}
 	return 0
+}
+
+func (h *SettingHandler) isUserFeatureEnabled(ctx context.Context, c *gin.Context, enabled func(*service.PublicSettings) bool) bool {
+	role, _ := middleware2.GetUserRoleFromContext(c)
+	if role == service.RoleAdmin {
+		return true
+	}
+
+	settings, err := h.settingService.GetPublicSettings(ctx)
+	if err != nil {
+		return false
+	}
+
+	return enabled(settings)
 }

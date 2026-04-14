@@ -120,6 +120,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyDocURL,
 		SettingKeyHomeContent,
 		SettingKeyHideCcsImportButton,
+		SettingKeyModelSquareEnabled,
+		SettingKeyAvailabilityCheckEnabled,
 		SettingKeyPurchaseSubscriptionEnabled,
 		SettingKeyPurchaseSubscriptionURL,
 		SettingKeyCustomMenuItems,
@@ -165,6 +167,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
+		ModelSquareEnabled:               !isFalseSettingValue(settings[SettingKeyModelSquareEnabled]),
+		AvailabilityCheckEnabled:         !isFalseSettingValue(settings[SettingKeyAvailabilityCheckEnabled]),
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
@@ -212,6 +216,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		DocURL                           string          `json:"doc_url,omitempty"`
 		HomeContent                      string          `json:"home_content,omitempty"`
 		HideCcsImportButton              bool            `json:"hide_ccs_import_button"`
+		ModelSquareEnabled               bool            `json:"model_square_enabled"`
+		AvailabilityCheckEnabled         bool            `json:"availability_check_enabled"`
 		PurchaseSubscriptionEnabled      bool            `json:"purchase_subscription_enabled"`
 		PurchaseSubscriptionURL          string          `json:"purchase_subscription_url,omitempty"`
 		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
@@ -237,6 +243,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		DocURL:                           settings.DocURL,
 		HomeContent:                      settings.HomeContent,
 		HideCcsImportButton:              settings.HideCcsImportButton,
+		ModelSquareEnabled:               settings.ModelSquareEnabled,
+		AvailabilityCheckEnabled:         settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                  filterUserVisibleMenuItems(settings.CustomMenuItems),
@@ -418,6 +426,8 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyDocURL] = settings.DocURL
 	updates[SettingKeyHomeContent] = settings.HomeContent
 	updates[SettingKeyHideCcsImportButton] = strconv.FormatBool(settings.HideCcsImportButton)
+	updates[SettingKeyModelSquareEnabled] = strconv.FormatBool(settings.ModelSquareEnabled)
+	updates[SettingKeyAvailabilityCheckEnabled] = strconv.FormatBool(settings.AvailabilityCheckEnabled)
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
@@ -775,6 +785,8 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyPromoCodeEnabled:                 "true", // 默认启用优惠码功能
 		SettingKeySiteName:                         "Sub2API",
 		SettingKeySiteLogo:                         "",
+		SettingKeyModelSquareEnabled:              "true",
+		SettingKeyAvailabilityCheckEnabled:        "true",
 		SettingKeyPurchaseSubscriptionEnabled:      "false",
 		SettingKeyPurchaseSubscriptionURL:          "",
 		SettingKeyCustomMenuItems:                  "[]",
@@ -837,6 +849,8 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		DocURL:                           settings[SettingKeyDocURL],
 		HomeContent:                      settings[SettingKeyHomeContent],
 		HideCcsImportButton:              settings[SettingKeyHideCcsImportButton] == "true",
+		ModelSquareEnabled:               !isFalseSettingValue(settings[SettingKeyModelSquareEnabled]),
+		AvailabilityCheckEnabled:         !isFalseSettingValue(settings[SettingKeyAvailabilityCheckEnabled]),
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],

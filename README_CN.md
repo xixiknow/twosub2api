@@ -43,16 +43,16 @@ TwoSub2API 是一个 AI API 网关平台，用于分发和管理 AI 产品订阅
 
 ## 部署方式
 
-### Docker 镜像（阿里云容器镜像服务）
+### Docker 镜像（GitHub Container Registry）
 
-直接从阿里云容器镜像仓库拉取：
+直接从 GitHub Container Registry 拉取：
 
 ```bash
 # 拉取最新版
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
+docker pull ghcr.io/xixiknow/twosub2api:latest
 
 # 拉取指定版本
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.95
+docker pull ghcr.io/xixiknow/twosub2api:v0.2.95
 ```
 
 ### Docker Compose 部署（推荐）
@@ -68,7 +68,7 @@ docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/t
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/miaocg1789/twosub2api.git
+git clone https://github.com/xixiknow/twosub2api.git
 cd twosub2api/deploy
 
 # 2. 复制环境配置文件
@@ -155,7 +155,7 @@ docker-compose -f docker-compose.local.yml up -d
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/miaocg1789/twosub2api.git
+git clone https://github.com/xixiknow/twosub2api.git
 cd twosub2api
 
 # 2. 安装 pnpm

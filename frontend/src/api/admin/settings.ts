@@ -37,6 +37,8 @@ export interface SystemSettings {
   doc_url: string
   home_content: string
   hide_ccs_import_button: boolean
+  model_square_enabled: boolean
+  availability_check_enabled: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   custom_menu_items: CustomMenuItem[]
@@ -131,6 +133,8 @@ export interface UpdateSettingsRequest {
   doc_url?: string
   home_content?: string
   hide_ccs_import_button?: boolean
+  model_square_enabled?: boolean
+  availability_check_enabled?: boolean
   purchase_subscription_enabled?: boolean
   purchase_subscription_url?: string
   custom_menu_items?: CustomMenuItem[]

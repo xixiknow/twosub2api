@@ -43,16 +43,16 @@ TwoSub2API is an AI API gateway platform designed to distribute and manage API q
 
 ## Deployment
 
-### Docker Image (Alibaba Cloud Registry)
+### Docker Image (GitHub Container Registry)
 
-Pull the latest image directly from Alibaba Cloud Container Registry:
+Pull the latest image directly from GitHub Container Registry:
 
 ```bash
 # Pull latest
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
+docker pull ghcr.io/xixiknow/twosub2api:latest
 
 # Or pull a specific version
-docker pull crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:v0.2.95
+docker pull ghcr.io/xixiknow/twosub2api:v0.2.95
 ```
 
 ### Docker Compose (Recommended)
@@ -68,7 +68,7 @@ Deploy with Docker Compose, including PostgreSQL and Redis containers.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/miaocg1789/twosub2api.git
+git clone https://github.com/xixiknow/twosub2api.git
 cd twosub2api/deploy
 
 # 2. Copy environment configuration
@@ -155,7 +155,7 @@ Build and run from source code for development or customization.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/miaocg1789/twosub2api.git
+git clone https://github.com/xixiknow/twosub2api.git
 cd twosub2api
 
 # 2. Install pnpm (if not already installed)

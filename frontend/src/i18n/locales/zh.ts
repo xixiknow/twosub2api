@@ -3965,7 +3965,11 @@ export default {
         homeContentIframeWarning:
           '⚠️ iframe 模式提示：部分网站设置了 X-Frame-Options 或 CSP 安全策略，禁止被嵌入到 iframe 中。如果页面显示空白或报错，请确认目标网站允许被嵌入，或考虑使用 HTML 模式自行构建页面内容。',
         hideCcsImportButton: '隐藏 CCS 导入按钮',
-        hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮'
+        hideCcsImportButtonHint: '启用后将在 API Keys 页面隐藏"导入 CCS"按钮',
+        modelSquareEnabled: '开放模型广场',
+        modelSquareEnabledHint: '关闭后，普通用户将看不到也无法访问模型广场页面',
+        availabilityCheckEnabled: '开放可用性检测',
+        availabilityCheckEnabledHint: '关闭后，普通用户将看不到也无法访问可用性检测页面'
       },
       purchase: {
         title: '充值/订阅页面',
@@ -4295,6 +4299,7 @@ export default {
     refresh: '刷新',
     sourceMode: '源码构建',
     sourceModeHint: '源码构建请使用 git pull 更新',
+    dockerModeHint: 'Docker 部署请拉取最新 ghcr.io/xixiknow/twosub2api 镜像后重建容器',
     updateNow: '立即更新',
     updating: '正在更新...',
     updateComplete: '更新完成',

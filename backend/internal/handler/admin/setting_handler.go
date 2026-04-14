@@ -103,6 +103,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		DocURL:                               settings.DocURL,
 		HomeContent:                          settings.HomeContent,
 		HideCcsImportButton:                  settings.HideCcsImportButton,
+		ModelSquareEnabled:                   settings.ModelSquareEnabled,
+		AvailabilityCheckEnabled:             settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:          settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
@@ -166,6 +168,8 @@ type UpdateSettingsRequest struct {
 	DocURL                      string                `json:"doc_url"`
 	HomeContent                 string                `json:"home_content"`
 	HideCcsImportButton         bool                  `json:"hide_ccs_import_button"`
+	ModelSquareEnabled          bool                  `json:"model_square_enabled"`
+	AvailabilityCheckEnabled    bool                  `json:"availability_check_enabled"`
 	PurchaseSubscriptionEnabled *bool                 `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
 	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
@@ -457,6 +461,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		DocURL:                           req.DocURL,
 		HomeContent:                      req.HomeContent,
 		HideCcsImportButton:              req.HideCcsImportButton,
+		ModelSquareEnabled:               req.ModelSquareEnabled,
+		AvailabilityCheckEnabled:         req.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      purchaseEnabled,
 		PurchaseSubscriptionURL:          purchaseURL,
 		CustomMenuItems:                  customMenuJSON,
@@ -551,6 +557,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		DocURL:                               updatedSettings.DocURL,
 		HomeContent:                          updatedSettings.HomeContent,
 		HideCcsImportButton:                  updatedSettings.HideCcsImportButton,
+		ModelSquareEnabled:                   updatedSettings.ModelSquareEnabled,
+		AvailabilityCheckEnabled:             updatedSettings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:          updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              updatedSettings.PurchaseSubscriptionURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
@@ -676,6 +684,12 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.HideCcsImportButton != after.HideCcsImportButton {
 		changed = append(changed, "hide_ccs_import_button")
+	}
+	if before.ModelSquareEnabled != after.ModelSquareEnabled {
+		changed = append(changed, "model_square_enabled")
+	}
+	if before.AvailabilityCheckEnabled != after.AvailabilityCheckEnabled {
+		changed = append(changed, "availability_check_enabled")
 	}
 	if before.DefaultConcurrency != after.DefaultConcurrency {
 		changed = append(changed, "default_concurrency")

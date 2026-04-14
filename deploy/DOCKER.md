@@ -10,7 +10,7 @@ docker run -d \
   -p 8080:8080 \
   -e DATABASE_URL="postgres://user:pass@host:5432/sub2api" \
   -e REDIS_URL="redis://host:6379" \
-  crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
+  ghcr.io/xixiknow/twosub2api:latest
 ```
 
 ## Docker Compose
@@ -20,7 +20,7 @@ version: '3.8'
 
 services:
   sub2api:
-    image: crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
+    image: ghcr.io/xixiknow/twosub2api:latest
     ports:
       - "8080:8080"
     environment:
@@ -72,5 +72,5 @@ volumes:
 
 ## Links
 
-- [GitHub Repository](https://github.com/miaocg1789/twosub2api)
-- [Documentation](https://github.com/miaocg1789/twosub2api#readme)
+- [GitHub Repository](https://github.com/xixiknow/twosub2api)
+- [Documentation](https://github.com/xixiknow/twosub2api#readme)

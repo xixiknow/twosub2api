@@ -38,6 +38,8 @@ type SystemSettings struct {
 	DocURL                      string
 	HomeContent                 string
 	HideCcsImportButton         bool
+	ModelSquareEnabled          bool
+	AvailabilityCheckEnabled    bool
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
 	CustomMenuItems             string // JSON array of custom menu items
@@ -96,6 +98,8 @@ type PublicSettings struct {
 	DocURL                           string
 	HomeContent                      string
 	HideCcsImportButton              bool
+	ModelSquareEnabled               bool
+	AvailabilityCheckEnabled         bool
 
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string

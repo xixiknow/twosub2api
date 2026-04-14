@@ -7,9 +7,9 @@
 
 FROM alpine:3.19
 
-LABEL maintainer="Wei-Shaw <github.com/Wei-Shaw>"
-LABEL description="Sub2API - AI API Gateway Platform"
-LABEL org.opencontainers.image.source="https://github.com/Wei-Shaw/sub2api"
+LABEL maintainer="xixiknow <github.com/xixiknow>"
+LABEL description="TwoSub2API - AI API Gateway Platform"
+LABEL org.opencontainers.image.source="https://github.com/xixiknow/twosub2api"
 
 # Install runtime dependencies
 RUN apk add --no-cache \

@@ -466,6 +466,8 @@ func TestAPIContracts(t *testing.T) {
 					service.SettingKeyAPIBaseURL:   "https://api.example.com",
 					service.SettingKeyContactInfo:  "support",
 					service.SettingKeyDocURL:       "https://docs.example.com",
+					service.SettingKeyModelSquareEnabled:       "true",
+					service.SettingKeyAvailabilityCheckEnabled: "true",
 
 					service.SettingKeyDefaultConcurrency: "5",
 					service.SettingKeyDefaultBalance:     "1.25",
@@ -527,6 +529,8 @@ func TestAPIContracts(t *testing.T) {
 						"invitation_code_enabled": false,
 						"home_content": "",
 					"hide_ccs_import_button": false,
+					"model_square_enabled": true,
+					"availability_check_enabled": true,
 					"purchase_subscription_enabled": false,
 					"purchase_subscription_url": "",
 					"min_claude_code_version": "",

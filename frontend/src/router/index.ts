@@ -456,7 +456,7 @@ const navigationLoading = useNavigationLoadingState()
 // 延迟初始化预加载，传入 router 实例
 let routePrefetch: ReturnType<typeof useRoutePrefetch> | null = null
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   // 开始导航加载状态
   navigationLoading.startNavigation()
 
@@ -518,6 +518,22 @@ router.beforeEach((to, _from, next) => {
     // User is authenticated but not admin, redirect to user dashboard
     next('/dashboard')
     return
+  }
+
+  if (!authStore.isAdmin) {
+    const needsFeatureCheck = to.path === '/model-square' || to.path === '/availability'
+    const publicSettings = needsFeatureCheck && !appStore.cachedPublicSettings
+      ? await appStore.fetchPublicSettings()
+      : appStore.cachedPublicSettings
+
+    if (to.path === '/model-square' && publicSettings?.model_square_enabled === false) {
+      next('/dashboard')
+      return
+    }
+    if (to.path === '/availability' && publicSettings?.availability_check_enabled === false) {
+      next('/dashboard')
+      return
+    }
   }
 
   // 简易模式下限制访问某些页面

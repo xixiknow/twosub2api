@@ -17,12 +17,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
 const (
 	updateCacheKey = "update_check_cache"
 	updateCacheTTL = 1200 // 20 minutes
-	githubRepo     = "Wei-Shaw/sub2api"
+	githubRepo     = "xixiknow/twosub2api"
 
 	// Security: allowed download domains for updates
 	allowedDownloadHost = "github.com"
@@ -50,7 +52,7 @@ type UpdateService struct {
 	cache          UpdateCache
 	githubClient   GitHubReleaseClient
 	currentVersion string
-	buildType      string // "source" for manual builds, "release" for CI builds
+	buildType      string // "source" for manual builds, "release" for packaged builds
 }
 
 // NewUpdateService creates a new UpdateService
@@ -71,7 +73,8 @@ type UpdateInfo struct {
 	ReleaseInfo    *ReleaseInfo `json:"release_info,omitempty"`
 	Cached         bool         `json:"cached"`
 	Warning        string       `json:"warning,omitempty"`
-	BuildType      string       `json:"build_type"` // "source" or "release"
+	BuildType      string       `json:"build_type"`      // "source" or "release"
+	DeploymentMode string       `json:"deployment_mode"` // "source", "binary", or "docker"
 }
 
 // ReleaseInfo contains GitHub release details
@@ -129,6 +132,7 @@ func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInf
 			HasUpdate:      false,
 			Warning:        err.Error(),
 			BuildType:      s.buildType,
+			DeploymentMode: s.deploymentMode(),
 		}, nil
 	}
 
@@ -140,6 +144,13 @@ func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInf
 // PerformUpdate downloads and applies the update
 // Uses atomic file replacement pattern for safe in-place updates
 func (s *UpdateService) PerformUpdate(ctx context.Context) error {
+	if s.deploymentMode() == "docker" {
+		return infraerrors.New(409, "DOCKER_MANUAL_UPDATE_REQUIRED", "Docker deployment does not support in-place self-update. Pull the latest image from ghcr.io/xixiknow/twosub2api and recreate the container.")
+	}
+	if s.buildType != "release" {
+		return infraerrors.New(409, "SOURCE_MANUAL_UPDATE_REQUIRED", "Source build does not support in-place self-update. Update the source code and redeploy manually.")
+	}
+
 	info, err := s.CheckUpdate(ctx, true)
 	if err != nil {
 		return err
@@ -251,6 +262,13 @@ func (s *UpdateService) PerformUpdate(ctx context.Context) error {
 
 // Rollback restores the previous version
 func (s *UpdateService) Rollback() error {
+	if s.deploymentMode() == "docker" {
+		return infraerrors.New(409, "DOCKER_MANUAL_ROLLBACK_REQUIRED", "Docker deployment does not support in-place rollback. Re-deploy the required image tag manually.")
+	}
+	if s.buildType != "release" {
+		return infraerrors.New(409, "SOURCE_MANUAL_ROLLBACK_REQUIRED", "Source build does not support in-place rollback. Restore the previous build and redeploy manually.")
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("failed to get executable path: %w", err)
@@ -301,8 +319,9 @@ func (s *UpdateService) fetchLatestRelease(ctx context.Context) (*UpdateInfo, er
 			HTMLURL:     release.HTMLURL,
 			Assets:      assets,
 		},
-		Cached:    false,
-		BuildType: s.buildType,
+		Cached:         false,
+		BuildType:      s.buildType,
+		DeploymentMode: s.deploymentMode(),
 	}, nil
 }
 
@@ -493,6 +512,7 @@ func (s *UpdateService) getFromCache(ctx context.Context) (*UpdateInfo, error) {
 		ReleaseInfo:    cached.ReleaseInfo,
 		Cached:         true,
 		BuildType:      s.buildType,
+		DeploymentMode: s.deploymentMode(),
 	}, nil
 }
 
@@ -537,4 +557,33 @@ func parseVersion(v string) [3]int {
 		}
 	}
 	return result
+}
+
+func (s *UpdateService) deploymentMode() string {
+	return detectDeploymentMode(s.buildType, isDockerRuntime())
+}
+
+func detectDeploymentMode(buildType string, dockerRuntime bool) string {
+	if dockerRuntime {
+		return "docker"
+	}
+	if buildType == "release" {
+		return "binary"
+	}
+	return "source"
+}
+
+func isDockerRuntime() bool {
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+	if value, ok := os.LookupEnv("KUBERNETES_SERVICE_HOST"); ok && strings.TrimSpace(value) != "" {
+		return true
+	}
+	return strings.HasPrefix(strings.TrimSpace(os.Getenv("AUTO_SETUP")), "true") && hasAppDataDir()
+}
+
+func hasAppDataDir() bool {
+	info, err := os.Stat("/app/data")
+	return err == nil && info.IsDir()
 }

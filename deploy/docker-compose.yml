@@ -16,7 +16,7 @@ services:
   # Sub2API Application
   # ===========================================================================
   sub2api:
-    image: crpi-pxlqri5n5thqtf6f.cn-guangzhou.personal.cr.aliyuncs.com/miaocg/twosub2api:latest
+    image: ghcr.io/xixiknow/twosub2api:latest
     container_name: sub2api
     restart: unless-stopped
     ulimits:

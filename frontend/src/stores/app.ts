@@ -39,6 +39,7 @@ export const useAppStore = defineStore('app', () => {
   const latestVersion = ref<string>('')
   const hasUpdate = ref<boolean>(false)
   const buildType = ref<string>('source')
+  const deploymentMode = ref<string>('source')
   const releaseInfo = ref<ReleaseInfo | null>(null)
 
   // Auto-incrementing ID for toasts
@@ -236,11 +237,12 @@ export const useAppStore = defineStore('app', () => {
     if (versionLoading.value) return null
     versionLoading.value = true
     try {
-      const data = await checkUpdatesAPI()
+      const data = await checkUpdatesAPI(force)
       currentVersion.value = data.current_version || ''
       latestVersion.value = data.latest_version || ''
       hasUpdate.value = data.has_update || false
       buildType.value = data.build_type || 'source'
+      deploymentMode.value = data.deployment_mode || 'source'
       releaseInfo.value = data.release_info || null
       versionLoaded.value = true
       return data
@@ -305,6 +307,8 @@ export const useAppStore = defineStore('app', () => {
         doc_url: docUrl.value,
         home_content: '',
         hide_ccs_import_button: false,
+        model_square_enabled: true,
+        availability_check_enabled: true,
         purchase_subscription_enabled: false,
         purchase_subscription_url: '',
         custom_menu_items: [],
@@ -406,6 +410,7 @@ export const useAppStore = defineStore('app', () => {
     latestVersion,
     hasUpdate,
     buildType,
+    deploymentMode,
     releaseInfo,
     userRole,
     backendModeEnabled,
