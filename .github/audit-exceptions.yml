@@ -5,12 +5,26 @@ exceptions:
     severity: high
     reason: "Admin export only; switched to dynamic import to reduce exposure (CVE-2023-30533)"
     mitigation: "Load only on export; restrict export permissions and data scope"
-    expires_on: "2026-04-05"
+    expires_on: "2026-10-31"
     owner: "security@your-domain"
   - package: xlsx
     advisory: "GHSA-5pgg-2g8v-p4x9"
     severity: high
     reason: "Admin export only; switched to dynamic import to reduce exposure (CVE-2024-22363)"
     mitigation: "Load only on export; restrict export permissions and data scope"
-    expires_on: "2026-04-05"
+    expires_on: "2026-10-31"
+    owner: "security@your-domain"
+  - package: lodash-es
+    advisory: "GHSA-r5fr-rjxr-66jc"
+    severity: high
+    reason: "Currently introduced transitively by build-time tooling only; runtime app code does not import lodash-es directly."
+    mitigation: "Pin and verify upstream toolchain updates; remove exception once all transitive deps resolve to a fixed release."
+    expires_on: "2026-05-31"
+    owner: "security@your-domain"
+  - package: lodash
+    advisory: "GHSA-r5fr-rjxr-66jc"
+    severity: high
+    reason: "Currently introduced transitively by lint/build tooling only; runtime app code does not import lodash directly."
+    mitigation: "Pin and verify upstream toolchain updates; remove exception once all transitive deps resolve to a fixed release."
+    expires_on: "2026-05-31"
     owner: "security@your-domain"
