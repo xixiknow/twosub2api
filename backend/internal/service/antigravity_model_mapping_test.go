@@ -145,10 +145,10 @@ func TestAntigravityGatewayService_GetMappedModel(t *testing.T) {
 			expected:       "",
 		},
 		{
-			name:           "未知模型 - gemini-future-model 返回空",
+			name:           "未知模型 - gemini-future-model 透传",
 			requestedModel: "gemini-future-model",
 			accountMapping: nil,
-			expected:       "",
+			expected:       "gemini-future-model",
 		},
 	}
 

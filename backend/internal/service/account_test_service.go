@@ -46,6 +46,8 @@ type TestEvent struct {
 	Success  bool   `json:"success,omitempty"`
 	Error    string `json:"error,omitempty"`
 	Endpoint string `json:"endpoint,omitempty"`
+	ImageURL string `json:"image_url,omitempty"`
+	MimeType string `json:"mime_type,omitempty"`
 }
 
 // endpointDef describes an API endpoint format for auto-detection
@@ -1025,6 +1027,18 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	if snapshot := ParseCodexRateLimitHeaders(resp.Header); snapshot != nil && s.accountRepo != nil {
+		now := time.Now()
+		updates := buildCodexUsageExtraUpdates(snapshot, now)
+		if len(updates) > 0 {
+			_ = s.accountRepo.UpdateExtra(ctx, account.ID, updates)
+		}
+		if resetAt := codexRateLimitResetAtFromSnapshot(snapshot, now); resetAt != nil {
+			account.RateLimitResetAt = resetAt
+			_ = s.accountRepo.SetRateLimited(ctx, account.ID, *resetAt)
+		}
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		errMsg := fmt.Sprintf("API returned %d: %s", resp.StatusCode, string(body))
@@ -1381,6 +1395,17 @@ func (s *AccountTestService) processGeminiStream(c *gin.Context, body io.Reader)
 							if partMap, ok := part.(map[string]any); ok {
 								if text, ok := partMap["text"].(string); ok && text != "" {
 									s.sendEvent(c, TestEvent{Type: "content", Text: text})
+								}
+								if inlineData, ok := partMap["inlineData"].(map[string]any); ok {
+									mimeType, _ := inlineData["mimeType"].(string)
+									data, _ := inlineData["data"].(string)
+									if mimeType != "" && data != "" {
+										s.sendEvent(c, TestEvent{
+											Type:     "image",
+											ImageURL: fmt.Sprintf("data:%s;base64,%s", mimeType, data),
+											MimeType: mimeType,
+										})
+									}
 								}
 							}
 						}
