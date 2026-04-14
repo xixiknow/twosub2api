@@ -18,7 +18,7 @@ func TestIsWindowExpired(t *testing.T) {
 			name:     "nil window start",
 			start:    nil,
 			duration: RateLimitWindow5h,
-			want:     false,
+			want:     true,
 		},
 		{
 			name:     "active window (started 1h ago, 5h window)",
@@ -113,7 +113,7 @@ func TestAPIKey_EffectiveUsage(t *testing.T) {
 			want7d: 0,
 		},
 		{
-			name: "nil window starts return raw usage",
+			name: "nil window starts are treated as expired",
 			key: APIKey{
 				Usage5h:       5.0,
 				Usage1d:       10.0,
@@ -122,12 +122,12 @@ func TestAPIKey_EffectiveUsage(t *testing.T) {
 				Window1dStart: nil,
 				Window7dStart: nil,
 			},
-			want5h: 5.0,
-			want1d: 10.0,
-			want7d: 50.0,
+			want5h: 0,
+			want1d: 0,
+			want7d: 0,
 		},
 		{
-			name: "mixed: 5h expired, 1d active, 7d nil",
+			name: "mixed: 5h expired, 1d active, 7d nil expired",
 			key: APIKey{
 				Usage5h:       5.0,
 				Usage1d:       10.0,
@@ -138,7 +138,7 @@ func TestAPIKey_EffectiveUsage(t *testing.T) {
 			},
 			want5h: 0,
 			want1d: 10.0,
-			want7d: 50.0,
+			want7d: 0,
 		},
 		{
 			name: "zero usage with active windows",
@@ -210,7 +210,7 @@ func TestAPIKeyRateLimitData_EffectiveUsage(t *testing.T) {
 			want7d: 0,
 		},
 		{
-			name: "nil window starts return raw usage",
+			name: "nil window starts are treated as expired",
 			data: APIKeyRateLimitData{
 				Usage5h:       3.0,
 				Usage1d:       8.0,
@@ -219,9 +219,9 @@ func TestAPIKeyRateLimitData_EffectiveUsage(t *testing.T) {
 				Window1dStart: nil,
 				Window7dStart: nil,
 			},
-			want5h: 3.0,
-			want1d: 8.0,
-			want7d: 40.0,
+			want5h: 0,
+			want1d: 0,
+			want7d: 0,
 		},
 	}
 

@@ -142,13 +142,14 @@ func TestGetModelPricing_UnknownClaudeModelFallsBackToSonnet(t *testing.T) {
 	require.InDelta(t, 3e-6, pricing.InputPricePerToken, 1e-12)
 }
 
-func TestGetModelPricing_UnknownOpenAIModelReturnsError(t *testing.T) {
+func TestGetModelPricing_UnknownOpenAIModelUsesUniversalFallback(t *testing.T) {
 	svc := newTestBillingService()
 
 	pricing, err := svc.GetModelPricing("gpt-unknown-model")
-	require.Error(t, err)
-	require.Nil(t, pricing)
-	require.Contains(t, err.Error(), "pricing not found")
+	require.NoError(t, err)
+	require.NotNil(t, pricing)
+	require.InDelta(t, 1.25e-6, pricing.InputPricePerToken, 1e-12)
+	require.InDelta(t, 10e-6, pricing.OutputPricePerToken, 1e-12)
 }
 
 func TestGetModelPricing_OpenAIGPT51Fallback(t *testing.T) {
@@ -415,17 +416,17 @@ func TestForceUpdatePricing_NilService(t *testing.T) {
 	require.Contains(t, err.Error(), "not initialized")
 }
 
-func TestCalculateCostWithLongContext_PropagatesError(t *testing.T) {
-	// 使用空的 fallback prices 让 GetModelPricing 失败
+func TestCalculateCostWithLongContext_UnknownModelUsesUniversalFallback(t *testing.T) {
 	svc := &BillingService{
 		cfg:            &config.Config{},
 		fallbackPrices: make(map[string]*ModelPricing),
 	}
 
 	tokens := UsageTokens{InputTokens: 300000, CacheReadTokens: 0}
-	_, err := svc.CalculateCostWithLongContext("unknown-model", tokens, 1.0, 200000, 2.0)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "pricing not found")
+	cost, err := svc.CalculateCostWithLongContext("unknown-model", tokens, 1.0, 200000, 2.0)
+	require.NoError(t, err)
+	require.NotNil(t, cost)
+	require.True(t, cost.ActualCost > 0)
 }
 
 func TestCalculateCost_SupportsCacheBreakdown(t *testing.T) {

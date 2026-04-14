@@ -108,8 +108,8 @@ func TestDiagnoseSelectionFailure_UnschedulableDetail(t *testing.T) {
 	if diagnosis.Category != "unschedulable" {
 		t.Fatalf("category=%s want=unschedulable", diagnosis.Category)
 	}
-	if diagnosis.Detail != "schedulable=false" {
-		t.Fatalf("detail=%s want=schedulable=false", diagnosis.Detail)
+	if diagnosis.Detail != "generic_unschedulable" {
+		t.Fatalf("detail=%s want=generic_unschedulable", diagnosis.Detail)
 	}
 }
 

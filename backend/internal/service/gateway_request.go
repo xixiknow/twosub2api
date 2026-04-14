@@ -98,8 +98,13 @@ func ParseGatewayRequest(body []byte, protocol string) (*ParsedRequest, error) {
 			return nil, fmt.Errorf("invalid model field type")
 		}
 		rawModel := modelResult.String()
-		// 智能归一化：将用户输入的模型变体转为标准格式（如 claude-sonnet-4.6 → claude-sonnet-4-6）
-		normalized := claude.NormalizeUserModelInput(rawModel)
+		normalized := rawModel
+		// 仅对 Claude 模型做版本号归一化。
+		// Gemini/OpenAI 等模型广泛使用小数点作为官方命名的一部分（如 gemini-2.5-pro / gpt-5.4），
+		// 不应在解析阶段被改写。
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(rawModel)), "claude-") {
+			normalized = claude.NormalizeUserModelInput(rawModel)
+		}
 		if normalized != rawModel {
 			// 同步更新请求体中的模型名
 			if updated, err := sjson.SetBytes(body, "model", normalized); err == nil {

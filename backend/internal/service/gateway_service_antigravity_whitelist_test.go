@@ -33,9 +33,9 @@ func TestGatewayService_isModelSupportedByAccount_AntigravityModelMapping(t *tes
 	require.True(t, svc.isModelSupportedByAccount(account, "gemini-3-flash"))
 	require.True(t, svc.isModelSupportedByAccount(account, "gemini-3-pro-high"))
 
-	// gemini-2.5-* 不匹配（不在 model_mapping 中）
-	require.False(t, svc.isModelSupportedByAccount(account, "gemini-2.5-flash"))
-	require.False(t, svc.isModelSupportedByAccount(account, "gemini-2.5-pro"))
+	// gemini-* 默认透传，新变体即使未在 mapping 中也允许
+	require.True(t, svc.isModelSupportedByAccount(account, "gemini-2.5-flash"))
+	require.True(t, svc.isModelSupportedByAccount(account, "gemini-2.5-pro"))
 
 	// 其他平台模型不支持
 	require.False(t, svc.isModelSupportedByAccount(account, "gpt-4"))

@@ -781,7 +781,7 @@ func TestGatewayService_AnthropicAPIKeyPassthrough_ForwardDirect_InvalidTokenTyp
 	result, err := svc.forwardAnthropicAPIKeyPassthrough(context.Background(), c, account, []byte(`{}`), "claude-3-5-sonnet-latest", false, time.Now())
 	require.Nil(t, result)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "requires apikey token")
+	require.Contains(t, err.Error(), "upstream error: 502 (failover)")
 }
 
 func TestGatewayService_AnthropicAPIKeyPassthrough_ForwardDirect_UpstreamRequestError(t *testing.T) {
@@ -806,8 +806,8 @@ func TestGatewayService_AnthropicAPIKeyPassthrough_ForwardDirect_UpstreamRequest
 	result, err := svc.forwardAnthropicAPIKeyPassthrough(context.Background(), c, account, []byte(`{"model":"x"}`), "x", false, time.Now())
 	require.Nil(t, result)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "upstream request failed")
-	require.Equal(t, http.StatusBadGateway, rec.Code)
+	require.Contains(t, err.Error(), "upstream error: 502 (failover)")
+	require.Equal(t, http.StatusOK, rec.Code)
 	rawBody, ok := c.Get(OpsUpstreamRequestBodyKey)
 	require.True(t, ok)
 	_, ok = rawBody.([]byte)

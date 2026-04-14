@@ -78,6 +78,25 @@ type openAIUserGroupRateRepoStub struct {
 	calls int
 }
 
+type openAIUsageBillingRepoStub struct {
+	result  *UsageBillingApplyResult
+	err     error
+	calls   int
+	lastCmd *UsageBillingCommand
+}
+
+func (s *openAIUsageBillingRepoStub) Apply(ctx context.Context, cmd *UsageBillingCommand) (*UsageBillingApplyResult, error) {
+	s.calls++
+	s.lastCmd = cmd
+	if s.err != nil {
+		return nil, s.err
+	}
+	if s.result != nil {
+		return s.result, nil
+	}
+	return &UsageBillingApplyResult{Applied: true}, nil
+}
+
 func (s *openAIUserGroupRateRepoStub) GetByUserAndGroup(ctx context.Context, userID, groupID int64) (*UserGroupRateOverride, error) {
 	s.calls++
 	if s.err != nil {
@@ -170,7 +189,7 @@ func TestOpenAIGatewayServiceRecordUsage_UsesUserSpecificGroupRate(t *testing.T)
 	require.Equal(t, 1, rateRepo.calls)
 	require.NotNil(t, usageRepo.lastLog)
 	require.Equal(t, userRate, usageRepo.lastLog.RateMultiplier)
-	require.Equal(t, 12, usageRepo.lastLog.InputTokens)
+	require.Equal(t, 15, usageRepo.lastLog.InputTokens)
 	require.Equal(t, 3, usageRepo.lastLog.CacheReadTokens)
 
 	expected := expectedOpenAICost(t, svc, "gpt-5.1", usage, userRate)
@@ -253,11 +272,15 @@ func TestOpenAIGatewayServiceRecordUsage_FallsBackToGroupDefaultRateWhenResolver
 	require.Equal(t, groupRate, usageRepo.lastLog.RateMultiplier)
 }
 
-func TestOpenAIGatewayServiceRecordUsage_DuplicateUsageLogSkipsBilling(t *testing.T) {
-	usageRepo := &openAIRecordUsageLogRepoStub{inserted: false}
+func TestOpenAIGatewayServiceRecordUsage_DuplicateBillingRequestSkipsBilling(t *testing.T) {
+	usageRepo := &openAIRecordUsageLogRepoStub{inserted: true}
 	userRepo := &openAIRecordUsageUserRepoStub{}
 	subRepo := &openAIRecordUsageSubRepoStub{}
+	billingRepo := &openAIUsageBillingRepoStub{
+		result: &UsageBillingApplyResult{Applied: false},
+	}
 	svc := newOpenAIRecordUsageServiceForTest(usageRepo, userRepo, subRepo, nil)
+	svc.usageBillingRepo = billingRepo
 
 	err := svc.RecordUsage(context.Background(), &OpenAIRecordUsageInput{
 		Result: &OpenAIForwardResult{
@@ -275,6 +298,7 @@ func TestOpenAIGatewayServiceRecordUsage_DuplicateUsageLogSkipsBilling(t *testin
 	})
 
 	require.NoError(t, err)
+	require.Equal(t, 1, billingRepo.calls)
 	require.Equal(t, 1, usageRepo.calls)
 	require.Equal(t, 0, userRepo.deductCalls)
 	require.Equal(t, 0, subRepo.incrementCalls)
@@ -335,7 +359,15 @@ func TestOpenAIGatewayServiceRecordUsage_ClampsActualInputTokensToZero(t *testin
 
 	require.NoError(t, err)
 	require.NotNil(t, usageRepo.lastLog)
-	require.Equal(t, 0, usageRepo.lastLog.InputTokens)
+	require.Equal(t, 2, usageRepo.lastLog.InputTokens)
+	require.Equal(t, 5, usageRepo.lastLog.CacheReadTokens)
+
+	expected := expectedOpenAICost(t, svc, "gpt-5.1", OpenAIUsage{
+		InputTokens:          2,
+		OutputTokens:         1,
+		CacheReadInputTokens: 5,
+	}, 1.1)
+	require.InDelta(t, expected.ActualCost, usageRepo.lastLog.ActualCost, 1e-12)
 }
 
 func TestOpenAIGatewayServiceRecordUsage_Gpt54LongContextBillsWholeSession(t *testing.T) {

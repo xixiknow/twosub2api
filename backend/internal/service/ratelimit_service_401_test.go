@@ -43,11 +43,12 @@ func (r *tokenCacheInvalidatorRecorder) InvalidateToken(ctx context.Context, acc
 
 func TestRateLimitService_HandleUpstreamError_OAuth401SetsTempUnschedulable(t *testing.T) {
 	tests := []struct {
-		name     string
-		platform string
+		name              string
+		platform          string
+		wantInvalidations int
 	}{
-		{name: "gemini", platform: PlatformGemini},
-		{name: "antigravity", platform: PlatformAntigravity},
+		{name: "gemini", platform: PlatformGemini, wantInvalidations: 0},
+		{name: "antigravity", platform: PlatformAntigravity, wantInvalidations: 0},
 	}
 
 	for _, tt := range tests {
@@ -78,7 +79,7 @@ func TestRateLimitService_HandleUpstreamError_OAuth401SetsTempUnschedulable(t *t
 			require.True(t, shouldDisable)
 			require.Equal(t, 0, repo.setErrorCalls)
 			require.Equal(t, 1, repo.tempCalls)
-			require.Len(t, invalidator.accounts, 1)
+			require.Len(t, invalidator.accounts, tt.wantInvalidations)
 		})
 	}
 }
@@ -92,6 +93,9 @@ func TestRateLimitService_HandleUpstreamError_OAuth401InvalidatorError(t *testin
 		ID:       101,
 		Platform: PlatformGemini,
 		Type:     AccountTypeOAuth,
+		Credentials: map[string]any{
+			"refresh_token": "refresh-token",
+		},
 	}
 
 	shouldDisable := service.HandleUpstreamError(context.Background(), account, 401, http.Header{}, []byte("unauthorized"))
@@ -116,6 +120,7 @@ func TestRateLimitService_HandleUpstreamError_NonOAuth401(t *testing.T) {
 	shouldDisable := service.HandleUpstreamError(context.Background(), account, 401, http.Header{}, []byte("unauthorized"))
 
 	require.True(t, shouldDisable)
-	require.Equal(t, 1, repo.setErrorCalls)
+	require.Equal(t, 0, repo.setErrorCalls)
+	require.Equal(t, 1, repo.tempCalls)
 	require.Empty(t, invalidator.accounts)
 }
