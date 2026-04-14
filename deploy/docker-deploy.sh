@@ -20,8 +20,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# GitHub raw content base URL
-GITHUB_RAW_URL="https://raw.githubusercontent.com/xixiknow/twosub2api/main/deploy"
+# GitHub repository / raw content base URL
+GITHUB_REPO="${GITHUB_REPO:-xixiknow/twosub2api}"
+GITHUB_RAW_URL="${GITHUB_RAW_URL:-https://raw.githubusercontent.com/${GITHUB_REPO}/main/deploy}"
+DEFAULT_SUB2API_IMAGE="ghcr.io/$(printf '%s' "${GITHUB_REPO}" | tr '[:upper:]' '[:lower:]')"
+SUB2API_IMAGE="${SUB2API_IMAGE:-${DEFAULT_SUB2API_IMAGE}:latest}"
 
 # Print colored message
 print_info() {
@@ -107,6 +110,23 @@ main() {
 
     # Create .env from .env.example
     cp .env.example .env
+
+    # Persist fork-aware repository settings
+    if ! grep -q '^GITHUB_REPO=' .env; then
+        echo "GITHUB_REPO=${GITHUB_REPO}" >> .env
+    elif sed --version >/dev/null 2>&1; then
+        sed -i "s#^GITHUB_REPO=.*#GITHUB_REPO=${GITHUB_REPO}#" .env
+    else
+        sed -i '' "s#^GITHUB_REPO=.*#GITHUB_REPO=${GITHUB_REPO}#" .env
+    fi
+
+    if ! grep -q '^SUB2API_IMAGE=' .env; then
+        echo "SUB2API_IMAGE=${SUB2API_IMAGE}" >> .env
+    elif sed --version >/dev/null 2>&1; then
+        sed -i "s#^SUB2API_IMAGE=.*#SUB2API_IMAGE=${SUB2API_IMAGE}#" .env
+    else
+        sed -i '' "s#^SUB2API_IMAGE=.*#SUB2API_IMAGE=${SUB2API_IMAGE}#" .env
+    fi
 
     # Update .env with generated secrets (cross-platform compatible)
     if sed --version >/dev/null 2>&1; then

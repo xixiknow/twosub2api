@@ -55,6 +55,10 @@ docker pull ghcr.io/xixiknow/twosub2api:latest
 docker pull ghcr.io/xixiknow/twosub2api:v0.2.95
 ```
 
+If you deploy from a fork, replace the image with your own
+`ghcr.io/<owner>/twosub2api:<tag>` and set `GITHUB_REPO=<owner>/twosub2api`
+in `deploy/.env` so update checks and GitHub links point to your fork.
+
 ### Docker Compose (Recommended)
 
 Deploy with Docker Compose, including PostgreSQL and Redis containers.
@@ -76,6 +80,13 @@ cp .env.example .env
 
 # 3. Edit configuration (generate secure passwords)
 nano .env
+```
+
+Optional fork overrides in `.env`:
+
+```bash
+GITHUB_REPO=yourname/twosub2api
+SUB2API_IMAGE=ghcr.io/yourname/twosub2api:latest
 ```
 
 **Required configuration in `.env`:**

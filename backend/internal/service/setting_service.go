@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -269,6 +270,9 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 
 func (s *SettingService) githubRepo() string {
 	if repo := strings.TrimSpace(s.githubRepoValue); repo != "" {
+		return repo
+	}
+	if repo := strings.TrimSpace(os.Getenv("GITHUB_REPO")); repo != "" {
 		return repo
 	}
 	return "xixiknow/twosub2api"

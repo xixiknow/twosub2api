@@ -55,6 +55,10 @@ docker pull ghcr.io/xixiknow/twosub2api:latest
 docker pull ghcr.io/xixiknow/twosub2api:v0.2.95
 ```
 
+如果你是基于 fork 部署，请把镜像地址替换成你自己的
+`ghcr.io/<owner>/twosub2api:<tag>`，并在 `deploy/.env` 中设置
+`GITHUB_REPO=<owner>/twosub2api`，这样更新检查和 GitHub 链接都会指向你的 fork。
+
 ### Docker Compose 部署（推荐）
 
 使用 Docker Compose 部署，包含 PostgreSQL 和 Redis 容器。
@@ -76,6 +80,13 @@ cp .env.example .env
 
 # 3. 编辑配置
 nano .env
+```
+
+fork 可选覆盖项：
+
+```bash
+GITHUB_REPO=yourname/twosub2api
+SUB2API_IMAGE=ghcr.io/yourname/twosub2api:latest
 ```
 
 **`.env` 必须配置项：**

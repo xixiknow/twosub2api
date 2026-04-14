@@ -43,6 +43,10 @@ chmod +x docker-deploy.sh
 ./docker-deploy.sh
 ```
 
+For forks, set `GITHUB_REPO=yourname/twosub2api` before running the script.
+It will download deployment files from your fork, persist `GITHUB_REPO` into `.env`,
+and default `SUB2API_IMAGE` to `ghcr.io/yourname/twosub2api:latest`.
+
 **What the script does:**
 - Downloads `docker-compose.local.yml` and `.env.example`
 - Automatically generates secure secrets (JWT_SECRET, TOTP_ENCRYPTION_KEY, POSTGRES_PASSWORD)
@@ -77,6 +81,10 @@ cd sub2api/deploy
 # Configure environment
 cp .env.example .env
 nano .env  # Set POSTGRES_PASSWORD and other required variables
+
+# Optional for forks
+# GITHUB_REPO=yourname/twosub2api
+# SUB2API_IMAGE=ghcr.io/yourname/twosub2api:latest
 
 # Generate secure secrets (recommended)
 JWT_SECRET=$(openssl rand -hex 32)

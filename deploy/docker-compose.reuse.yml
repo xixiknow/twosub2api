@@ -1,6 +1,6 @@
 services:
   twosub2api:
-    image: ghcr.io/xixiknow/twosub2api:latest
+    image: ${SUB2API_IMAGE:-ghcr.io/xixiknow/twosub2api:latest}
     container_name: twosub2api
     restart: unless-stopped
     ulimits:
@@ -17,6 +17,7 @@ services:
       - SERVER_PORT=8080
       - SERVER_MODE=${SERVER_MODE:-release}
       - RUN_MODE=${RUN_MODE:-standard}
+      - GITHUB_REPO=${GITHUB_REPO:-}
       - DATABASE_HOST=${DATABASE_HOST:?DATABASE_HOST is required}
       - DATABASE_PORT=${DATABASE_PORT:-5432}
       - DATABASE_USER=${DATABASE_USER:-sub2api}

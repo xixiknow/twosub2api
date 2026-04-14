@@ -579,6 +579,9 @@ func (s *UpdateService) ghcrImageRef() string {
 func defaultGitHubRepo(repo string) string {
 	repo = strings.TrimSpace(repo)
 	if repo == "" {
+		repo = strings.TrimSpace(os.Getenv("GITHUB_REPO"))
+	}
+	if repo == "" {
 		return "xixiknow/twosub2api"
 	}
 	return repo

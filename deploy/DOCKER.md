@@ -13,6 +13,10 @@ docker run -d \
   ghcr.io/xixiknow/twosub2api:latest
 ```
 
+For fork images, replace `ghcr.io/xixiknow/twosub2api:latest` with your own
+`ghcr.io/<owner>/twosub2api:latest`, and set `GITHUB_REPO=<owner>/twosub2api`
+when using the compose templates from `deploy/`.
+
 ## Docker Compose
 
 ```yaml

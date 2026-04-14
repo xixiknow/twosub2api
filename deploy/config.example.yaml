@@ -5,6 +5,8 @@
 # 复制此文件到 /etc/sub2api/config.yaml 并根据需要修改
 #
 # Documentation / 文档: https://github.com/xixiknow/twosub2api
+# Fork deployment tip / Fork 部署提示:
+# Set GITHUB_REPO in your service or container environment to point update checks and GitHub links to your fork.
 
 # =============================================================================
 # Server Configuration
