@@ -4126,7 +4126,7 @@ export default {
     refresh: 'Refresh',
     sourceMode: 'Source Build',
     sourceModeHint: 'Source build, use git pull to update',
-    dockerModeHint: 'Docker deployment: pull the latest ghcr.io/xixiknow/twosub2api image and recreate the container',
+    dockerModeHint: 'Docker deployment: pull the latest {image} image and recreate the container',
     updateNow: 'Update Now',
     updating: 'Updating...',
     updateComplete: 'Update Complete',

@@ -375,7 +375,7 @@ const appStore = useAppStore()
 const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
 const siteLogo = computed(() => appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '')
 const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore.docUrl || '')
-const githubUrl = 'https://github.com/xixiknow/twosub2api'
+const githubUrl = computed(() => appStore.cachedPublicSettings?.github_url || appStore.githubUrl || '')
 
 // ==================== Theme (same as HomeView) ====================
 

@@ -75,6 +75,7 @@ type SettingService struct {
 	cfg                   *config.Config
 	onUpdate              func() // Callback when settings are updated (for cache invalidation)
 	version               string // Application version
+	githubRepo            string // Source repository used for links and update hints
 }
 
 // NewSettingService 创建系统设置服务实例
@@ -175,6 +176,8 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		LinuxDoOAuthEnabled:              linuxDoEnabled,
 		ReferralEnabled:                  settings[SettingKeyReferralEnabled] == "true",
 		LoginIPAlertEnabled:              settings[SettingKeyLoginIPAlertEnabled] == "true",
+		GitHubRepo:                       s.githubRepo(),
+		GitHubURL:                        githubRepoURL(s.githubRepo()),
 	}, nil
 }
 
@@ -187,6 +190,11 @@ func (s *SettingService) SetOnUpdateCallback(callback func()) {
 // SetVersion sets the application version for injection into public settings
 func (s *SettingService) SetVersion(version string) {
 	s.version = version
+}
+
+// SetGitHubRepo sets the source repository for public links.
+func (s *SettingService) SetGitHubRepo(repo string) {
+	s.githubRepo = strings.TrimSpace(repo)
 }
 
 // GetPublicSettingsForInjection returns public settings in a format suitable for HTML injection
@@ -225,6 +233,8 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ReferralEnabled                  bool            `json:"referral_enabled"`
 		LoginIPAlertEnabled              bool            `json:"login_ip_alert_enabled"`
 		Version                          string          `json:"version,omitempty"`
+		GitHubRepo                       string          `json:"github_repo,omitempty"`
+		GitHubURL                        string          `json:"github_url,omitempty"`
 	}{
 		RegistrationEnabled:              settings.RegistrationEnabled,
 		EmailVerifyEnabled:               settings.EmailVerifyEnabled,
@@ -252,7 +262,24 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		ReferralEnabled:                  settings.ReferralEnabled,
 		LoginIPAlertEnabled:              settings.LoginIPAlertEnabled,
 		Version:                          s.version,
+		GitHubRepo:                       settings.GitHubRepo,
+		GitHubURL:                        settings.GitHubURL,
 	}, nil
+}
+
+func (s *SettingService) githubRepo() string {
+	if repo := strings.TrimSpace(s.githubRepo); repo != "" {
+		return repo
+	}
+	return "xixiknow/twosub2api"
+}
+
+func githubRepoURL(repo string) string {
+	repo = strings.TrimSpace(repo)
+	if repo == "" {
+		return ""
+	}
+	return "https://github.com/" + repo
 }
 
 // filterUserVisibleMenuItems filters out admin-only menu items from a raw JSON

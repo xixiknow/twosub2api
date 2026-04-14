@@ -30,6 +30,7 @@ export const useAppStore = defineStore('app', () => {
   const contactInfo = ref<string>('')
   const apiBaseUrl = ref<string>('')
   const docUrl = ref<string>('')
+  const githubUrl = ref<string>('')
   const cachedPublicSettings = ref<PublicSettings | null>(null)
 
   // Version state
@@ -271,6 +272,7 @@ export const useAppStore = defineStore('app', () => {
     contactInfo.value = config.contact_info || ''
     apiBaseUrl.value = config.api_base_url || ''
     docUrl.value = config.doc_url || ''
+    githubUrl.value = config.github_url || ''
     publicSettingsLoaded.value = true
   }
 
@@ -316,7 +318,9 @@ export const useAppStore = defineStore('app', () => {
         referral_enabled: false,
         login_ip_alert_enabled: false,
         backend_mode_enabled: false,
-        version: siteVersion.value
+        version: siteVersion.value,
+        github_repo: '',
+        github_url: githubUrl.value
       }
     }
 
@@ -376,6 +380,7 @@ export const useAppStore = defineStore('app', () => {
     contactInfo,
     apiBaseUrl,
     docUrl,
+    githubUrl,
     cachedPublicSettings,
 
     // Computed

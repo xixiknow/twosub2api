@@ -252,12 +252,34 @@ describe('useAppStore', () => {
     it('从 window.__APP_CONFIG__ 初始化', () => {
       const windowAny = window as any
       windowAny.__APP_CONFIG__ = {
+        registration_enabled: false,
+        email_verify_enabled: false,
+        registration_email_suffix_whitelist: [],
+        promo_code_enabled: true,
+        password_reset_enabled: false,
+        invitation_code_enabled: false,
+        turnstile_enabled: false,
+        turnstile_site_key: '',
         site_name: 'TestSite',
         site_logo: '/logo.png',
+        site_subtitle: '',
         version: '1.0.0',
         contact_info: 'test@test.com',
         api_base_url: 'https://api.test.com',
         doc_url: 'https://docs.test.com',
+        home_content: '',
+        hide_ccs_import_button: false,
+        model_square_enabled: true,
+        availability_check_enabled: true,
+        purchase_subscription_enabled: false,
+        purchase_subscription_url: '',
+        custom_menu_items: [],
+        linuxdo_oauth_enabled: false,
+        referral_enabled: false,
+        login_ip_alert_enabled: false,
+        backend_mode_enabled: false,
+        github_repo: 'xixiknow/twosub2api',
+        github_url: 'https://github.com/xixiknow/twosub2api',
       }
 
       const store = useAppStore()
@@ -280,7 +302,36 @@ describe('useAppStore', () => {
 
     it('clearPublicSettingsCache 清除缓存', () => {
       const windowAny = window as any
-      windowAny.__APP_CONFIG__ = { site_name: 'Test' }
+      windowAny.__APP_CONFIG__ = {
+        registration_enabled: false,
+        email_verify_enabled: false,
+        registration_email_suffix_whitelist: [],
+        promo_code_enabled: true,
+        password_reset_enabled: false,
+        invitation_code_enabled: false,
+        turnstile_enabled: false,
+        turnstile_site_key: '',
+        site_name: 'Test',
+        site_logo: '',
+        site_subtitle: '',
+        api_base_url: '',
+        contact_info: '',
+        doc_url: '',
+        home_content: '',
+        hide_ccs_import_button: false,
+        model_square_enabled: true,
+        availability_check_enabled: true,
+        purchase_subscription_enabled: false,
+        purchase_subscription_url: '',
+        custom_menu_items: [],
+        linuxdo_oauth_enabled: false,
+        referral_enabled: false,
+        login_ip_alert_enabled: false,
+        backend_mode_enabled: false,
+        version: '',
+        github_repo: '',
+        github_url: '',
+      }
       const store = useAppStore()
       store.initFromInjectedConfig()
 

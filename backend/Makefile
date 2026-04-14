@@ -2,6 +2,8 @@
 
 VERSION ?= $(shell tr -d '\r\n' < ./cmd/server/VERSION)
 LDFLAGS ?= -s -w -X main.Version=$(VERSION)
+GITHUB_REPO ?= $(shell git config --get remote.origin.url | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$$##')
+LDFLAGS += -X main.GitHubRepo=$(GITHUB_REPO)
 
 build:
 	CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -trimpath -o bin/server ./cmd/server

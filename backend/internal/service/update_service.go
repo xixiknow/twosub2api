@@ -24,7 +24,6 @@ import (
 const (
 	updateCacheKey = "update_check_cache"
 	updateCacheTTL = 1200 // 20 minutes
-	githubRepo     = "xixiknow/twosub2api"
 
 	// Security: allowed download domains for updates
 	allowedDownloadHost = "github.com"
@@ -53,15 +52,17 @@ type UpdateService struct {
 	githubClient   GitHubReleaseClient
 	currentVersion string
 	buildType      string // "source" for manual builds, "release" for packaged builds
+	githubRepo     string
 }
 
 // NewUpdateService creates a new UpdateService
-func NewUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, version, buildType string) *UpdateService {
+func NewUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, version, buildType, githubRepo string) *UpdateService {
 	return &UpdateService{
 		cache:          cache,
 		githubClient:   githubClient,
 		currentVersion: version,
 		buildType:      buildType,
+		githubRepo:     defaultGitHubRepo(githubRepo),
 	}
 }
 
@@ -145,7 +146,7 @@ func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInf
 // Uses atomic file replacement pattern for safe in-place updates
 func (s *UpdateService) PerformUpdate(ctx context.Context) error {
 	if s.deploymentMode() == "docker" {
-		return infraerrors.New(409, "DOCKER_MANUAL_UPDATE_REQUIRED", "Docker deployment does not support in-place self-update. Pull the latest image from ghcr.io/xixiknow/twosub2api and recreate the container.")
+		return infraerrors.New(409, "DOCKER_MANUAL_UPDATE_REQUIRED", fmt.Sprintf("Docker deployment does not support in-place self-update. Pull the latest image from %s and recreate the container.", s.ghcrImageRef()))
 	}
 	if s.buildType != "release" {
 		return infraerrors.New(409, "SOURCE_MANUAL_UPDATE_REQUIRED", "Source build does not support in-place self-update. Update the source code and redeploy manually.")
@@ -292,7 +293,7 @@ func (s *UpdateService) Rollback() error {
 }
 
 func (s *UpdateService) fetchLatestRelease(ctx context.Context) (*UpdateInfo, error) {
-	release, err := s.githubClient.FetchLatestRelease(ctx, githubRepo)
+	release, err := s.githubClient.FetchLatestRelease(ctx, s.githubRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -561,6 +562,26 @@ func parseVersion(v string) [3]int {
 
 func (s *UpdateService) deploymentMode() string {
 	return detectDeploymentMode(s.buildType, isDockerRuntime())
+}
+
+func (s *UpdateService) ghcrImageRef() string {
+	repo := strings.TrimSpace(s.githubRepo)
+	if repo == "" {
+		return "ghcr.io/xixiknow/twosub2api"
+	}
+	parts := strings.Split(repo, "/")
+	if len(parts) != 2 || strings.TrimSpace(parts[0]) == "" || strings.TrimSpace(parts[1]) == "" {
+		return "ghcr.io/xixiknow/twosub2api"
+	}
+	return "ghcr.io/" + strings.ToLower(parts[0]) + "/" + parts[1]
+}
+
+func defaultGitHubRepo(repo string) string {
+	repo = strings.TrimSpace(repo)
+	if repo == "" {
+		return "xixiknow/twosub2api"
+	}
+	return repo
 }
 
 func detectDeploymentMode(buildType string, dockerRuntime bool) string {

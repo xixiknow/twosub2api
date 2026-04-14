@@ -15,6 +15,7 @@ import (
 type BuildInfo struct {
 	Version   string
 	BuildType string
+	GitHubRepo string
 }
 
 // ProvidePricingService creates and initializes PricingService
@@ -296,6 +297,7 @@ func ProvideSettingService(settingRepo SettingRepository, groupRepo GroupReposit
 	svc := NewSettingService(settingRepo, cfg)
 	svc.SetDefaultSubscriptionGroupReader(groupRepo)
 	svc.SetVersion(bi.Version)
+	svc.SetGitHubRepo(bi.GitHubRepo)
 	return svc
 }
 
@@ -306,7 +308,7 @@ func ProvideModelsCacheInvalidator(gateway *GatewayService) ModelsCacheInvalidat
 
 // ProvideUpdateService creates UpdateService with version and build type from BuildInfo.
 func ProvideUpdateService(cache UpdateCache, githubClient GitHubReleaseClient, bi BuildInfo) *UpdateService {
-	return NewUpdateService(cache, githubClient, bi.Version, bi.BuildType)
+	return NewUpdateService(cache, githubClient, bi.Version, bi.BuildType, bi.GitHubRepo)
 }
 
 // ProviderSet is the Wire provider set for all services

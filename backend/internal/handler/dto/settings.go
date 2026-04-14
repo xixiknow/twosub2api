@@ -119,6 +119,8 @@ type PublicSettings struct {
 	ReferralEnabled                  bool             `json:"referral_enabled"`
 	LoginIPAlertEnabled              bool             `json:"login_ip_alert_enabled"`
 	Version                          string           `json:"version"`
+	GitHubRepo                       string           `json:"github_repo"`
+	GitHubURL                        string           `json:"github_url"`
 }
 
 // StreamTimeoutSettings 流超时处理配置 DTO

@@ -109,6 +109,8 @@ type PublicSettings struct {
 	ReferralEnabled     bool
 	LoginIPAlertEnabled bool
 	Version             string
+	GitHubRepo          string
+	GitHubURL           string
 }
 
 // PaymentSettings 支付系统配置

@@ -132,7 +132,7 @@
 
                 <a
                   v-if="authStore.isAdmin"
-                  href="https://github.com/xixiknow/twosub2api"
+                  :href="appStore.cachedPublicSettings?.github_url || appStore.githubUrl || '#'"
                   target="_blank"
                   rel="noopener noreferrer"
                   @click="closeDropdown"

@@ -434,7 +434,7 @@ const isHomeContentUrl = computed(() => {
 const isDark = ref(document.documentElement.classList.contains('dark'))
 
 // GitHub URL
-const githubUrl = 'https://github.com/xixiknow/twosub2api'
+const githubUrl = computed(() => appStore.cachedPublicSettings?.github_url || appStore.githubUrl || '')
 
 // Auth state
 const isAuthenticated = computed(() => authStore.isAuthenticated)

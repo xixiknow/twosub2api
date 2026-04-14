@@ -37,6 +37,7 @@ var (
 	Commit    = "unknown"
 	Date      = "unknown"
 	BuildType = "source" // "source" for manual builds, "release" for CI builds (set by ldflags)
+	GitHubRepo = ""
 )
 
 func init() {
@@ -143,6 +144,7 @@ func runMainServer() {
 	buildInfo := handler.BuildInfo{
 		Version:   Version,
 		BuildType: BuildType,
+		GitHubRepo: GitHubRepo,
 	}
 
 	app, err := initializeApplication(buildInfo)

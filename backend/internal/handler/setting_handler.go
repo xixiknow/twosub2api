@@ -70,6 +70,8 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		ReferralEnabled:                  settings.ReferralEnabled,
 		LoginIPAlertEnabled:              settings.LoginIPAlertEnabled,
 		Version:                          h.version,
+		GitHubRepo:                       settings.GitHubRepo,
+		GitHubURL:                        settings.GitHubURL,
 	})
 }
 

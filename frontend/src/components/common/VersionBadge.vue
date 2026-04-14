@@ -328,7 +328,7 @@
                     />
                   </svg>
                   <p class="text-xs text-blue-600 dark:text-blue-400">
-                    {{ t('version.dockerModeHint') }}
+                    {{ dockerModeHint }}
                   </p>
                 </div>
 
@@ -466,6 +466,15 @@ const latestVersion = computed(() => appStore.latestVersion)
 const hasUpdate = computed(() => appStore.hasUpdate)
 const releaseInfo = computed(() => appStore.releaseInfo)
 const deploymentMode = computed(() => appStore.deploymentMode)
+const githubRepo = computed(() => appStore.cachedPublicSettings?.github_repo || '')
+const ghcrImage = computed(() => {
+  const repo = githubRepo.value.trim()
+  if (!repo || !repo.includes('/')) return 'ghcr.io/xixiknow/twosub2api'
+  const [owner, name] = repo.split('/', 2)
+  if (!owner || !name) return 'ghcr.io/xixiknow/twosub2api'
+  return `ghcr.io/${owner.toLowerCase()}/${name}`
+})
+const dockerModeHint = computed(() => t('version.dockerModeHint', { image: ghcrImage.value }))
 
 // Update process states (local to this component)
 const updating = ref(false)

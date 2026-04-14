@@ -114,6 +114,8 @@ export interface PublicSettings {
   login_ip_alert_enabled: boolean
   backend_mode_enabled: boolean
   version: string
+  github_repo: string
+  github_url: string
 }
 
 export interface AuthResponse {
