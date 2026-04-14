@@ -73,6 +73,9 @@ func (s *userRepoStubForGroupUpdate) DisableTotp(context.Context, int64) error {
 func (s *userRepoStubForGroupUpdate) GetByReferralCode(context.Context, string) (*User, error) {
 	return nil, ErrUserNotFound
 }
+func (s *userRepoStubForGroupUpdate) UpdateLoginIP(context.Context, int64, string) error {
+	panic("unexpected")
+}
 
 // apiKeyRepoStubForGroupUpdate implements APIKeyRepository for AdminUpdateAPIKeyGroupID tests.
 type apiKeyRepoStubForGroupUpdate struct {

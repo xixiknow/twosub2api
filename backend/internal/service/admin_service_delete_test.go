@@ -113,6 +113,10 @@ func (s *userRepoStub) GetByReferralCode(ctx context.Context, code string) (*Use
 	return nil, ErrUserNotFound
 }
 
+func (s *userRepoStub) UpdateLoginIP(ctx context.Context, userID int64, ip string) error {
+	panic("unexpected UpdateLoginIP call")
+}
+
 type groupRepoStub struct {
 	affectedUserIDs []int64
 	deleteErr       error
