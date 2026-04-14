@@ -75,7 +75,7 @@ type SettingService struct {
 	cfg                   *config.Config
 	onUpdate              func() // Callback when settings are updated (for cache invalidation)
 	version               string // Application version
-	githubRepo            string // Source repository used for links and update hints
+	githubRepoValue       string // Source repository used for links and update hints
 }
 
 // NewSettingService 创建系统设置服务实例
@@ -194,7 +194,7 @@ func (s *SettingService) SetVersion(version string) {
 
 // SetGitHubRepo sets the source repository for public links.
 func (s *SettingService) SetGitHubRepo(repo string) {
-	s.githubRepo = strings.TrimSpace(repo)
+	s.githubRepoValue = strings.TrimSpace(repo)
 }
 
 // GetPublicSettingsForInjection returns public settings in a format suitable for HTML injection
@@ -268,7 +268,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 }
 
 func (s *SettingService) githubRepo() string {
-	if repo := strings.TrimSpace(s.githubRepo); repo != "" {
+	if repo := strings.TrimSpace(s.githubRepoValue); repo != "" {
 		return repo
 	}
 	return "xixiknow/twosub2api"
