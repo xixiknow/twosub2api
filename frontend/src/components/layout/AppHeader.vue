@@ -52,6 +52,9 @@
         <!-- Subscription Progress (for users with active subscriptions) -->
         <SubscriptionProgressMini v-if="user" />
 
+        <!-- VIP Status -->
+        <VIPStatusMini v-if="user" />
+
         <!-- Balance Display -->
         <div
           v-if="user"
@@ -223,6 +226,7 @@ import { useAppStore, useAuthStore, useOnboardingStore } from '@/stores'
 import { useAdminSettingsStore } from '@/stores/adminSettings'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import SubscriptionProgressMini from '@/components/common/SubscriptionProgressMini.vue'
+import VIPStatusMini from '@/components/common/VIPStatusMini.vue'
 import AnnouncementBell from '@/components/common/AnnouncementBell.vue'
 import Icon from '@/components/icons/Icon.vue'
 

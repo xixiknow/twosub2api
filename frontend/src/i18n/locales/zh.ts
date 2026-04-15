@@ -365,7 +365,8 @@ export default {
     wallet: '钱包',
     referral: '推荐返利',
     paymentSettings: '支付设置',
-    paymentOrders: '订单记录'
+    paymentOrders: '订单记录',
+    vip: 'VIP 管理'
   },
 
   // Auth
@@ -1280,6 +1281,11 @@ export default {
         keyExists: '属性键已存在',
         dragToReorder: '拖拽排序'
       }
+    },
+
+    vip: {
+      title: 'VIP 管理',
+      description: '配置 VIP 等级规则并查看 VIP 用户状态'
     },
 
     // Groups Management

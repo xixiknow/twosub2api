@@ -319,6 +319,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/vip',
+    name: 'AdminVIP',
+    component: () => import('@/views/admin/VIPView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'VIP Management',
+      titleKey: 'admin.vip.title',
+      descriptionKey: 'admin.vip.description'
+    }
+  },
+  {
     path: '/admin/accounts',
     name: 'AdminAccounts',
     component: () => import('@/views/admin/AccountsView.vue'),

@@ -431,6 +431,7 @@ type adminServiceImpl struct {
 	settingService         *SettingService
 	defaultSubAssigner     DefaultSubscriptionAssigner
 	userSubRepo            UserSubscriptionRepository
+	vipService             *VIPService
 	privacyClientFactory   PrivacyClientFactory
 	trialCampaignService   *TrialCampaignService
 	redeemMetadataService  *RedeemMetadataService
@@ -496,6 +497,11 @@ func (s *adminServiceImpl) SetModelsCacheInvalidator(invalidator ModelsCacheInva
 	s.modelsCacheInvalidator = invalidator
 }
 
+// SetVIPService injects VIPService without changing the constructor signature.
+func (s *adminServiceImpl) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
+}
+
 // User management implementations
 func (s *adminServiceImpl) ListUsers(ctx context.Context, page, pageSize int, filters UserListFilters) ([]User, int64, error) {
 	params := pagination.PaginationParams{Page: page, PageSize: pageSize}
@@ -525,6 +531,7 @@ func (s *adminServiceImpl) ListUsers(ctx context.Context, page, pageSize int, fi
 			s.loadUserGroupRatesOneByOne(ctx, users)
 		}
 	}
+	s.attachVIPSummaries(ctx, users)
 	return users, result.Total, nil
 }
 
@@ -556,6 +563,7 @@ func (s *adminServiceImpl) GetUser(ctx context.Context, id int64) (*User, error)
 			user.GroupRates = rates
 		}
 	}
+	s.attachVIPSummary(ctx, user)
 	return user, nil
 }
 
@@ -578,6 +586,28 @@ func (s *adminServiceImpl) CreateUser(ctx context.Context, input *CreateUserInpu
 	}
 	s.assignDefaultSubscriptions(ctx, user.ID)
 	return user, nil
+}
+
+func (s *adminServiceImpl) attachVIPSummaries(ctx context.Context, users []User) {
+	if s.vipService == nil || len(users) == 0 {
+		return
+	}
+	for i := range users {
+		s.attachVIPSummary(ctx, &users[i])
+	}
+}
+
+func (s *adminServiceImpl) attachVIPSummary(ctx context.Context, user *User) {
+	if s.vipService == nil || user == nil || user.ID <= 0 {
+		return
+	}
+	current, next, _, err := s.vipService.ResolveUserVIP(ctx, user.ID)
+	if err != nil {
+		logger.LegacyPrintf("service.admin", "failed to resolve vip summary: user_id=%d err=%v", user.ID, err)
+		return
+	}
+	user.CurrentVIP = current
+	user.NextVIP = next
 }
 
 func (s *adminServiceImpl) assignDefaultSubscriptions(ctx context.Context, userID int64) {

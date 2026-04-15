@@ -17,8 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
 const (
@@ -145,11 +143,8 @@ func (s *UpdateService) CheckUpdate(ctx context.Context, force bool) (*UpdateInf
 // PerformUpdate downloads and applies the update
 // Uses atomic file replacement pattern for safe in-place updates
 func (s *UpdateService) PerformUpdate(ctx context.Context) error {
-	if s.deploymentMode() == "docker" {
-		return infraerrors.New(409, "DOCKER_MANUAL_UPDATE_REQUIRED", fmt.Sprintf("Docker deployment does not support in-place self-update. Pull the latest image from %s and recreate the container.", s.ghcrImageRef()))
-	}
 	if s.buildType != "release" {
-		return infraerrors.New(409, "SOURCE_MANUAL_UPDATE_REQUIRED", "Source build does not support in-place self-update. Update the source code and redeploy manually.")
+		return fmt.Errorf("source build does not support in-place self-update")
 	}
 
 	info, err := s.CheckUpdate(ctx, true)
@@ -263,11 +258,8 @@ func (s *UpdateService) PerformUpdate(ctx context.Context) error {
 
 // Rollback restores the previous version
 func (s *UpdateService) Rollback() error {
-	if s.deploymentMode() == "docker" {
-		return infraerrors.New(409, "DOCKER_MANUAL_ROLLBACK_REQUIRED", "Docker deployment does not support in-place rollback. Re-deploy the required image tag manually.")
-	}
 	if s.buildType != "release" {
-		return infraerrors.New(409, "SOURCE_MANUAL_ROLLBACK_REQUIRED", "Source build does not support in-place rollback. Restore the previous build and redeploy manually.")
+		return fmt.Errorf("source build does not support in-place rollback")
 	}
 
 	exePath, err := os.Executable()

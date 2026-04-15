@@ -118,6 +118,9 @@ func initializeApplication(buildInfo handler.BuildInfo) (*Application, error) {
 	geminiTokenCache := repository.NewGeminiTokenCache(redisClient)
 	compositeTokenCacheInvalidator := service.NewCompositeTokenCacheInvalidator(geminiTokenCache)
 	adminService := service.NewAdminService(userRepository, groupRepository, accountRepository, proxyRepository, apiKeyRepository, redeemCodeRepository, userGroupRateRepository, billingCacheService, proxyExitInfoProber, proxyLatencyCache, apiKeyAuthCacheInvalidator, nil, compositeTokenCacheInvalidator, client, settingService, subscriptionService, userSubscriptionRepository, privacyClientFactory, trialCampaignService, redeemMetadataService)
+	if vipAwareAdminService, ok := adminService.(interface{ SetVIPService(*service.VIPService) }); ok {
+		vipAwareAdminService.SetVIPService(vipService)
+	}
 	concurrencyCache := repository.ProvideConcurrencyCache(redisClient, configConfig)
 	concurrencyService := service.ProvideConcurrencyService(concurrencyCache, accountRepository, configConfig)
 	adminUserHandler := admin.NewUserHandler(adminService, concurrencyService)

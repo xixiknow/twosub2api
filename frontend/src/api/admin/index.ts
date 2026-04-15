@@ -25,6 +25,7 @@ import errorPassthroughAPI from './errorPassthrough'
 import apiKeysAPI from './apiKeys'
 import scheduledTestsAPI from './scheduledTests'
 import paymentOrdersAPI from './paymentOrders'
+import vipAPI from './vip'
 
 /**
  * Unified admin API object for convenient access
@@ -50,7 +51,8 @@ export const adminAPI = {
   apiKeys: apiKeysAPI,
   scheduledTests: scheduledTestsAPI,
   paymentOrders: paymentOrdersAPI,
-  backup: backupAPI
+  backup: backupAPI,
+  vip: vipAPI
 }
 
 export {
@@ -74,7 +76,8 @@ export {
   apiKeysAPI,
   scheduledTestsAPI,
   paymentOrdersAPI,
-  backupAPI
+  backupAPI,
+  vipAPI
 }
 
 export default adminAPI

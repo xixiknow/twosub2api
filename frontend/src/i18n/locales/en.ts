@@ -365,7 +365,8 @@ export default {
     wallet: 'Wallet',
     referral: 'Referral',
     paymentSettings: 'Payment',
-    paymentOrders: 'Payment Orders'
+    paymentOrders: 'Payment Orders',
+    vip: 'VIP'
   },
 
   // Auth
@@ -1224,6 +1225,11 @@ export default {
         keyExists: 'Attribute key already exists',
         dragToReorder: 'Drag to reorder'
       }
+    },
+
+    vip: {
+      title: 'VIP Management',
+      description: 'Configure VIP tiers and view user VIP status'
     },
 
     // Groups

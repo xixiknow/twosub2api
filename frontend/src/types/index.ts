@@ -60,6 +60,21 @@ export interface VIPNextLevel {
   unlock_condition_label: string
 }
 
+export interface VIPModelMultiplierRule {
+  model_pattern: string
+  multiplier: number
+}
+
+export interface VIPRule {
+  level_code: string
+  level_name: string
+  required_recharge: number
+  required_spend: number
+  multiplier: number
+  model_multipliers: Record<string, number>
+  rule_key: string
+}
+
 export interface AdminUser extends User {
   // 管理员备注（普通用户接口不返回）
   notes: string

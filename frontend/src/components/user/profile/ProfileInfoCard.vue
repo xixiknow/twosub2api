@@ -40,29 +40,6 @@
           <Icon name="user" size="sm" class="text-gray-400 dark:text-gray-500" />
           <span class="truncate">{{ user.username }}</span>
         </div>
-        <div
-          v-if="user?.current_vip"
-          class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-900/20"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div class="font-medium text-amber-800 dark:text-amber-200">
-              {{ user.current_vip.level_name }}
-            </div>
-            <div class="text-xs text-amber-700 dark:text-amber-300">
-              {{ user.current_vip.base_multiplier.toFixed(2) }}x
-            </div>
-          </div>
-          <div class="mt-1 text-xs text-amber-700 dark:text-amber-300">
-            累计实付 ¥{{ (user.current_vip.recharge_total || 0).toFixed(2) }} / 累计消费
-            ${{ (user.current_vip.spend_total || 0).toFixed(2) }}
-          </div>
-          <div
-            v-if="user.next_vip"
-            class="mt-2 text-xs text-amber-700 dark:text-amber-300"
-          >
-            下一等级 {{ user.next_vip.level_name }}: {{ user.next_vip.unlock_condition_label }}
-          </div>
-        </div>
       </div>
     </div>
   </div>

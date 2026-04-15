@@ -286,66 +286,8 @@
                 </div>
               </div>
 
-              <!-- Priority 4: Update available for Docker deployment - show manual pull hint -->
-              <div v-else-if="hasUpdate && isDockerDeployment" class="space-y-2">
-                <div
-                  class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20"
-                >
-                  <div
-                    class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50"
-                  >
-                    <Icon
-                      name="download"
-                      size="sm"
-                      :stroke-width="2"
-                      class="text-amber-600 dark:text-amber-400"
-                    />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
-                      {{ t('version.updateAvailable') }}
-                    </p>
-                    <p class="text-xs text-amber-600/70 dark:text-amber-400/70">
-                      v{{ latestVersion }}
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800/50 dark:bg-blue-900/20"
-                >
-                  <svg
-                    class="h-3.5 w-3.5 flex-shrink-0 text-blue-500 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p class="text-xs text-blue-600 dark:text-blue-400">
-                    {{ dockerModeHint }}
-                  </p>
-                </div>
-
-                <a
-                  v-if="releaseInfo?.html_url && releaseInfo.html_url !== '#'"
-                  :href="releaseInfo.html_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex items-center justify-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-dark-200"
-                >
-                  {{ t('version.viewChangelog') }}
-                  <Icon name="externalLink" size="xs" :stroke-width="2" />
-                </a>
-              </div>
-
-              <!-- Priority 5: Update available for binary release - show update button -->
-              <div v-else-if="hasUpdate && isBinaryDeployment" class="space-y-2">
+              <!-- Priority 4: Update available for release deployment - show update button -->
+              <div v-else-if="hasUpdate && canSelfUpdate" class="space-y-2">
                 <!-- Update info card -->
                 <div
                   class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20"
@@ -466,15 +408,6 @@ const latestVersion = computed(() => appStore.latestVersion)
 const hasUpdate = computed(() => appStore.hasUpdate)
 const releaseInfo = computed(() => appStore.releaseInfo)
 const deploymentMode = computed(() => appStore.deploymentMode)
-const githubRepo = computed(() => appStore.cachedPublicSettings?.github_repo || '')
-const ghcrImage = computed(() => {
-  const repo = githubRepo.value.trim()
-  if (!repo || !repo.includes('/')) return 'ghcr.io/xixiknow/twosub2api'
-  const [owner, name] = repo.split('/', 2)
-  if (!owner || !name) return 'ghcr.io/xixiknow/twosub2api'
-  return `ghcr.io/${owner.toLowerCase()}/${name}`
-})
-const dockerModeHint = computed(() => t('version.dockerModeHint', { image: ghcrImage.value }))
 
 // Update process states (local to this component)
 const updating = ref(false)
@@ -485,8 +418,7 @@ const updateSuccess = ref(false)
 const restartCountdown = ref(0)
 
 const isSourceDeployment = computed(() => deploymentMode.value === 'source')
-const isDockerDeployment = computed(() => deploymentMode.value === 'docker')
-const isBinaryDeployment = computed(() => deploymentMode.value === 'binary')
+const canSelfUpdate = computed(() => deploymentMode.value === 'binary' || deploymentMode.value === 'docker')
 
 function toggleDropdown() {
   dropdownOpen.value = !dropdownOpen.value
