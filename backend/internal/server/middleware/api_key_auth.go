@@ -42,7 +42,11 @@ func startAuthFailCleanup() {
 				time.Sleep(authFailCleanupEvery)
 				now := time.Now().UnixNano()
 				authFailCounters.Range(func(key, value any) bool {
-					c := value.(*authFailCounter)
+					c, ok := value.(*authFailCounter)
+					if !ok || c == nil {
+						authFailCounters.Delete(key)
+						return true
+					}
 					if c.windowEnd.Load() < now {
 						authFailCounters.Delete(key)
 					}
@@ -59,7 +63,11 @@ func recordAuthFailure(clientIP string) bool {
 	startAuthFailCleanup()
 	now := time.Now()
 	val, _ := authFailCounters.LoadOrStore(clientIP, &authFailCounter{})
-	c := val.(*authFailCounter)
+	c, ok := val.(*authFailCounter)
+	if !ok || c == nil {
+		c = &authFailCounter{}
+		authFailCounters.Store(clientIP, c)
+	}
 
 	// If window expired, reset
 	if time.Unix(0, c.windowEnd.Load()).Before(now) {
@@ -76,7 +84,11 @@ func isAuthRateLimited(clientIP string) bool {
 	if !ok {
 		return false
 	}
-	c := val.(*authFailCounter)
+	c, ok := val.(*authFailCounter)
+	if !ok || c == nil {
+		authFailCounters.Delete(clientIP)
+		return false
+	}
 	now := time.Now()
 	if time.Unix(0, c.windowEnd.Load()).Before(now) {
 		return false

@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -68,12 +69,12 @@ func (g *AlipayGateway) createPagePay(req *CreatePayRequest) (*CreatePayResult, 
 
 	// 构造自动提交表单
 	var formBuilder strings.Builder
-	formBuilder.WriteString(fmt.Sprintf(`<form id="alipaySubmit" action="%s" method="POST">`, alipayGatewayURL))
+	_, _ = formBuilder.WriteString(fmt.Sprintf(`<form id="alipaySubmit" action="%s" method="POST">`, alipayGatewayURL))
 	for k, v := range params {
-		formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s"/>`, k, escapeHTML(v)))
+		_, _ = formBuilder.WriteString(fmt.Sprintf(`<input type="hidden" name="%s" value="%s"/>`, k, escapeHTML(v)))
 	}
-	formBuilder.WriteString(`<input type="submit" value="Pay"/></form>`)
-	formBuilder.WriteString(`<script>document.getElementById("alipaySubmit").submit();</script>`)
+	_, _ = formBuilder.WriteString(`<input type="submit" value="Pay"/></form>`)
+	_, _ = formBuilder.WriteString(`<script>document.getElementById("alipaySubmit").submit();</script>`)
 
 	return &CreatePayResult{
 		FormHTML: formBuilder.String(),
@@ -111,7 +112,9 @@ func (g *AlipayGateway) createF2FPay(req *CreatePayRequest) (*CreatePayResult, e
 	if err != nil {
 		return nil, fmt.Errorf("alipay f2f request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -169,7 +172,9 @@ func (g *AlipayGateway) QueryTrade(orderNo string) (*QueryTradeResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("alipay query request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -198,7 +203,10 @@ func (g *AlipayGateway) QueryTrade(orderNo string) (*QueryTradeResult, error) {
 
 	amount := 0.0
 	if alipayResp.Response.TotalAmount != "" {
-		fmt.Sscanf(alipayResp.Response.TotalAmount, "%f", &amount)
+		amount, err = strconv.ParseFloat(alipayResp.Response.TotalAmount, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse alipay query amount: %w", err)
+		}
 	}
 
 	return &QueryTradeResult{
@@ -236,7 +244,10 @@ func (g *AlipayGateway) VerifyNotify(params map[string]string) (*NotifyResult, e
 
 	amount := 0.0
 	if v := params["total_amount"]; v != "" {
-		fmt.Sscanf(v, "%f", &amount)
+		amount, err = strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, fmt.Errorf("parse alipay notify amount: %w", err)
+		}
 	}
 
 	return &NotifyResult{
@@ -271,7 +282,7 @@ func (g *AlipayGateway) rsaSign(params map[string]string) (string, error) {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(content))
+	_, _ = h.Write([]byte(content))
 	signature, err := rsa.SignPKCS1v15(rand.Reader, rsaKey, crypto.SHA256, h.Sum(nil))
 	if err != nil {
 		return "", fmt.Errorf("rsa sign: %w", err)
@@ -300,7 +311,7 @@ func (g *AlipayGateway) rsaVerify(params map[string]string, sign string) error {
 	}
 
 	h := sha256.New()
-	h.Write([]byte(content))
+	_, _ = h.Write([]byte(content))
 	return rsa.VerifyPKCS1v15(rsaPub, crypto.SHA256, h.Sum(nil), signBytes)
 }
 
@@ -345,11 +356,11 @@ func buildSignContent(params map[string]string) string {
 	var buf strings.Builder
 	for i, k := range keys {
 		if i > 0 {
-			buf.WriteByte('&')
+			_ = buf.WriteByte('&')
 		}
-		buf.WriteString(k)
-		buf.WriteByte('=')
-		buf.WriteString(params[k])
+		_, _ = buf.WriteString(k)
+		_ = buf.WriteByte('=')
+		_, _ = buf.WriteString(params[k])
 	}
 	return buf.String()
 }
@@ -363,16 +374,16 @@ func formatPrivateKey(raw string) string {
 	raw = strings.NewReplacer(" ", "", "\n", "", "\r", "", "\t", "").Replace(raw)
 	// 按 PEM 标准每 64 字符换行
 	var buf strings.Builder
-	buf.WriteString("-----BEGIN PRIVATE KEY-----\n")
+	_, _ = buf.WriteString("-----BEGIN PRIVATE KEY-----\n")
 	for i := 0; i < len(raw); i += 64 {
 		end := i + 64
 		if end > len(raw) {
 			end = len(raw)
 		}
-		buf.WriteString(raw[i:end])
-		buf.WriteByte('\n')
+		_, _ = buf.WriteString(raw[i:end])
+		_ = buf.WriteByte('\n')
 	}
-	buf.WriteString("-----END PRIVATE KEY-----")
+	_, _ = buf.WriteString("-----END PRIVATE KEY-----")
 	return buf.String()
 }
 
@@ -383,16 +394,16 @@ func formatPublicKey(raw string) string {
 	}
 	raw = strings.NewReplacer(" ", "", "\n", "", "\r", "", "\t", "").Replace(raw)
 	var buf strings.Builder
-	buf.WriteString("-----BEGIN PUBLIC KEY-----\n")
+	_, _ = buf.WriteString("-----BEGIN PUBLIC KEY-----\n")
 	for i := 0; i < len(raw); i += 64 {
 		end := i + 64
 		if end > len(raw) {
 			end = len(raw)
 		}
-		buf.WriteString(raw[i:end])
-		buf.WriteByte('\n')
+		_, _ = buf.WriteString(raw[i:end])
+		_ = buf.WriteByte('\n')
 	}
-	buf.WriteString("-----END PUBLIC KEY-----")
+	_, _ = buf.WriteString("-----END PUBLIC KEY-----")
 	return buf.String()
 }
 
