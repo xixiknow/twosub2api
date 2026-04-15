@@ -6,6 +6,7 @@
         <StatCard :title="t('profile.concurrencyLimit')" :value="user?.concurrency || 0" :icon="BoltIcon" icon-variant="warning" />
         <StatCard :title="t('profile.memberSince')" :value="formatDate(user?.created_at || '', { year: 'numeric', month: 'long' })" :icon="CalendarIcon" icon-variant="primary" />
       </div>
+      <VIPStatusCard :user="user" />
       <ProfileInfoCard :user="user" />
       <div v-if="contactInfo" class="card border-primary-200 bg-primary-50 dark:bg-primary-900/20 p-6">
         <div class="flex items-center gap-4">
@@ -25,6 +26,7 @@ import { ref, computed, h, onMounted } from 'vue'; import { useI18n } from 'vue-
 import { useAuthStore } from '@/stores/auth'; import { formatDate } from '@/utils/format'
 import { authAPI } from '@/api'; import AppLayout from '@/components/layout/AppLayout.vue'
 import StatCard from '@/components/common/StatCard.vue'
+import VIPStatusCard from '@/components/user/VIPStatusCard.vue'
 import ProfileInfoCard from '@/components/user/profile/ProfileInfoCard.vue'
 import ProfileEditForm from '@/components/user/profile/ProfileEditForm.vue'
 import ProfilePasswordForm from '@/components/user/profile/ProfilePasswordForm.vue'

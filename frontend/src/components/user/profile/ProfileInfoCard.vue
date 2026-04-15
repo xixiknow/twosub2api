@@ -41,7 +41,7 @@
           <span class="truncate">{{ user.username }}</span>
         </div>
         <div
-          v-if="user?.current_vip?.enabled"
+          v-if="user?.current_vip"
           class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-900/20"
         >
           <div class="flex items-center justify-between gap-3">

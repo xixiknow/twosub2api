@@ -153,6 +153,13 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID int64, req Updat
 	if s.authCacheInvalidator != nil && user.Concurrency != oldConcurrency {
 		s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 	}
+	if s.vipService != nil {
+		current, next, _, vipErr := s.vipService.ResolveUserVIP(ctx, userID)
+		if vipErr == nil {
+			user.CurrentVIP = current
+			user.NextVIP = next
+		}
+	}
 
 	return user, nil
 }
