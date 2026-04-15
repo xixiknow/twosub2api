@@ -348,7 +348,9 @@ type RedeemCode struct {
 type AdminRedeemCode struct {
 	RedeemCode
 
-	Notes string `json:"notes"`
+	Notes             string  `json:"notes"`
+	TrialCampaignKey  *string `json:"trial_campaign_key,omitempty"`
+	TrialCampaignName *string `json:"trial_campaign_name,omitempty"`
 }
 
 // UsageLog 是普通用户接口使用的 usage log DTO（不包含管理员字段）。
