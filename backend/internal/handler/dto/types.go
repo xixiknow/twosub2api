@@ -16,6 +16,28 @@ type User struct {
 
 	APIKeys       []APIKey           `json:"api_keys,omitempty"`
 	Subscriptions []UserSubscription `json:"subscriptions,omitempty"`
+	CurrentVIP    *VIPSummary        `json:"current_vip,omitempty"`
+	NextVIP       *VIPNextLevel      `json:"next_vip,omitempty"`
+}
+
+type VIPSummary struct {
+	Enabled         bool    `json:"enabled"`
+	LevelCode       string  `json:"level_code"`
+	LevelName       string  `json:"level_name"`
+	BaseMultiplier  float64 `json:"base_multiplier"`
+	RechargeTotal   float64 `json:"recharge_total"`
+	SpendTotal      float64 `json:"spend_total"`
+	ProgressPercent float64 `json:"progress_percent"`
+}
+
+type VIPNextLevel struct {
+	LevelCode            string  `json:"level_code"`
+	LevelName            string  `json:"level_name"`
+	RequiredRecharge     float64 `json:"required_recharge"`
+	RequiredSpend        float64 `json:"required_spend"`
+	RemainingRecharge    float64 `json:"remaining_recharge"`
+	RemainingSpend       float64 `json:"remaining_spend"`
+	UnlockConditionLabel string  `json:"unlock_condition_label"`
 }
 
 // AdminUser 是管理员接口使用的 user DTO（包含敏感/内部字段）。
@@ -309,6 +331,9 @@ type RedeemCode struct {
 
 	GroupID      *int64 `json:"group_id"`
 	ValidityDays int    `json:"validity_days"`
+	CashPriceCNY *float64 `json:"cash_price_cny,omitempty"`
+	TrialCampaignKey *string `json:"trial_campaign_key,omitempty"`
+	TrialCampaignName *string `json:"trial_campaign_name,omitempty"`
 
 	// Notes is only populated for admin_balance/admin_concurrency types
 	// so users can see why they were charged or credited
@@ -372,6 +397,13 @@ type UsageLog struct {
 	OpenAIWSMode bool   `json:"openai_ws_mode"`
 	DurationMs   *int   `json:"duration_ms"`
 	FirstTokenMs *int   `json:"first_token_ms"`
+	VIPLevelCode *string `json:"vip_level_code,omitempty"`
+	VIPLevelName *string `json:"vip_level_name,omitempty"`
+	VIPBaseMultiplier *float64 `json:"vip_base_multiplier,omitempty"`
+	VIPFinalMultiplier *float64 `json:"vip_final_multiplier,omitempty"`
+	VIPDiscountAmount *float64 `json:"vip_discount_amount,omitempty"`
+	VIPOriginalCost *float64 `json:"vip_original_cost,omitempty"`
+	VIPRuleKey *string `json:"vip_rule_key,omitempty"`
 
 	// 图片生成字段
 	ImageCount int     `json:"image_count"`

@@ -1072,6 +1072,39 @@
 
         <!-- Tab: General -->
         <div v-show="activeTab === 'general'" class="space-y-6">
+        <div class="card">
+          <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">VIP</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              VIP 升级门槛按用户实付人民币累计，不按到账余额统计。
+            </p>
+          </div>
+          <div class="space-y-4 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="font-medium text-gray-900 dark:text-white">启用 VIP</label>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  启用后用户将看到当前 VIP 等级，并按规则参与计费折扣
+                </p>
+              </div>
+              <Toggle v-model="form.vip_enabled" />
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                VIP 规则 JSON
+              </label>
+              <textarea
+                v-model="form.vip_rules"
+                rows="10"
+                class="input font-mono text-xs"
+                :placeholder="vipRulesHint"
+              ></textarea>
+              <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                `required_recharge` 单位为人民币元；可用 `model_multipliers` 对不同模型单独配置倍率
+              </p>
+            </div>
+          </div>
+        </div>
         <!-- Site Settings -->
         <div class="card">
           <div class="border-b border-gray-100 px-6 py-4 dark:border-dark-700">
@@ -1987,6 +2020,20 @@ const paymentForm = reactive({
   referral_commission_rate: 0
 })
 
+const vipRulesHint = `[
+  {
+    "level_code": "vip1",
+    "level_name": "VIP1",
+    "required_recharge": 50,
+    "required_spend": 0,
+    "multiplier": 0.95,
+    "model_multipliers": {
+      "gpt-5*": 0.9
+    },
+    "rule_key": "vip1"
+  }
+]`
+
 const alipayMode = computed({
   get() {
     if (paymentForm.payment_alipay_f2f_enabled) return 'f2f'
@@ -2080,6 +2127,8 @@ const form = reactive<SettingsForm>({
   purchase_subscription_enabled: false,
   purchase_subscription_url: '',
   custom_menu_items: [] as Array<{id: string; label: string; icon_svg: string; url: string; visibility: 'user' | 'admin'; sort_order: number}>,
+  vip_enabled: false,
+  vip_rules: '',
   smtp_host: '',
   smtp_port: 587,
   smtp_username: '',
@@ -2389,6 +2438,8 @@ async function saveSettings() {
       purchase_subscription_enabled: form.purchase_subscription_enabled,
       purchase_subscription_url: form.purchase_subscription_url,
       custom_menu_items: form.custom_menu_items,
+      vip_enabled: form.vip_enabled,
+      vip_rules: form.vip_rules,
       smtp_host: form.smtp_host,
       smtp_port: form.smtp_port,
       smtp_username: form.smtp_username,

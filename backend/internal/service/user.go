@@ -42,6 +42,28 @@ type User struct {
 
 	APIKeys       []APIKey
 	Subscriptions []UserSubscription
+	CurrentVIP    *VIPSummary
+	NextVIP       *VIPNextLevel
+}
+
+type VIPSummary struct {
+	Enabled         bool
+	LevelCode       string
+	LevelName       string
+	BaseMultiplier  float64
+	RechargeTotal   float64
+	SpendTotal      float64
+	ProgressPercent float64
+}
+
+type VIPNextLevel struct {
+	LevelCode            string
+	LevelName            string
+	RequiredRecharge     float64
+	RequiredSpend        float64
+	RemainingRecharge    float64
+	RemainingSpend       float64
+	UnlockConditionLabel string
 }
 
 func (u *User) IsAdmin() bool {

@@ -38,6 +38,9 @@ type GenerateRedeemCodesRequest struct {
 	Value        float64 `json:"value" binding:"min=0"`
 	GroupID      *int64  `json:"group_id"`                                    // 订阅类型必填
 	ValidityDays int     `json:"validity_days" binding:"omitempty,max=36500"` // 订阅类型使用，默认30天，最大100年
+	CampaignKey  string  `json:"campaign_key"`
+	CampaignName string  `json:"campaign_name"`
+	CashPriceCNY float64 `json:"cash_price_cny" binding:"min=0"`
 }
 
 // CreateAndRedeemCodeRequest represents creating a fixed code and redeeming it for a target user.
@@ -112,6 +115,9 @@ func (h *RedeemHandler) Generate(c *gin.Context) {
 			Value:        req.Value,
 			GroupID:      req.GroupID,
 			ValidityDays: req.ValidityDays,
+			CampaignKey:  req.CampaignKey,
+			CampaignName: req.CampaignName,
+			CashPriceCNY: req.CashPriceCNY,
 		})
 		if execErr != nil {
 			return nil, execErr

@@ -77,6 +77,7 @@ type UserService struct {
 	userRepo             UserRepository
 	authCacheInvalidator APIKeyAuthCacheInvalidator
 	billingCache         BillingCache
+	vipService           *VIPService
 }
 
 // NewUserService 创建用户服务实例
@@ -86,6 +87,10 @@ func NewUserService(userRepo UserRepository, authCacheInvalidator APIKeyAuthCach
 		authCacheInvalidator: authCacheInvalidator,
 		billingCache:         billingCache,
 	}
+}
+
+func (s *UserService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
 }
 
 // GetFirstAdmin 获取首个管理员用户（用于 Admin API Key 认证）
@@ -102,6 +107,13 @@ func (s *UserService) GetProfile(ctx context.Context, userID int64) (*User, erro
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if s.vipService != nil {
+		current, next, _, vipErr := s.vipService.ResolveUserVIP(ctx, userID)
+		if vipErr == nil {
+			user.CurrentVIP = current
+			user.NextVIP = next
+		}
 	}
 	return user, nil
 }
@@ -178,6 +190,13 @@ func (s *UserService) GetByID(ctx context.Context, id int64) (*User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
+	}
+	if s.vipService != nil {
+		current, next, _, vipErr := s.vipService.ResolveUserVIP(ctx, id)
+		if vipErr == nil {
+			user.CurrentVIP = current
+			user.NextVIP = next
+		}
 	}
 	return user, nil
 }

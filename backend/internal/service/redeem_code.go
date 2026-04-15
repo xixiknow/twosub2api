@@ -19,6 +19,9 @@ type RedeemCode struct {
 
 	GroupID      *int64
 	ValidityDays int
+	CashPriceCNY *float64
+	TrialCampaignKey  *string
+	TrialCampaignName *string
 
 	User  *User
 	Group *Group

@@ -301,6 +301,9 @@ type GenerateRedeemCodesInput struct {
 	Value        float64
 	GroupID      *int64 // 订阅类型专用：关联的分组ID
 	ValidityDays int    // 订阅类型专用：有效天数
+	CampaignKey  string
+	CampaignName string
+	CashPriceCNY float64
 }
 
 type ProxyBatchDeleteResult struct {
@@ -429,6 +432,8 @@ type adminServiceImpl struct {
 	defaultSubAssigner     DefaultSubscriptionAssigner
 	userSubRepo            UserSubscriptionRepository
 	privacyClientFactory   PrivacyClientFactory
+	trialCampaignService   *TrialCampaignService
+	redeemMetadataService  *RedeemMetadataService
 }
 
 type userGroupRateBatchReader interface {
@@ -459,6 +464,8 @@ func NewAdminService(
 	defaultSubAssigner DefaultSubscriptionAssigner,
 	userSubRepo UserSubscriptionRepository,
 	privacyClientFactory PrivacyClientFactory,
+	trialCampaignService *TrialCampaignService,
+	redeemMetadataService *RedeemMetadataService,
 ) AdminService {
 	return &adminServiceImpl{
 		userRepo:               userRepo,
@@ -479,6 +486,8 @@ func NewAdminService(
 		defaultSubAssigner:     defaultSubAssigner,
 		userSubRepo:            userSubRepo,
 		privacyClientFactory:   privacyClientFactory,
+		trialCampaignService:   trialCampaignService,
+		redeemMetadataService:  redeemMetadataService,
 	}
 }
 
@@ -782,6 +791,14 @@ func (s *adminServiceImpl) GetUserBalanceHistory(ctx context.Context, userID int
 	codes, result, err := s.redeemCodeRepo.ListByUserPaginated(ctx, userID, params, codeType)
 	if err != nil {
 		return nil, 0, 0, err
+	}
+	for i := range codes {
+		if s.trialCampaignService != nil {
+			_ = s.trialCampaignService.DecorateRedeemCode(ctx, &codes[i])
+		}
+		if s.redeemMetadataService != nil {
+			_ = s.redeemMetadataService.DecorateRedeemCode(ctx, &codes[i])
+		}
 	}
 	// Aggregate total recharged amount (only once, regardless of type filter)
 	totalRecharged, err := s.redeemCodeRepo.SumPositiveBalanceByUser(ctx, userID)
@@ -1930,11 +1947,29 @@ func (s *adminServiceImpl) ListRedeemCodes(ctx context.Context, page, pageSize i
 	if err != nil {
 		return nil, 0, err
 	}
+	for i := range codes {
+		if s.trialCampaignService != nil {
+			_ = s.trialCampaignService.DecorateRedeemCode(ctx, &codes[i])
+		}
+		if s.redeemMetadataService != nil {
+			_ = s.redeemMetadataService.DecorateRedeemCode(ctx, &codes[i])
+		}
+	}
 	return codes, result.Total, nil
 }
 
 func (s *adminServiceImpl) GetRedeemCode(ctx context.Context, id int64) (*RedeemCode, error) {
-	return s.redeemCodeRepo.GetByID(ctx, id)
+	code, err := s.redeemCodeRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if s.trialCampaignService != nil {
+		_ = s.trialCampaignService.DecorateRedeemCode(ctx, code)
+	}
+	if s.redeemMetadataService != nil {
+		_ = s.redeemMetadataService.DecorateRedeemCode(ctx, code)
+	}
+	return code, nil
 }
 
 func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *GenerateRedeemCodesInput) ([]RedeemCode, error) {
@@ -1975,6 +2010,23 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 		}
 		if err := s.redeemCodeRepo.Create(ctx, &code); err != nil {
 			return nil, err
+		}
+		if s.redeemMetadataService != nil && input.CashPriceCNY > 0 && input.Type == RedeemTypeBalance {
+			if err := s.redeemMetadataService.SetCashPrice(ctx, code.ID, input.CashPriceCNY); err != nil {
+				return nil, err
+			}
+			cashPrice := input.CashPriceCNY
+			code.CashPriceCNY = &cashPrice
+		}
+		if s.trialCampaignService != nil && input.Type == RedeemTypeSubscription && strings.TrimSpace(input.CampaignKey) != "" {
+			if err := s.trialCampaignService.BindRedeemCode(ctx, code.ID, input.CampaignKey, input.CampaignName); err != nil {
+				return nil, err
+			}
+			campaignKey := strings.TrimSpace(input.CampaignKey)
+			code.TrialCampaignKey = &campaignKey
+			if name := strings.TrimSpace(input.CampaignName); name != "" {
+				code.TrialCampaignName = &name
+			}
 		}
 		codes = append(codes, code)
 	}

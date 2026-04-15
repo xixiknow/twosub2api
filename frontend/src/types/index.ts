@@ -34,8 +34,30 @@ export interface User {
   status: 'active' | 'disabled' // Account status
   allowed_groups: number[] | null // Allowed group IDs (null = all non-exclusive groups)
   subscriptions?: UserSubscription[] // User's active subscriptions
+  current_vip?: VIPSummary | null
+  next_vip?: VIPNextLevel | null
   created_at: string
   updated_at: string
+}
+
+export interface VIPSummary {
+  enabled: boolean
+  level_code: string
+  level_name: string
+  base_multiplier: number
+  recharge_total: number
+  spend_total: number
+  progress_percent: number
+}
+
+export interface VIPNextLevel {
+  level_code: string
+  level_name: string
+  required_recharge: number
+  required_spend: number
+  remaining_recharge: number
+  remaining_spend: number
+  unlock_condition_label: string
 }
 
 export interface AdminUser extends User {
@@ -965,6 +987,13 @@ export interface UsageLog {
   total_cost: number
   actual_cost: number
   rate_multiplier: number
+  vip_level_code?: string | null
+  vip_level_name?: string | null
+  vip_base_multiplier?: number | null
+  vip_final_multiplier?: number | null
+  vip_discount_amount?: number | null
+  vip_original_cost?: number | null
+  vip_rule_key?: string | null
   billing_type: number
 
   request_type?: UsageRequestType
@@ -1047,6 +1076,9 @@ export interface RedeemCode {
   updated_at?: string
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
+  cash_price_cny?: number | null
+  trial_campaign_key?: string | null
+  trial_campaign_name?: string | null
   user?: User
   group?: Group // 关联的分组
 }
@@ -1057,6 +1089,9 @@ export interface GenerateRedeemCodesRequest {
   value: number
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
+  campaign_key?: string
+  campaign_name?: string
+  cash_price_cny?: number
 }
 
 export interface RedeemCodeRequest {

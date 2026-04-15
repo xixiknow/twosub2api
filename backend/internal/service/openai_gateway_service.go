@@ -350,6 +350,7 @@ type OpenAIGatewayService struct {
 	openaiWSRetryMetrics  openAIWSRetryMetrics
 	responseHeaderFilter  *responseheaders.CompiledHeaderFilter
 	codexSnapshotThrottle *accountWriteThrottle
+	vipService            *VIPService
 }
 
 // NewOpenAIGatewayService creates a new OpenAIGatewayService
@@ -404,6 +405,10 @@ func NewOpenAIGatewayService(
 	}
 	svc.logOpenAIWSModeBootstrap()
 	return svc
+}
+
+func (s *OpenAIGatewayService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
 }
 
 func (s *OpenAIGatewayService) getCodexSnapshotThrottle() *accountWriteThrottle {
@@ -4377,6 +4382,7 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 	// 按次计费判断（优先于 token 零值检查，确保按次计费不被跳过）
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
 	var cost *CostBreakdown
+	var vipDecision *VIPPricingDecision
 	if apiKey.Group != nil {
 		// 优先使用用户专属按次价格
 		if userRateOverride.PerRequestPrice != nil {
@@ -4419,6 +4425,12 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 			cost = &CostBreakdown{ActualCost: 0}
 		}
 	}
+	if s.vipService != nil && cost != nil {
+		decision, err := s.vipService.ApplyCost(ctx, user.ID, billingModel, cost, multiplier)
+		if err == nil {
+			vipDecision = decision
+		}
+	}
 
 	// Determine billing type
 	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
@@ -4456,6 +4468,29 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		DurationMs:            &durationMs,
 		FirstTokenMs:          result.FirstTokenMs,
 		CreatedAt:             time.Now(),
+	}
+	if vipDecision != nil {
+		if vipDecision.LevelCode != "" {
+			usageLog.VIPLevelCode = &vipDecision.LevelCode
+		}
+		if vipDecision.LevelName != "" {
+			usageLog.VIPLevelName = &vipDecision.LevelName
+		}
+		if vipDecision.BaseMultiplier > 0 {
+			usageLog.VIPBaseMultiplier = &vipDecision.BaseMultiplier
+		}
+		if vipDecision.FinalMultiplier > 0 {
+			usageLog.VIPFinalMultiplier = &vipDecision.FinalMultiplier
+		}
+		if vipDecision.DiscountAmount > 0 {
+			usageLog.VIPDiscountAmount = &vipDecision.DiscountAmount
+		}
+		if vipDecision.OriginalCost > 0 {
+			usageLog.VIPOriginalCost = &vipDecision.OriginalCost
+		}
+		if vipDecision.RuleKey != "" {
+			usageLog.VIPRuleKey = &vipDecision.RuleKey
+		}
 	}
 
 	// 记录上游模型（仅当与请求模型不同时）
@@ -4511,6 +4546,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 
 	if billingErr != nil {
 		return billingErr
+	}
+	if s.vipService != nil && cost != nil && cost.ActualCost > 0 {
+		s.vipService.QueueSpend(ctx, user.ID, cost.ActualCost)
 	}
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
 

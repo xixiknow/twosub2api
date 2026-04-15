@@ -108,6 +108,8 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:          settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              settings.PurchaseSubscriptionURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
+		VIPEnabled:                           settings.VIPEnabled,
+		VIPRules:                             settings.VIPRules,
 		DefaultConcurrency:                   settings.DefaultConcurrency,
 		DefaultBalance:                       settings.DefaultBalance,
 		DefaultSubscriptions:                 defaultSubscriptions,
@@ -173,6 +175,8 @@ type UpdateSettingsRequest struct {
 	PurchaseSubscriptionEnabled *bool                 `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
 	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
+	VIPEnabled                  bool                  `json:"vip_enabled"`
+	VIPRules                    string                `json:"vip_rules"`
 
 	// 默认配置
 	DefaultConcurrency   int                              `json:"default_concurrency"`
@@ -466,6 +470,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:      purchaseEnabled,
 		PurchaseSubscriptionURL:          purchaseURL,
 		CustomMenuItems:                  customMenuJSON,
+		VIPEnabled:                       req.VIPEnabled,
+		VIPRules:                         strings.TrimSpace(req.VIPRules),
 		DefaultConcurrency:               req.DefaultConcurrency,
 		DefaultBalance:                   req.DefaultBalance,
 		DefaultSubscriptions:             defaultSubscriptions,
@@ -562,6 +568,8 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PurchaseSubscriptionEnabled:          updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              updatedSettings.PurchaseSubscriptionURL,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
+		VIPEnabled:                           updatedSettings.VIPEnabled,
+		VIPRules:                             updatedSettings.VIPRules,
 		DefaultConcurrency:                   updatedSettings.DefaultConcurrency,
 		DefaultBalance:                       updatedSettings.DefaultBalance,
 		DefaultSubscriptions:                 updatedDefaultSubscriptions,

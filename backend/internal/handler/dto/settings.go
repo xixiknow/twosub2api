@@ -56,6 +56,8 @@ type SystemSettings struct {
 	PurchaseSubscriptionEnabled bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     string           `json:"purchase_subscription_url"`
 	CustomMenuItems             []CustomMenuItem `json:"custom_menu_items"`
+	VIPEnabled                  bool             `json:"vip_enabled"`
+	VIPRules                    string           `json:"vip_rules"`
 
 	DefaultConcurrency   int                          `json:"default_concurrency"`
 	DefaultBalance       float64                      `json:"default_balance"`

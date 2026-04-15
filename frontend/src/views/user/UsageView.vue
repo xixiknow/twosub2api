@@ -454,6 +454,28 @@
               >{{ (tooltipData?.rate_multiplier || 1).toFixed(2) }}x</span
             >
           </div>
+          <div
+            v-if="tooltipData?.vip_level_name || tooltipData?.vip_discount_amount"
+            class="mb-2 border-t border-gray-700 pt-1.5"
+          >
+            <div class="text-xs font-semibold text-gray-300 mb-1">VIP</div>
+            <div v-if="tooltipData?.vip_level_name" class="flex items-center justify-between gap-6">
+              <span class="text-gray-400">等级</span>
+              <span class="font-medium text-amber-300">{{ tooltipData.vip_level_name }}</span>
+            </div>
+            <div v-if="tooltipData?.vip_base_multiplier != null" class="flex items-center justify-between gap-6">
+              <span class="text-gray-400">VIP 倍率</span>
+              <span class="font-medium text-amber-300">{{ tooltipData.vip_base_multiplier.toFixed(2) }}x</span>
+            </div>
+            <div v-if="tooltipData?.vip_original_cost != null" class="flex items-center justify-between gap-6">
+              <span class="text-gray-400">VIP 前费用</span>
+              <span class="font-medium text-white">${{ tooltipData.vip_original_cost.toFixed(6) }}</span>
+            </div>
+            <div v-if="tooltipData?.vip_discount_amount != null" class="flex items-center justify-between gap-6">
+              <span class="text-gray-400">VIP 优惠</span>
+              <span class="font-medium text-emerald-300">-${{ tooltipData.vip_discount_amount.toFixed(6) }}</span>
+            </div>
+          </div>
           <div class="flex items-center justify-between gap-6">
             <span class="text-gray-400">{{ t('usage.original') }}</span>
             <span class="font-medium text-white">${{ tooltipData?.total_cost.toFixed(6) }}</span>

@@ -42,6 +42,8 @@ export interface SystemSettings {
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
   custom_menu_items: CustomMenuItem[]
+  vip_enabled: boolean
+  vip_rules: string
   // SMTP settings
   smtp_host: string
   smtp_port: number
@@ -138,6 +140,8 @@ export interface UpdateSettingsRequest {
   purchase_subscription_enabled?: boolean
   purchase_subscription_url?: string
   custom_menu_items?: CustomMenuItem[]
+  vip_enabled?: boolean
+  vip_rules?: string
   smtp_host?: string
   smtp_port?: number
   smtp_username?: string

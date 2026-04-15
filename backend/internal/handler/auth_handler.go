@@ -91,6 +91,11 @@ type LoginIPInfo struct {
 // respondWithTokenPair 生成 Token 对并返回认证响应
 // 如果 Token 对生成失败，回退到只返回 Access Token（向后兼容）
 func (h *AuthHandler) respondWithTokenPair(c *gin.Context, user *service.User) {
+	if h.userService != nil && user != nil {
+		if refreshed, err := h.userService.GetByID(c.Request.Context(), user.ID); err == nil && refreshed != nil {
+			user = refreshed
+		}
+	}
 	loginIP := ip.GetClientIP(c)
 
 	// 在更新 IP 前，先保存"上次"登录信息用于弹窗

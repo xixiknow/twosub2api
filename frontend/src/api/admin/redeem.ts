@@ -65,12 +65,20 @@ export async function generate(
   type: RedeemCodeType,
   value: number,
   groupId?: number | null,
-  validityDays?: number
+  validityDays?: number,
+  options?: {
+    campaign_key?: string
+    campaign_name?: string
+    cash_price_cny?: number
+  }
 ): Promise<RedeemCode[]> {
   const payload: GenerateRedeemCodesRequest = {
     count,
     type,
-    value
+    value,
+    campaign_key: options?.campaign_key,
+    campaign_name: options?.campaign_name,
+    cash_price_cny: options?.cash_price_cny
   }
 
   // 订阅类型专用字段

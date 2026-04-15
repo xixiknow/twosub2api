@@ -551,6 +551,7 @@ type GatewayService struct {
 	debugModelRouting     atomic.Bool
 	debugClaudeMimic      atomic.Bool
 	usageBillingRepo      UsageBillingRepository
+	vipService           *VIPService
 }
 
 // NewGatewayService creates a new GatewayService
@@ -619,6 +620,10 @@ func NewGatewayService(
 	svc.debugModelRouting.Store(parseDebugEnvBool(os.Getenv("SUB2API_DEBUG_MODEL_ROUTING")))
 	svc.debugClaudeMimic.Store(parseDebugEnvBool(os.Getenv("SUB2API_DEBUG_CLAUDE_MIMIC")))
 	return svc
+}
+
+func (s *GatewayService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
 }
 
 // GenerateSessionHash 从预解析请求计算粘性会话 hash
@@ -6713,6 +6718,7 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 	}
 
 	var cost *CostBreakdown
+	var vipDecision *VIPPricingDecision
 
 	// 按次计费判断：对普通请求（非图片生成）生效
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
@@ -6767,6 +6773,12 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 			cost = &CostBreakdown{ActualCost: 0}
 		}
 	}
+	if s.vipService != nil && cost != nil {
+		decision, err := s.vipService.ApplyCost(ctx, user.ID, result.Model, cost, multiplier)
+		if err == nil {
+			vipDecision = decision
+		}
+	}
 
 	// 判断计费方式：订阅模式 vs 余额模式
 	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
@@ -6816,6 +6828,29 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 		MediaType:             mediaType,
 		CacheTTLOverridden:    cacheTTLOverridden,
 		CreatedAt:             time.Now(),
+	}
+	if vipDecision != nil {
+		if vipDecision.LevelCode != "" {
+			usageLog.VIPLevelCode = &vipDecision.LevelCode
+		}
+		if vipDecision.LevelName != "" {
+			usageLog.VIPLevelName = &vipDecision.LevelName
+		}
+		if vipDecision.BaseMultiplier > 0 {
+			usageLog.VIPBaseMultiplier = &vipDecision.BaseMultiplier
+		}
+		if vipDecision.FinalMultiplier > 0 {
+			usageLog.VIPFinalMultiplier = &vipDecision.FinalMultiplier
+		}
+		if vipDecision.DiscountAmount > 0 {
+			usageLog.VIPDiscountAmount = &vipDecision.DiscountAmount
+		}
+		if vipDecision.OriginalCost > 0 {
+			usageLog.VIPOriginalCost = &vipDecision.OriginalCost
+		}
+		if vipDecision.RuleKey != "" {
+			usageLog.VIPRuleKey = &vipDecision.RuleKey
+		}
 	}
 
 	// 添加 UserAgent
@@ -6874,6 +6909,9 @@ func (s *GatewayService) RecordUsage(ctx context.Context, input *RecordUsageInpu
 
 	if billingErr != nil {
 		return billingErr
+	}
+	if s.vipService != nil && cost != nil && cost.ActualCost > 0 {
+		s.vipService.QueueSpend(ctx, user.ID, cost.ActualCost)
 	}
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.gateway")
 
@@ -6936,6 +6974,7 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 	}
 
 	var cost *CostBreakdown
+	var vipDecision *VIPPricingDecision
 
 	// 按次计费判断：对普通请求（非图片生成）生效
 	// 跳过条件：客户端断开且无输出 token（请求未成功完成，不应扣费）
@@ -6988,6 +7027,12 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 			cost = &CostBreakdown{ActualCost: 0}
 		}
 	}
+	if s.vipService != nil && cost != nil {
+		decision, err := s.vipService.ApplyCost(ctx, user.ID, result.Model, cost, multiplier)
+		if err == nil {
+			vipDecision = decision
+		}
+	}
 
 	// 判断计费方式：订阅模式 vs 余额模式
 	isSubscriptionBilling := subscription != nil && apiKey.Group != nil && apiKey.Group.IsSubscriptionType()
@@ -7032,6 +7077,29 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 		ImageSize:             imageSize,
 		CacheTTLOverridden:    cacheTTLOverridden,
 		CreatedAt:             time.Now(),
+	}
+	if vipDecision != nil {
+		if vipDecision.LevelCode != "" {
+			usageLog.VIPLevelCode = &vipDecision.LevelCode
+		}
+		if vipDecision.LevelName != "" {
+			usageLog.VIPLevelName = &vipDecision.LevelName
+		}
+		if vipDecision.BaseMultiplier > 0 {
+			usageLog.VIPBaseMultiplier = &vipDecision.BaseMultiplier
+		}
+		if vipDecision.FinalMultiplier > 0 {
+			usageLog.VIPFinalMultiplier = &vipDecision.FinalMultiplier
+		}
+		if vipDecision.DiscountAmount > 0 {
+			usageLog.VIPDiscountAmount = &vipDecision.DiscountAmount
+		}
+		if vipDecision.OriginalCost > 0 {
+			usageLog.VIPOriginalCost = &vipDecision.OriginalCost
+		}
+		if vipDecision.RuleKey != "" {
+			usageLog.VIPRuleKey = &vipDecision.RuleKey
+		}
 	}
 
 	// 添加 UserAgent
@@ -7090,6 +7158,9 @@ func (s *GatewayService) RecordUsageWithLongContext(ctx context.Context, input *
 
 	if billingErr != nil {
 		return billingErr
+	}
+	if s.vipService != nil && cost != nil && cost.ActualCost > 0 {
+		s.vipService.QueueSpend(ctx, user.ID, cost.ActualCost)
 	}
 	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.gateway")
 

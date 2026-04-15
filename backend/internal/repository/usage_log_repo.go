@@ -28,7 +28,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 )
 
-const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, upstream_model, group_id, subscription_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, media_type, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, created_at"
+const usageLogSelectColumns = "id, user_id, api_key_id, account_id, request_id, model, upstream_model, group_id, subscription_id, input_tokens, output_tokens, cache_creation_tokens, cache_read_tokens, cache_creation_5m_tokens, cache_creation_1h_tokens, input_cost, output_cost, cache_creation_cost, cache_read_cost, total_cost, actual_cost, rate_multiplier, vip_level_code, vip_level_name, vip_base_multiplier, vip_final_multiplier, vip_discount_amount, vip_original_cost, vip_rule_key, account_rate_multiplier, billing_type, request_type, stream, openai_ws_mode, duration_ms, first_token_ms, user_agent, ip_address, image_count, image_size, media_type, service_tier, reasoning_effort, inbound_endpoint, upstream_endpoint, cache_ttl_overridden, created_at"
 
 var usageLogInsertArgTypes = [...]string{
 	"bigint",
@@ -52,6 +52,13 @@ var usageLogInsertArgTypes = [...]string{
 	"numeric",
 	"numeric",
 	"numeric",
+	"text",
+	"text",
+	"numeric",
+	"numeric",
+	"numeric",
+	"numeric",
+	"text",
 	"numeric",
 	"smallint",
 	"smallint",
@@ -294,6 +301,13 @@ func (r *usageLogRepository) createSingle(ctx context.Context, sqlq sqlExecutor,
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			vip_level_code,
+			vip_level_name,
+			vip_base_multiplier,
+			vip_final_multiplier,
+			vip_discount_amount,
+			vip_original_cost,
+			vip_rule_key,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -318,7 +332,8 @@ func (r *usageLogRepository) createSingle(ctx context.Context, sqlq sqlExecutor,
 			$9, $10, $11, $12,
 			$13, $14,
 			$15, $16, $17, $18, $19, $20,
-			$21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
+			$21, $22, $23, $24, $25, $26, $27, $28,
+			$29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46
 		)
 		ON CONFLICT (request_id, api_key_id) DO NOTHING
 		RETURNING id, created_at
@@ -725,6 +740,13 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			vip_level_code,
+			vip_level_name,
+			vip_base_multiplier,
+			vip_final_multiplier,
+			vip_discount_amount,
+			vip_original_cost,
+			vip_rule_key,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -745,7 +767,7 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 			created_at
 		) AS (VALUES `)
 
-	args := make([]any, 0, len(keys)*39)
+	args := make([]any, 0, len(keys)*46)
 	argPos := 1
 	for idx, key := range keys {
 		if idx > 0 {
@@ -795,6 +817,13 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 				total_cost,
 				actual_cost,
 				rate_multiplier,
+				vip_level_code,
+				vip_level_name,
+				vip_base_multiplier,
+				vip_final_multiplier,
+				vip_discount_amount,
+				vip_original_cost,
+				vip_rule_key,
 				account_rate_multiplier,
 				billing_type,
 				request_type,
@@ -836,6 +865,13 @@ func buildUsageLogBatchInsertQuery(keys []string, preparedByKey map[string]usage
 				total_cost,
 				actual_cost,
 				rate_multiplier,
+				vip_level_code,
+				vip_level_name,
+				vip_base_multiplier,
+				vip_final_multiplier,
+				vip_discount_amount,
+				vip_original_cost,
+				vip_rule_key,
 				account_rate_multiplier,
 				billing_type,
 				request_type,
@@ -917,6 +953,13 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			vip_level_code,
+			vip_level_name,
+			vip_base_multiplier,
+			vip_final_multiplier,
+			vip_discount_amount,
+			vip_original_cost,
+			vip_rule_key,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -937,7 +980,7 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			created_at
 		) AS (VALUES `)
 
-	args := make([]any, 0, len(preparedList)*39)
+	args := make([]any, 0, len(preparedList)*46)
 	argPos := 1
 	for idx, prepared := range preparedList {
 		if idx > 0 {
@@ -984,6 +1027,13 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			vip_level_code,
+			vip_level_name,
+			vip_base_multiplier,
+			vip_final_multiplier,
+			vip_discount_amount,
+			vip_original_cost,
+			vip_rule_key,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -1025,6 +1075,13 @@ func buildUsageLogBestEffortInsertQuery(preparedList []usageLogInsertPrepared) (
 			total_cost,
 			actual_cost,
 			rate_multiplier,
+			vip_level_code,
+			vip_level_name,
+			vip_base_multiplier,
+			vip_final_multiplier,
+			vip_discount_amount,
+			vip_original_cost,
+			vip_rule_key,
 			account_rate_multiplier,
 			billing_type,
 			request_type,
@@ -1131,6 +1188,9 @@ func prepareUsageLogInsert(log *service.UsageLog) usageLogInsertPrepared {
 	inboundEndpoint := nullString(log.InboundEndpoint)
 	upstreamEndpoint := nullString(log.UpstreamEndpoint)
 	upstreamModel := nullString(log.UpstreamModel)
+	vipLevelCode := nullString(log.VIPLevelCode)
+	vipLevelName := nullString(log.VIPLevelName)
+	vipRuleKey := nullString(log.VIPRuleKey)
 
 	var requestIDArg any
 	if requestID != "" {
@@ -1164,6 +1224,13 @@ func prepareUsageLogInsert(log *service.UsageLog) usageLogInsertPrepared {
 			log.TotalCost,
 			log.ActualCost,
 			rateMultiplier,
+			vipLevelCode,
+			vipLevelName,
+			log.VIPBaseMultiplier,
+			log.VIPFinalMultiplier,
+			log.VIPDiscountAmount,
+			log.VIPOriginalCost,
+			vipRuleKey,
 			log.AccountRateMultiplier,
 			log.BillingType,
 			requestType,
@@ -3904,6 +3971,13 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		totalCost             float64
 		actualCost            float64
 		rateMultiplier        float64
+		vipLevelCode          sql.NullString
+		vipLevelName          sql.NullString
+		vipBaseMultiplier     sql.NullFloat64
+		vipFinalMultiplier    sql.NullFloat64
+		vipDiscountAmount     sql.NullFloat64
+		vipOriginalCost       sql.NullFloat64
+		vipRuleKey            sql.NullString
 		accountRateMultiplier sql.NullFloat64
 		billingType           int16
 		requestTypeRaw        int16
@@ -3947,6 +4021,13 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		&totalCost,
 		&actualCost,
 		&rateMultiplier,
+		&vipLevelCode,
+		&vipLevelName,
+		&vipBaseMultiplier,
+		&vipFinalMultiplier,
+		&vipDiscountAmount,
+		&vipOriginalCost,
+		&vipRuleKey,
 		&accountRateMultiplier,
 		&billingType,
 		&requestTypeRaw,
@@ -3988,6 +4069,10 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 		TotalCost:             totalCost,
 		ActualCost:            actualCost,
 		RateMultiplier:        rateMultiplier,
+		VIPBaseMultiplier:     nullFloat64Ptr(vipBaseMultiplier),
+		VIPFinalMultiplier:    nullFloat64Ptr(vipFinalMultiplier),
+		VIPDiscountAmount:     nullFloat64Ptr(vipDiscountAmount),
+		VIPOriginalCost:       nullFloat64Ptr(vipOriginalCost),
 		AccountRateMultiplier: nullFloat64Ptr(accountRateMultiplier),
 		BillingType:           int8(billingType),
 		RequestType:           service.RequestTypeFromInt16(requestTypeRaw),
@@ -4003,6 +4088,18 @@ func scanUsageLog(scanner interface{ Scan(...any) error }) (*service.UsageLog, e
 
 	if requestID.Valid {
 		log.RequestID = requestID.String
+	}
+	if vipLevelCode.Valid {
+		value := vipLevelCode.String
+		log.VIPLevelCode = &value
+	}
+	if vipLevelName.Valid {
+		value := vipLevelName.String
+		log.VIPLevelName = &value
+	}
+	if vipRuleKey.Valid {
+		value := vipRuleKey.String
+		log.VIPRuleKey = &value
 	}
 	if groupID.Valid {
 		value := groupID.Int64

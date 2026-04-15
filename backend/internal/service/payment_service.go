@@ -74,6 +74,7 @@ type PaymentService struct {
 	settingSvc          *SettingService
 	userRepo            UserRepository
 	billingCacheService *BillingCacheService
+	vipService          *VIPService
 }
 
 // NewPaymentService 创建支付服务
@@ -85,6 +86,10 @@ func NewPaymentService(db *sql.DB, settingRepo SettingRepository, settingSvc *Se
 		userRepo:            userRepo,
 		billingCacheService: billingCacheService,
 	}
+}
+
+func (s *PaymentService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
 }
 
 // GetPaymentConfig 获取支付配置（给前端用）
@@ -363,6 +368,9 @@ func (s *PaymentService) HandleNotify(ctx context.Context, channel string, param
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tx: %w", err)
 	}
+	if s.vipService != nil {
+		s.vipService.OnRechargeSuccess(ctx, order.UserID, order.Amount)
+	}
 
 	log.Printf("payment success: order=%s user=%d amount=%.2f credit=%.8f", order.OrderNo, order.UserID, order.Amount, order.Credit)
 
@@ -530,6 +538,9 @@ func (s *PaymentService) activeQueryPayment(ctx context.Context, orderID int64, 
 
 	if err := tx.Commit(); err != nil {
 		return "", fmt.Errorf("commit tx: %w", err)
+	}
+	if s.vipService != nil {
+		s.vipService.OnRechargeSuccess(ctx, userID, amount)
 	}
 
 	log.Printf("payment success (active query): order=%s user=%d amount=%.2f credit=%.8f", orderNo, userID, amount, credit)

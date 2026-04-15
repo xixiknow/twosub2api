@@ -90,16 +90,32 @@
           </template>
 
           <template #cell-value="{ value, row }">
-            <span class="text-sm font-medium text-gray-900 dark:text-white">
-              <template v-if="row.type === 'balance'">${{ value.toFixed(2) }}</template>
-              <template v-else-if="row.type === 'subscription'">
-                {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
-                <span v-if="row.group" class="ml-1 text-xs text-gray-500 dark:text-gray-400"
-                  >({{ row.group.name }})</span
+            <div class="text-sm font-medium text-gray-900 dark:text-white">
+              <template v-if="row.type === 'balance'">
+                <div>${{ value.toFixed(2) }}</div>
+                <div
+                  v-if="row.cash_price_cny != null && row.cash_price_cny > 0"
+                  class="text-xs font-normal text-gray-500 dark:text-gray-400"
                 >
+                  ¥{{ row.cash_price_cny.toFixed(2) }}
+                </div>
+              </template>
+              <template v-else-if="row.type === 'subscription'">
+                <div>
+                  {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
+                  <span v-if="row.group" class="ml-1 text-xs text-gray-500 dark:text-gray-400"
+                    >({{ row.group.name }})</span
+                  >
+                </div>
+                <div
+                  v-if="row.trial_campaign_name || row.trial_campaign_key"
+                  class="text-xs font-normal text-gray-500 dark:text-gray-400"
+                >
+                  {{ row.trial_campaign_name || row.trial_campaign_key }}
+                </div>
               </template>
               <template v-else>{{ value }}</template>
-            </span>
+            </div>
           </template>
 
           <template #cell-status="{ value }">
@@ -228,6 +244,20 @@
                 class="input"
               />
             </div>
+            <div v-if="generateForm.type === 'balance'">
+              <label class="input-label">实付金额 (CNY)</label>
+              <input
+                v-model.number="generateForm.cash_price_cny"
+                type="number"
+                min="0"
+                step="0.01"
+                class="input"
+                placeholder="例如 10"
+              />
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                VIP 累计按实付金额统计，不按到账额度统计
+              </p>
+            </div>
             <!-- 邀请码类型：显示提示信息 -->
             <div v-if="generateForm.type === 'invitation'" class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
               <p class="text-sm text-blue-700 dark:text-blue-300">
@@ -277,6 +307,27 @@
                   required
                   class="input"
                 />
+              </div>
+              <div>
+                <label class="input-label">体验活动 Key</label>
+                <input
+                  v-model.trim="generateForm.campaign_key"
+                  type="text"
+                  class="input"
+                  placeholder="例如 trial-2026-spring"
+                />
+              </div>
+              <div>
+                <label class="input-label">体验活动名称</label>
+                <input
+                  v-model.trim="generateForm.campaign_name"
+                  type="text"
+                  class="input"
+                  placeholder="例如 春季体验套餐"
+                />
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  填写活动 Key 后，同一用户对该体验活动只能兑换一次
+                </p>
               </div>
             </template>
             <div>
@@ -549,7 +600,10 @@ const generateForm = reactive({
   value: 10,
   count: 1,
   group_id: null as number | null,
-  validity_days: 30
+  validity_days: 30,
+  cash_price_cny: 0,
+  campaign_key: '',
+  campaign_name: ''
 })
 
 // 监听类型变化，邀请码类型时自动设置 value 为 0
@@ -642,7 +696,12 @@ const handleGenerateCodes = async () => {
       generateForm.type,
       generateForm.value,
       generateForm.type === 'subscription' ? generateForm.group_id : undefined,
-      generateForm.type === 'subscription' ? generateForm.validity_days : undefined
+      generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
+      {
+        cash_price_cny: generateForm.type === 'balance' ? generateForm.cash_price_cny : undefined,
+        campaign_key: generateForm.type === 'subscription' ? generateForm.campaign_key : undefined,
+        campaign_name: generateForm.type === 'subscription' ? generateForm.campaign_name : undefined
+      }
     )
     showGenerateDialog.value = false
     generatedCodes.value = result
@@ -650,6 +709,9 @@ const handleGenerateCodes = async () => {
     // 重置表单
     generateForm.group_id = null
     generateForm.validity_days = 30
+    generateForm.cash_price_cny = 0
+    generateForm.campaign_key = ''
+    generateForm.campaign_name = ''
     loadCodes()
   } catch (error: any) {
     appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToGenerate'))

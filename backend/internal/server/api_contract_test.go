@@ -666,6 +666,8 @@ func newContractDeps(t *testing.T) *contractDeps {
 		nil,
 		userSubRepo,
 		nil,
+		nil,
+		nil,
 	)
 	authHandler := handler.NewAuthHandler(cfg, nil, userService, settingService, nil, redeemService, nil)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)

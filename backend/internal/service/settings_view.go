@@ -43,6 +43,8 @@ type SystemSettings struct {
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
 	CustomMenuItems             string // JSON array of custom menu items
+	VIPEnabled                  bool
+	VIPRules                    string // JSON array of vip rules
 
 	DefaultConcurrency   int
 	DefaultBalance       float64

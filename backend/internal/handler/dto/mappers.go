@@ -76,6 +76,38 @@ func UserFromServiceShallow(u *service.User) *User {
 		AllowedGroups: u.AllowedGroups,
 		CreatedAt:     u.CreatedAt,
 		UpdatedAt:     u.UpdatedAt,
+		CurrentVIP:    vipSummaryFromService(u.CurrentVIP),
+		NextVIP:       vipNextLevelFromService(u.NextVIP),
+	}
+}
+
+func vipSummaryFromService(v *service.VIPSummary) *VIPSummary {
+	if v == nil {
+		return nil
+	}
+	return &VIPSummary{
+		Enabled:         v.Enabled,
+		LevelCode:       v.LevelCode,
+		LevelName:       v.LevelName,
+		BaseMultiplier:  v.BaseMultiplier,
+		RechargeTotal:   v.RechargeTotal,
+		SpendTotal:      v.SpendTotal,
+		ProgressPercent: v.ProgressPercent,
+	}
+}
+
+func vipNextLevelFromService(v *service.VIPNextLevel) *VIPNextLevel {
+	if v == nil {
+		return nil
+	}
+	return &VIPNextLevel{
+		LevelCode:            v.LevelCode,
+		LevelName:            v.LevelName,
+		RequiredRecharge:     v.RequiredRecharge,
+		RequiredSpend:        v.RequiredSpend,
+		RemainingRecharge:    v.RemainingRecharge,
+		RemainingSpend:       v.RemainingSpend,
+		UnlockConditionLabel: v.UnlockConditionLabel,
 	}
 }
 
@@ -540,8 +572,10 @@ func RedeemCodeFromServiceAdmin(rc *service.RedeemCode) *AdminRedeemCode {
 		return nil
 	}
 	return &AdminRedeemCode{
-		RedeemCode: redeemCodeFromServiceBase(rc),
-		Notes:      rc.Notes,
+		RedeemCode:       redeemCodeFromServiceBase(rc),
+		Notes:            rc.Notes,
+		TrialCampaignKey: rc.TrialCampaignKey,
+		TrialCampaignName: rc.TrialCampaignName,
 	}
 }
 
@@ -557,6 +591,9 @@ func redeemCodeFromServiceBase(rc *service.RedeemCode) RedeemCode {
 		CreatedAt:    rc.CreatedAt,
 		GroupID:      rc.GroupID,
 		ValidityDays: rc.ValidityDays,
+		CashPriceCNY: rc.CashPriceCNY,
+		TrialCampaignKey: rc.TrialCampaignKey,
+		TrialCampaignName: rc.TrialCampaignName,
 		User:         UserFromServiceShallow(rc.User),
 		Group:        GroupFromServiceShallow(rc.Group),
 	}
@@ -613,6 +650,13 @@ func usageLogFromServiceUser(l *service.UsageLog) UsageLog {
 		TotalCost:             l.TotalCost,
 		ActualCost:            l.ActualCost,
 		RateMultiplier:        l.RateMultiplier,
+		VIPLevelCode:          l.VIPLevelCode,
+		VIPLevelName:          l.VIPLevelName,
+		VIPBaseMultiplier:     l.VIPBaseMultiplier,
+		VIPFinalMultiplier:    l.VIPFinalMultiplier,
+		VIPDiscountAmount:     l.VIPDiscountAmount,
+		VIPOriginalCost:       l.VIPOriginalCost,
+		VIPRuleKey:            l.VIPRuleKey,
 		BillingType:           l.BillingType,
 		RequestType:           requestType.String(),
 		Stream:                stream,

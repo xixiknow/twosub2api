@@ -17,6 +17,7 @@ import (
 var (
 	ErrRedeemCodeNotFound  = infraerrors.NotFound("REDEEM_CODE_NOT_FOUND", "redeem code not found")
 	ErrRedeemCodeUsed      = infraerrors.Conflict("REDEEM_CODE_USED", "redeem code already used")
+	ErrTrialCampaignAlreadyClaimed = infraerrors.Conflict("TRIAL_CAMPAIGN_ALREADY_CLAIMED", "trial package already claimed")
 	ErrInsufficientBalance = infraerrors.BadRequest("INSUFFICIENT_BALANCE", "余额不足，请充值后再试")
 	ErrRedeemRateLimited   = infraerrors.TooManyRequests("REDEEM_RATE_LIMITED", "too many failed attempts, please try again later")
 	ErrRedeemCodeLocked    = infraerrors.Conflict("REDEEM_CODE_LOCKED", "redeem code is being processed, please try again")
@@ -80,6 +81,9 @@ type RedeemService struct {
 	billingCacheService  *BillingCacheService
 	entClient            *dbent.Client
 	authCacheInvalidator APIKeyAuthCacheInvalidator
+	trialCampaignService *TrialCampaignService
+	redeemMetadataService *RedeemMetadataService
+	vipService           *VIPService
 }
 
 // NewRedeemService 创建兑换码服务实例
@@ -101,6 +105,18 @@ func NewRedeemService(
 		entClient:            entClient,
 		authCacheInvalidator: authCacheInvalidator,
 	}
+}
+
+func (s *RedeemService) SetTrialCampaignService(trialCampaignService *TrialCampaignService) {
+	s.trialCampaignService = trialCampaignService
+}
+
+func (s *RedeemService) SetRedeemMetadataService(redeemMetadataService *RedeemMetadataService) {
+	s.redeemMetadataService = redeemMetadataService
+}
+
+func (s *RedeemService) SetVIPService(vipService *VIPService) {
+	s.vipService = vipService
 }
 
 // GenerateRandomCode 生成随机兑换码
@@ -286,6 +302,16 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	if redeemCode.Type == RedeemTypeSubscription && redeemCode.GroupID == nil {
 		return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
 	}
+	if s.trialCampaignService != nil {
+		if err := s.trialCampaignService.DecorateRedeemCode(ctx, redeemCode); err != nil {
+			return nil, fmt.Errorf("decorate redeem code trial campaign: %w", err)
+		}
+	}
+	if s.redeemMetadataService != nil {
+		if err := s.redeemMetadataService.DecorateRedeemCode(ctx, redeemCode); err != nil {
+			return nil, fmt.Errorf("decorate redeem code metadata: %w", err)
+		}
+	}
 
 	// 获取用户信息
 	user, err := s.userRepo.GetByID(ctx, userID)
@@ -347,9 +373,18 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 		return nil, fmt.Errorf("unsupported redeem type: %s", redeemCode.Type)
 	}
 
+	if s.trialCampaignService != nil {
+		if err := s.trialCampaignService.Claim(txCtx, userID, redeemCode); err != nil {
+			return nil, err
+		}
+	}
+
 	// 提交事务
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit transaction: %w", err)
+	}
+	if s.vipService != nil && redeemCode.Type == RedeemTypeBalance && redeemCode.CashPriceCNY != nil && *redeemCode.CashPriceCNY > 0 {
+		s.vipService.OnRechargeSuccess(ctx, userID, *redeemCode.CashPriceCNY)
 	}
 
 	// 事务提交成功后失效缓存
@@ -359,6 +394,12 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	redeemCode, err = s.redeemRepo.GetByID(ctx, redeemCode.ID)
 	if err != nil {
 		return nil, fmt.Errorf("get updated redeem code: %w", err)
+	}
+	if s.trialCampaignService != nil {
+		_ = s.trialCampaignService.DecorateRedeemCode(ctx, redeemCode)
+	}
+	if s.redeemMetadataService != nil {
+		_ = s.redeemMetadataService.DecorateRedeemCode(ctx, redeemCode)
 	}
 
 	return redeemCode, nil
@@ -410,6 +451,12 @@ func (s *RedeemService) GetByID(ctx context.Context, id int64) (*RedeemCode, err
 	if err != nil {
 		return nil, fmt.Errorf("get redeem code: %w", err)
 	}
+	if s.trialCampaignService != nil {
+		_ = s.trialCampaignService.DecorateRedeemCode(ctx, code)
+	}
+	if s.redeemMetadataService != nil {
+		_ = s.redeemMetadataService.DecorateRedeemCode(ctx, code)
+	}
 	return code, nil
 }
 
@@ -419,6 +466,12 @@ func (s *RedeemService) GetByCode(ctx context.Context, code string) (*RedeemCode
 	if err != nil {
 		return nil, fmt.Errorf("get redeem code: %w", err)
 	}
+	if s.trialCampaignService != nil {
+		_ = s.trialCampaignService.DecorateRedeemCode(ctx, redeemCode)
+	}
+	if s.redeemMetadataService != nil {
+		_ = s.redeemMetadataService.DecorateRedeemCode(ctx, redeemCode)
+	}
 	return redeemCode, nil
 }
 
@@ -427,6 +480,16 @@ func (s *RedeemService) List(ctx context.Context, params pagination.PaginationPa
 	codes, pagination, err := s.redeemRepo.List(ctx, params)
 	if err != nil {
 		return nil, nil, fmt.Errorf("list redeem codes: %w", err)
+	}
+	if s.trialCampaignService != nil {
+		for i := range codes {
+			_ = s.trialCampaignService.DecorateRedeemCode(ctx, &codes[i])
+		}
+	}
+	if s.redeemMetadataService != nil {
+		for i := range codes {
+			_ = s.redeemMetadataService.DecorateRedeemCode(ctx, &codes[i])
+		}
 	}
 	return codes, pagination, nil
 }
@@ -472,6 +535,16 @@ func (s *RedeemService) GetUserHistory(ctx context.Context, userID int64, limit 
 	codes, err := s.redeemRepo.ListByUser(ctx, userID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("get user redeem history: %w", err)
+	}
+	if s.trialCampaignService != nil {
+		for i := range codes {
+			_ = s.trialCampaignService.DecorateRedeemCode(ctx, &codes[i])
+		}
+	}
+	if s.redeemMetadataService != nil {
+		for i := range codes {
+			_ = s.redeemMetadataService.DecorateRedeemCode(ctx, &codes[i])
+		}
 	}
 	return codes, nil
 }
