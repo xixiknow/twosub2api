@@ -60,6 +60,13 @@ func TestUsageLogRepositoryCreateSyncRequestTypeAndLegacyFields(t *testing.T) {
 			log.TotalCost,
 			log.ActualCost,
 			log.RateMultiplier,
+			sqlmock.AnyArg(), // vip_level_code
+			sqlmock.AnyArg(), // vip_level_name
+			log.VIPBaseMultiplier,
+			log.VIPFinalMultiplier,
+			log.VIPDiscountAmount,
+			log.VIPOriginalCost,
+			sqlmock.AnyArg(), // vip_rule_key
 			log.AccountRateMultiplier,
 			log.BillingType,
 			int16(service.RequestTypeWSV2),
@@ -131,6 +138,13 @@ func TestUsageLogRepositoryCreate_PersistsServiceTier(t *testing.T) {
 			log.TotalCost,
 			log.ActualCost,
 			log.RateMultiplier,
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			log.VIPBaseMultiplier,
+			log.VIPFinalMultiplier,
+			log.VIPDiscountAmount,
+			log.VIPOriginalCost,
+			sqlmock.AnyArg(),
 			log.AccountRateMultiplier,
 			log.BillingType,
 			int16(service.RequestTypeSync),
@@ -349,6 +363,13 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			1.0,               // total_cost
 			0.9,               // actual_cost
 			1.0,               // rate_multiplier
+			sql.NullString{},  // vip_level_code
+			sql.NullString{},  // vip_level_name
+			sql.NullFloat64{}, // vip_base_multiplier
+			sql.NullFloat64{}, // vip_final_multiplier
+			sql.NullFloat64{}, // vip_discount_amount
+			sql.NullFloat64{}, // vip_original_cost
+			sql.NullString{},  // vip_rule_key
 			sql.NullFloat64{}, // account_rate_multiplier
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeWSV2),
@@ -391,6 +412,13 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			1, 2, 3, 4, 5, 6,
 			0.1, 0.2, 0.3, 0.4, 1.0, 0.9,
 			1.0,
+			sql.NullString{},
+			sql.NullString{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullString{},
 			sql.NullFloat64{},
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeUnknown),
@@ -433,6 +461,13 @@ func TestScanUsageLogRequestTypeAndLegacyFallback(t *testing.T) {
 			1, 2, 3, 4, 5, 6,
 			0.1, 0.2, 0.3, 0.4, 1.0, 0.9,
 			1.0,
+			sql.NullString{},
+			sql.NullString{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullFloat64{},
+			sql.NullString{},
 			sql.NullFloat64{},
 			int16(service.BillingTypeBalance),
 			int16(service.RequestTypeSync),
