@@ -244,10 +244,11 @@ func (g *AlipayGateway) VerifyNotify(params map[string]string) (*NotifyResult, e
 
 	amount := 0.0
 	if v := params["total_amount"]; v != "" {
-		amount, err = strconv.ParseFloat(v, 64)
-		if err != nil {
-			return nil, fmt.Errorf("parse alipay notify amount: %w", err)
+		parsedAmount, parseErr := strconv.ParseFloat(v, 64)
+		if parseErr != nil {
+			return nil, fmt.Errorf("parse alipay notify amount: %w", parseErr)
 		}
+		amount = parsedAmount
 	}
 
 	return &NotifyResult{
