@@ -457,7 +457,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores'
 import {
@@ -476,7 +475,6 @@ import Icon from '@/components/icons/Icon.vue'
 import { formatDateTime, formatDateOnly } from '@/utils/format'
 import QRCode from 'qrcode'
 
-const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const appStore = useAppStore()
