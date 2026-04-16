@@ -408,6 +408,10 @@ var (
 		{Name: "default_mapped_model", Type: field.TypeString, Size: 100, Default: ""},
 		{Name: "per_request_price", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "model_per_request_prices", Type: field.TypeJSON, Nullable: true, SchemaType: map[string]string{"postgres": "jsonb"}},
+		{Name: "subscription_price", Type: field.TypeFloat64, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "subscription_display_name", Type: field.TypeString, Size: 255, Default: ""},
+		{Name: "subscription_visible", Type: field.TypeBool, Default: false},
+		{Name: "subscription_features", Type: field.TypeJSON, SchemaType: map[string]string{"postgres": "jsonb"}},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
@@ -670,6 +674,62 @@ var (
 		Name:       "settings",
 		Columns:    SettingsColumns,
 		PrimaryKey: []*schema.Column{SettingsColumns[0]},
+	}
+	// SubscriptionOrdersColumns holds the columns for the "subscription_orders" table.
+	SubscriptionOrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "order_no", Type: field.TypeString, Unique: true, Size: 64},
+		{Name: "trade_no", Type: field.TypeString, Nullable: true, Size: 128},
+		{Name: "amount", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "original_price", Type: field.TypeFloat64, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "discount_amount", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(10,2)"}},
+		{Name: "payment_method", Type: field.TypeString, Size: 32},
+		{Name: "status", Type: field.TypeString, Size: 16, Default: "pending"},
+		{Name: "notify_data", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "expired_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "activated_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
+		{Name: "subscription_id", Type: field.TypeInt64, Nullable: true},
+		{Name: "group_id", Type: field.TypeInt64},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// SubscriptionOrdersTable holds the schema information for the "subscription_orders" table.
+	SubscriptionOrdersTable = &schema.Table{
+		Name:       "subscription_orders",
+		Columns:    SubscriptionOrdersColumns,
+		PrimaryKey: []*schema.Column{SubscriptionOrdersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "subscription_orders_groups_subscription_orders",
+				Columns:    []*schema.Column{SubscriptionOrdersColumns[14]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "subscription_orders_users_subscription_orders",
+				Columns:    []*schema.Column{SubscriptionOrdersColumns[15]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "subscriptionorder_order_no",
+				Unique:  true,
+				Columns: []*schema.Column{SubscriptionOrdersColumns[1]},
+			},
+			{
+				Name:    "subscriptionorder_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{SubscriptionOrdersColumns[15]},
+			},
+			{
+				Name:    "subscriptionorder_status",
+				Unique:  false,
+				Columns: []*schema.Column{SubscriptionOrdersColumns[7]},
+			},
+		},
 	}
 	// UsageCleanupTasksColumns holds the columns for the "usage_cleanup_tasks" table.
 	UsageCleanupTasksColumns = []*schema.Column{
@@ -1106,6 +1166,7 @@ var (
 		RedeemCodesTable,
 		SecuritySecretsTable,
 		SettingsTable,
+		SubscriptionOrdersTable,
 		UsageCleanupTasksTable,
 		UsageLogsTable,
 		UsersTable,
@@ -1169,6 +1230,11 @@ func init() {
 	}
 	SettingsTable.Annotation = &entsql.Annotation{
 		Table: "settings",
+	}
+	SubscriptionOrdersTable.ForeignKeys[0].RefTable = GroupsTable
+	SubscriptionOrdersTable.ForeignKeys[1].RefTable = UsersTable
+	SubscriptionOrdersTable.Annotation = &entsql.Annotation{
+		Table: "subscription_orders",
 	}
 	UsageCleanupTasksTable.Annotation = &entsql.Annotation{
 		Table: "usage_cleanup_tasks",

@@ -72,6 +72,13 @@ func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) er
 	// 设置支持的模型系列（始终设置，空数组表示不限制）
 	builder = builder.SetSupportedModelScopes(groupIn.SupportedModelScopes)
 
+	// 设置套餐配置字段
+	builder = builder.
+		SetNillableSubscriptionPrice(groupIn.SubscriptionPrice).
+		SetSubscriptionDisplayName(groupIn.SubscriptionDisplayName).
+		SetSubscriptionVisible(groupIn.SubscriptionVisible).
+		SetSubscriptionFeatures(groupIn.SubscriptionFeatures)
+
 	created, err := builder.Save(ctx)
 	if err == nil {
 		groupIn.ID = created.ID
@@ -197,6 +204,17 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 	} else {
 		builder = builder.ClearModelPerRequestPrices()
 	}
+
+	// 处理套餐配置字段
+	if groupIn.SubscriptionPrice != nil {
+		builder = builder.SetSubscriptionPrice(*groupIn.SubscriptionPrice)
+	} else {
+		builder = builder.ClearSubscriptionPrice()
+	}
+	builder = builder.
+		SetSubscriptionDisplayName(groupIn.SubscriptionDisplayName).
+		SetSubscriptionVisible(groupIn.SubscriptionVisible).
+		SetSubscriptionFeatures(groupIn.SubscriptionFeatures)
 
 	updated, err := builder.Save(ctx)
 	if err != nil {

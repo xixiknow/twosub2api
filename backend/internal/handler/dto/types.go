@@ -152,6 +152,12 @@ type AdminGroup struct {
 
 	// 分组排序
 	SortOrder int `json:"sort_order"`
+
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64 `json:"subscription_price"`
+	SubscriptionDisplayName string   `json:"subscription_display_name"`
+	SubscriptionVisible     bool     `json:"subscription_visible"`
+	SubscriptionFeatures    []string `json:"subscription_features"`
 }
 
 type Account struct {

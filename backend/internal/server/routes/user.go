@@ -108,6 +108,15 @@ func RegisterUserRoutes(
 
 		// 模型广场
 		authenticated.GET("/model-square", h.Setting.GetModelSquare)
+
+		// 订阅套餐购买
+		subscriptionPlans := authenticated.Group("/subscription-plans")
+		{
+			subscriptionPlans.GET("", h.SubscriptionPlan.ListPlans)
+			subscriptionPlans.POST("/purchase", h.SubscriptionPlan.Purchase)
+			subscriptionPlans.GET("/orders", h.SubscriptionPlan.ListOrders)
+			subscriptionPlans.GET("/orders/:id/status", h.SubscriptionPlan.GetOrderStatus)
+		}
 	}
 
 	// 支付回调路由（无需认证，由支付网关服务器回调）
@@ -117,5 +126,14 @@ func RegisterUserRoutes(
 		paymentNotify.POST("/notify/wechat", h.Payment.NotifyWechat)
 		paymentNotify.GET("/notify/epay", h.Payment.NotifyEpay)
 		paymentNotify.GET("/return", h.Payment.PaymentReturn)
+	}
+
+	// 订阅套餐支付回调路由（无需认证）
+	subPlanNotify := v1.Group("/subscription-plans")
+	{
+		subPlanNotify.POST("/notify/alipay", h.SubscriptionPlan.NotifyAlipay)
+		subPlanNotify.POST("/notify/wechat", h.SubscriptionPlan.NotifyWechat)
+		subPlanNotify.GET("/notify/epay", h.SubscriptionPlan.NotifyEpay)
+		subPlanNotify.GET("/return", h.SubscriptionPlan.PaymentReturn)
 	}
 }

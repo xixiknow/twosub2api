@@ -77,6 +77,11 @@ type PaymentService struct {
 	vipService          *VIPService
 }
 
+type paymentCallbackPaths struct {
+	notify string
+	ret    string
+}
+
 // NewPaymentService 创建支付服务
 func NewPaymentService(db *sql.DB, settingRepo SettingRepository, settingSvc *SettingService, userRepo UserRepository, billingCacheService *BillingCacheService) *PaymentService {
 	return &PaymentService{
@@ -727,8 +732,46 @@ func (s *PaymentService) ExpireOrders(ctx context.Context) error {
 	return nil
 }
 
+// GetGateway 根据支付方式获取网关（公开方法，供 SubscriptionPlanService 等外部调用）
+func (s *PaymentService) GetGateway(ctx context.Context, method payment.PaymentMethod) (payment.Gateway, error) {
+	return s.getGateway(ctx, method)
+}
+
+// GetGatewayWithCallbacks 根据支付方式获取网关，并允许调用方覆盖通知/跳转路径。
+func (s *PaymentService) GetGatewayWithCallbacks(ctx context.Context, method payment.PaymentMethod, notifyPath, returnPath string) (payment.Gateway, error) {
+	return s.getGatewayWithPaths(ctx, method, paymentCallbackPaths{
+		notify: notifyPath,
+		ret:    returnPath,
+	})
+}
+
 // getGateway 根据支付方式获取网关
 func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentMethod) (payment.Gateway, error) {
+	return s.getGatewayWithPaths(ctx, method, defaultPaymentCallbackPaths(method))
+}
+
+func defaultPaymentCallbackPaths(method payment.PaymentMethod) paymentCallbackPaths {
+	switch method {
+	case payment.MethodAlipay, payment.MethodAlipayF2F:
+		return paymentCallbackPaths{
+			notify: "/api/v1/payment/notify/alipay",
+			ret:    "/api/v1/payment/return",
+		}
+	case payment.MethodWechat:
+		return paymentCallbackPaths{
+			notify: "/api/v1/payment/notify/wechat",
+		}
+	case payment.MethodEpay, payment.MethodEpayAlipay, payment.MethodEpayWechat:
+		return paymentCallbackPaths{
+			notify: "/api/v1/payment/notify/epay",
+			ret:    "/api/v1/payment/return",
+		}
+	default:
+		return paymentCallbackPaths{}
+	}
+}
+
+func (s *PaymentService) getGatewayWithPaths(ctx context.Context, method payment.PaymentMethod, paths paymentCallbackPaths) (payment.Gateway, error) {
 	settings, err := s.settingRepo.GetAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get settings: %w", err)
@@ -747,8 +790,8 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			PrivateKey: settings[SettingKeyAlipayPrivateKey],
 			PublicKey:  settings[SettingKeyAlipayPublicKey],
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/alipay"
-		cfg.ReturnURL = baseURL + "/api/v1/payment/return"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
+		cfg.ReturnURL = buildCallbackURL(baseURL, paths.ret)
 		log.Printf("alipay gateway: notify_url=%s", cfg.NotifyURL)
 		return payment.NewAlipayGateway(cfg), nil
 
@@ -758,7 +801,7 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			PrivateKey: settings[SettingKeyAlipayPrivateKey],
 			PublicKey:  settings[SettingKeyAlipayPublicKey],
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/alipay"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
 		log.Printf("alipay f2f gateway: notify_url=%s app_id=%q key_len=%d", cfg.NotifyURL, cfg.AppID, len(cfg.PrivateKey))
 		return payment.NewAlipayF2FGateway(cfg), nil
 
@@ -768,7 +811,7 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			MchID:  settings[SettingKeyWechatMchID],
 			APIKey: settings[SettingKeyWechatAPIKey],
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/wechat"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
 		return payment.NewWechatGateway(cfg), nil
 
 	case payment.MethodEpay:
@@ -778,8 +821,8 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			Key:    settings[SettingKeyEpayKey],
 			Type:   settings[SettingKeyEpayType],
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/epay"
-		cfg.ReturnURL = baseURL + "/api/v1/payment/return"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
+		cfg.ReturnURL = buildCallbackURL(baseURL, paths.ret)
 		return payment.NewEpayGateway(cfg), nil
 
 	case payment.MethodEpayAlipay:
@@ -789,8 +832,8 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			Key:    settings[SettingKeyEpayKey],
 			Type:   "alipay",
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/epay"
-		cfg.ReturnURL = baseURL + "/api/v1/payment/return"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
+		cfg.ReturnURL = buildCallbackURL(baseURL, paths.ret)
 		return payment.NewEpayGateway(cfg), nil
 
 	case payment.MethodEpayWechat:
@@ -800,13 +843,20 @@ func (s *PaymentService) getGateway(ctx context.Context, method payment.PaymentM
 			Key:    settings[SettingKeyEpayKey],
 			Type:   "wxpay",
 		}
-		cfg.NotifyURL = baseURL + "/api/v1/payment/notify/epay"
-		cfg.ReturnURL = baseURL + "/api/v1/payment/return"
+		cfg.NotifyURL = buildCallbackURL(baseURL, paths.notify)
+		cfg.ReturnURL = buildCallbackURL(baseURL, paths.ret)
 		return payment.NewEpayGateway(cfg), nil
 
 	default:
 		return nil, fmt.Errorf("unsupported payment method: %s", method)
 	}
+}
+
+func buildCallbackURL(baseURL, path string) string {
+	if path == "" {
+		return ""
+	}
+	return baseURL + path
 }
 
 // PaymentStats 支付统计数据

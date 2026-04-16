@@ -156,6 +156,11 @@ type CreateGroupInput struct {
 	// 分组按次收费配置
 	PerRequestPrice       *float64
 	ModelPerRequestPrices map[string]float64
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64
+	SubscriptionDisplayName string
+	SubscriptionVisible     bool
+	SubscriptionFeatures    []string
 }
 
 type UpdateGroupInput struct {
@@ -191,6 +196,11 @@ type UpdateGroupInput struct {
 	// 分组按次收费配置
 	PerRequestPrice       *float64
 	ModelPerRequestPrices map[string]float64
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64
+	SubscriptionDisplayName *string
+	SubscriptionVisible     *bool
+	SubscriptionFeatures    *[]string
 }
 
 type CreateAccountInput struct {
@@ -961,6 +971,10 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		DefaultMappedModel:              input.DefaultMappedModel,
 		PerRequestPrice:                 perRequestPrice,
 		ModelPerRequestPrices:           input.ModelPerRequestPrices,
+		SubscriptionPrice:               normalizePrice(input.SubscriptionPrice),
+		SubscriptionDisplayName:         input.SubscriptionDisplayName,
+		SubscriptionVisible:             input.SubscriptionVisible,
+		SubscriptionFeatures:            input.SubscriptionFeatures,
 	}
 	if err := s.groupRepo.Create(ctx, group); err != nil {
 		return nil, err
@@ -1173,6 +1187,20 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	}
 	if input.ModelPerRequestPrices != nil {
 		group.ModelPerRequestPrices = input.ModelPerRequestPrices
+	}
+
+	// 套餐配置字段（自助订阅购买功能）
+	if input.SubscriptionPrice != nil {
+		group.SubscriptionPrice = normalizePrice(input.SubscriptionPrice)
+	}
+	if input.SubscriptionDisplayName != nil {
+		group.SubscriptionDisplayName = *input.SubscriptionDisplayName
+	}
+	if input.SubscriptionVisible != nil {
+		group.SubscriptionVisible = *input.SubscriptionVisible
+	}
+	if input.SubscriptionFeatures != nil {
+		group.SubscriptionFeatures = *input.SubscriptionFeatures
 	}
 
 	if err := s.groupRepo.Update(ctx, group); err != nil {

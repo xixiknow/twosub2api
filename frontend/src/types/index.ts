@@ -145,6 +145,7 @@ export interface PublicSettings {
   availability_check_enabled: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
+  subscription_purchase_enabled?: boolean
   custom_menu_items: CustomMenuItem[]
   linuxdo_oauth_enabled: boolean
   referral_enabled: boolean
@@ -463,6 +464,12 @@ export interface AdminGroup extends Group {
 
   // 分组排序
   sort_order: number
+
+  // 套餐配置字段（订阅类型分组）
+  subscription_price?: number | null
+  subscription_display_name?: string
+  subscription_visible?: boolean
+  subscription_features?: string[]
 }
 
 export interface ApiKey {

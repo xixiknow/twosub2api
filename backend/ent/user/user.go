@@ -73,6 +73,8 @@ const (
 	EdgeAttributeValues = "attribute_values"
 	// EdgePromoCodeUsages holds the string denoting the promo_code_usages edge name in mutations.
 	EdgePromoCodeUsages = "promo_code_usages"
+	// EdgeSubscriptionOrders holds the string denoting the subscription_orders edge name in mutations.
+	EdgeSubscriptionOrders = "subscription_orders"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
 	EdgeUserAllowedGroups = "user_allowed_groups"
 	// Table holds the table name of the user in the database.
@@ -138,6 +140,13 @@ const (
 	PromoCodeUsagesInverseTable = "promo_code_usages"
 	// PromoCodeUsagesColumn is the table column denoting the promo_code_usages relation/edge.
 	PromoCodeUsagesColumn = "user_id"
+	// SubscriptionOrdersTable is the table that holds the subscription_orders relation/edge.
+	SubscriptionOrdersTable = "subscription_orders"
+	// SubscriptionOrdersInverseTable is the table name for the SubscriptionOrder entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptionorder" package.
+	SubscriptionOrdersInverseTable = "subscription_orders"
+	// SubscriptionOrdersColumn is the table column denoting the subscription_orders relation/edge.
+	SubscriptionOrdersColumn = "user_id"
 	// UserAllowedGroupsTable is the table that holds the user_allowed_groups relation/edge.
 	UserAllowedGroupsTable = "user_allowed_groups"
 	// UserAllowedGroupsInverseTable is the table name for the UserAllowedGroup entity.
@@ -472,6 +481,20 @@ func ByPromoCodeUsages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySubscriptionOrdersCount orders the results by subscription_orders count.
+func BySubscriptionOrdersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSubscriptionOrdersStep(), opts...)
+	}
+}
+
+// BySubscriptionOrders orders the results by subscription_orders terms.
+func BySubscriptionOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserAllowedGroupsCount orders the results by user_allowed_groups count.
 func ByUserAllowedGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -546,6 +569,13 @@ func newPromoCodeUsagesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PromoCodeUsagesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PromoCodeUsagesTable, PromoCodeUsagesColumn),
+	)
+}
+func newSubscriptionOrdersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionOrdersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionOrdersTable, SubscriptionOrdersColumn),
 	)
 }
 func newUserAllowedGroupsStep() *sqlgraph.Step {

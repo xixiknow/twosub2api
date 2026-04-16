@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionorder"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
@@ -563,6 +564,73 @@ func (_u *GroupUpdate) ClearModelPerRequestPrices() *GroupUpdate {
 	return _u
 }
 
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (_u *GroupUpdate) SetSubscriptionPrice(v float64) *GroupUpdate {
+	_u.mutation.ResetSubscriptionPrice()
+	_u.mutation.SetSubscriptionPrice(v)
+	return _u
+}
+
+// SetNillableSubscriptionPrice sets the "subscription_price" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableSubscriptionPrice(v *float64) *GroupUpdate {
+	if v != nil {
+		_u.SetSubscriptionPrice(*v)
+	}
+	return _u
+}
+
+// AddSubscriptionPrice adds value to the "subscription_price" field.
+func (_u *GroupUpdate) AddSubscriptionPrice(v float64) *GroupUpdate {
+	_u.mutation.AddSubscriptionPrice(v)
+	return _u
+}
+
+// ClearSubscriptionPrice clears the value of the "subscription_price" field.
+func (_u *GroupUpdate) ClearSubscriptionPrice() *GroupUpdate {
+	_u.mutation.ClearSubscriptionPrice()
+	return _u
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (_u *GroupUpdate) SetSubscriptionDisplayName(v string) *GroupUpdate {
+	_u.mutation.SetSubscriptionDisplayName(v)
+	return _u
+}
+
+// SetNillableSubscriptionDisplayName sets the "subscription_display_name" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableSubscriptionDisplayName(v *string) *GroupUpdate {
+	if v != nil {
+		_u.SetSubscriptionDisplayName(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (_u *GroupUpdate) SetSubscriptionVisible(v bool) *GroupUpdate {
+	_u.mutation.SetSubscriptionVisible(v)
+	return _u
+}
+
+// SetNillableSubscriptionVisible sets the "subscription_visible" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableSubscriptionVisible(v *bool) *GroupUpdate {
+	if v != nil {
+		_u.SetSubscriptionVisible(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (_u *GroupUpdate) SetSubscriptionFeatures(v []string) *GroupUpdate {
+	_u.mutation.SetSubscriptionFeatures(v)
+	return _u
+}
+
+// AppendSubscriptionFeatures appends value to the "subscription_features" field.
+func (_u *GroupUpdate) AppendSubscriptionFeatures(v []string) *GroupUpdate {
+	_u.mutation.AppendSubscriptionFeatures(v)
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdate) AddAPIKeyIDs(ids ...int64) *GroupUpdate {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -651,6 +719,21 @@ func (_u *GroupUpdate) AddAllowedUsers(v ...*User) *GroupUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAllowedUserIDs(ids...)
+}
+
+// AddSubscriptionOrderIDs adds the "subscription_orders" edge to the SubscriptionOrder entity by IDs.
+func (_u *GroupUpdate) AddSubscriptionOrderIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.AddSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionOrders adds the "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *GroupUpdate) AddSubscriptionOrders(v ...*SubscriptionOrder) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionOrderIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -784,6 +867,27 @@ func (_u *GroupUpdate) RemoveAllowedUsers(v ...*User) *GroupUpdate {
 	return _u.RemoveAllowedUserIDs(ids...)
 }
 
+// ClearSubscriptionOrders clears all "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *GroupUpdate) ClearSubscriptionOrders() *GroupUpdate {
+	_u.mutation.ClearSubscriptionOrders()
+	return _u
+}
+
+// RemoveSubscriptionOrderIDs removes the "subscription_orders" edge to SubscriptionOrder entities by IDs.
+func (_u *GroupUpdate) RemoveSubscriptionOrderIDs(ids ...int64) *GroupUpdate {
+	_u.mutation.RemoveSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionOrders removes "subscription_orders" edges to SubscriptionOrder entities.
+func (_u *GroupUpdate) RemoveSubscriptionOrders(v ...*SubscriptionOrder) *GroupUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionOrderIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *GroupUpdate) Save(ctx context.Context) (int, error) {
 	if err := _u.defaults(); err != nil {
@@ -851,6 +955,11 @@ func (_u *GroupUpdate) check() error {
 	if v, ok := _u.mutation.DefaultMappedModel(); ok {
 		if err := group.DefaultMappedModelValidator(v); err != nil {
 			return &ValidationError{Name: "default_mapped_model", err: fmt.Errorf(`ent: validator failed for field "Group.default_mapped_model": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SubscriptionDisplayName(); ok {
+		if err := group.SubscriptionDisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_display_name", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_display_name": %w`, err)}
 		}
 	}
 	return nil
@@ -1031,6 +1140,29 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.ModelPerRequestPricesCleared() {
 		_spec.ClearField(group.FieldModelPerRequestPrices, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.SubscriptionPrice(); ok {
+		_spec.SetField(group.FieldSubscriptionPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedSubscriptionPrice(); ok {
+		_spec.AddField(group.FieldSubscriptionPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.SubscriptionPriceCleared() {
+		_spec.ClearField(group.FieldSubscriptionPrice, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.SubscriptionDisplayName(); ok {
+		_spec.SetField(group.FieldSubscriptionDisplayName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionVisible(); ok {
+		_spec.SetField(group.FieldSubscriptionVisible, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SubscriptionFeatures(); ok {
+		_spec.SetField(group.FieldSubscriptionFeatures, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSubscriptionFeatures(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldSubscriptionFeatures, value)
+		})
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1324,6 +1456,51 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionOrdersIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
@@ -1874,6 +2051,73 @@ func (_u *GroupUpdateOne) ClearModelPerRequestPrices() *GroupUpdateOne {
 	return _u
 }
 
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (_u *GroupUpdateOne) SetSubscriptionPrice(v float64) *GroupUpdateOne {
+	_u.mutation.ResetSubscriptionPrice()
+	_u.mutation.SetSubscriptionPrice(v)
+	return _u
+}
+
+// SetNillableSubscriptionPrice sets the "subscription_price" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableSubscriptionPrice(v *float64) *GroupUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionPrice(*v)
+	}
+	return _u
+}
+
+// AddSubscriptionPrice adds value to the "subscription_price" field.
+func (_u *GroupUpdateOne) AddSubscriptionPrice(v float64) *GroupUpdateOne {
+	_u.mutation.AddSubscriptionPrice(v)
+	return _u
+}
+
+// ClearSubscriptionPrice clears the value of the "subscription_price" field.
+func (_u *GroupUpdateOne) ClearSubscriptionPrice() *GroupUpdateOne {
+	_u.mutation.ClearSubscriptionPrice()
+	return _u
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (_u *GroupUpdateOne) SetSubscriptionDisplayName(v string) *GroupUpdateOne {
+	_u.mutation.SetSubscriptionDisplayName(v)
+	return _u
+}
+
+// SetNillableSubscriptionDisplayName sets the "subscription_display_name" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableSubscriptionDisplayName(v *string) *GroupUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionDisplayName(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (_u *GroupUpdateOne) SetSubscriptionVisible(v bool) *GroupUpdateOne {
+	_u.mutation.SetSubscriptionVisible(v)
+	return _u
+}
+
+// SetNillableSubscriptionVisible sets the "subscription_visible" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableSubscriptionVisible(v *bool) *GroupUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionVisible(*v)
+	}
+	return _u
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (_u *GroupUpdateOne) SetSubscriptionFeatures(v []string) *GroupUpdateOne {
+	_u.mutation.SetSubscriptionFeatures(v)
+	return _u
+}
+
+// AppendSubscriptionFeatures appends value to the "subscription_features" field.
+func (_u *GroupUpdateOne) AppendSubscriptionFeatures(v []string) *GroupUpdateOne {
+	_u.mutation.AppendSubscriptionFeatures(v)
+	return _u
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_u *GroupUpdateOne) AddAPIKeyIDs(ids ...int64) *GroupUpdateOne {
 	_u.mutation.AddAPIKeyIDs(ids...)
@@ -1962,6 +2206,21 @@ func (_u *GroupUpdateOne) AddAllowedUsers(v ...*User) *GroupUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddAllowedUserIDs(ids...)
+}
+
+// AddSubscriptionOrderIDs adds the "subscription_orders" edge to the SubscriptionOrder entity by IDs.
+func (_u *GroupUpdateOne) AddSubscriptionOrderIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.AddSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionOrders adds the "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *GroupUpdateOne) AddSubscriptionOrders(v ...*SubscriptionOrder) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionOrderIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -2095,6 +2354,27 @@ func (_u *GroupUpdateOne) RemoveAllowedUsers(v ...*User) *GroupUpdateOne {
 	return _u.RemoveAllowedUserIDs(ids...)
 }
 
+// ClearSubscriptionOrders clears all "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *GroupUpdateOne) ClearSubscriptionOrders() *GroupUpdateOne {
+	_u.mutation.ClearSubscriptionOrders()
+	return _u
+}
+
+// RemoveSubscriptionOrderIDs removes the "subscription_orders" edge to SubscriptionOrder entities by IDs.
+func (_u *GroupUpdateOne) RemoveSubscriptionOrderIDs(ids ...int64) *GroupUpdateOne {
+	_u.mutation.RemoveSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionOrders removes "subscription_orders" edges to SubscriptionOrder entities.
+func (_u *GroupUpdateOne) RemoveSubscriptionOrders(v ...*SubscriptionOrder) *GroupUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionOrderIDs(ids...)
+}
+
 // Where appends a list predicates to the GroupUpdate builder.
 func (_u *GroupUpdateOne) Where(ps ...predicate.Group) *GroupUpdateOne {
 	_u.mutation.Where(ps...)
@@ -2175,6 +2455,11 @@ func (_u *GroupUpdateOne) check() error {
 	if v, ok := _u.mutation.DefaultMappedModel(); ok {
 		if err := group.DefaultMappedModelValidator(v); err != nil {
 			return &ValidationError{Name: "default_mapped_model", err: fmt.Errorf(`ent: validator failed for field "Group.default_mapped_model": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.SubscriptionDisplayName(); ok {
+		if err := group.SubscriptionDisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_display_name", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_display_name": %w`, err)}
 		}
 	}
 	return nil
@@ -2372,6 +2657,29 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if _u.mutation.ModelPerRequestPricesCleared() {
 		_spec.ClearField(group.FieldModelPerRequestPrices, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.SubscriptionPrice(); ok {
+		_spec.SetField(group.FieldSubscriptionPrice, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedSubscriptionPrice(); ok {
+		_spec.AddField(group.FieldSubscriptionPrice, field.TypeFloat64, value)
+	}
+	if _u.mutation.SubscriptionPriceCleared() {
+		_spec.ClearField(group.FieldSubscriptionPrice, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.SubscriptionDisplayName(); ok {
+		_spec.SetField(group.FieldSubscriptionDisplayName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.SubscriptionVisible(); ok {
+		_spec.SetField(group.FieldSubscriptionVisible, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.SubscriptionFeatures(); ok {
+		_spec.SetField(group.FieldSubscriptionFeatures, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedSubscriptionFeatures(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, group.FieldSubscriptionFeatures, value)
+		})
 	}
 	if _u.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -2665,6 +2973,51 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionOrdersIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Group{config: _u.config}

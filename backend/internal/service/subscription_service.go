@@ -191,6 +191,8 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 		validityDays = MaxValidityDays
 	}
 
+	managedTx := dbent.TxFromContext(ctx) == nil
+
 	// 已有订阅，执行续期（在事务中完成所有更新）
 	if existingSub != nil {
 		now := time.Now()
@@ -209,23 +211,30 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 			newExpiresAt = MaxExpiresAt
 		}
 
-		// 开启事务：ExtendExpiry + UpdateStatus + UpdateNotes 在同一事务中完成
-		tx, err := s.entClient.Tx(ctx)
-		if err != nil {
-			return nil, false, fmt.Errorf("begin transaction: %w", err)
+		txCtx := ctx
+		var tx *dbent.Tx
+		if managedTx {
+			tx, err = s.entClient.Tx(ctx)
+			if err != nil {
+				return nil, false, fmt.Errorf("begin transaction: %w", err)
+			}
+			txCtx = dbent.NewTxContext(ctx, tx)
 		}
-		txCtx := dbent.NewTxContext(ctx, tx)
 
 		// 更新过期时间
 		if err := s.userSubRepo.ExtendExpiry(txCtx, existingSub.ID, newExpiresAt); err != nil {
-			_ = tx.Rollback()
+			if managedTx {
+				_ = tx.Rollback()
+			}
 			return nil, false, fmt.Errorf("extend subscription: %w", err)
 		}
 
 		// 如果订阅已过期或被暂停，恢复为active状态
 		if existingSub.Status != SubscriptionStatusActive {
 			if err := s.userSubRepo.UpdateStatus(txCtx, existingSub.ID, SubscriptionStatusActive); err != nil {
-				_ = tx.Rollback()
+				if managedTx {
+					_ = tx.Rollback()
+				}
 				return nil, false, fmt.Errorf("update subscription status: %w", err)
 			}
 		}
@@ -238,14 +247,18 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 			}
 			newNotes += input.Notes
 			if err := s.userSubRepo.UpdateNotes(txCtx, existingSub.ID, newNotes); err != nil {
-				_ = tx.Rollback()
+				if managedTx {
+					_ = tx.Rollback()
+				}
 				return nil, false, fmt.Errorf("update subscription notes: %w", err)
 			}
 		}
 
 		// 提交事务
-		if err := tx.Commit(); err != nil {
-			return nil, false, fmt.Errorf("commit transaction: %w", err)
+		if managedTx {
+			if err := tx.Commit(); err != nil {
+				return nil, false, fmt.Errorf("commit transaction: %w", err)
+			}
 		}
 
 		// 失效订阅缓存
@@ -260,7 +273,7 @@ func (s *SubscriptionService) AssignOrExtendSubscription(ctx context.Context, in
 		}
 
 		// 返回更新后的订阅
-		sub, err := s.userSubRepo.GetByID(ctx, existingSub.ID)
+		sub, err := s.userSubRepo.GetByID(txCtx, existingSub.ID)
 		return sub, true, err // true 表示是续期
 	}
 

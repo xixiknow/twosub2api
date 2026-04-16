@@ -525,7 +525,8 @@ const userNavItems = computed((): NavItem[] => {
     ...(appStore.cachedPublicSettings?.availability_check_enabled !== false
       ? [{ path: '/availability', label: t('nav.availability'), icon: ShieldCheckIcon }]
       : []),
-    ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
+    ...((appStore.cachedPublicSettings?.subscription_purchase_enabled ??
+      appStore.cachedPublicSettings?.purchase_subscription_enabled)
       ? [
           {
             path: '/purchase',
@@ -558,7 +559,8 @@ const personalNavItems = computed((): NavItem[] => {
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true },
     { path: '/model-square', label: t('nav.modelSquare'), icon: SparklesIcon },
     { path: '/availability', label: t('nav.availability'), icon: ShieldCheckIcon },
-    ...(appStore.cachedPublicSettings?.purchase_subscription_enabled
+    ...((appStore.cachedPublicSettings?.subscription_purchase_enabled ??
+      appStore.cachedPublicSettings?.purchase_subscription_enabled)
       ? [
           {
             path: '/purchase',

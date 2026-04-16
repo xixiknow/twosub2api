@@ -111,6 +111,11 @@ type CreateGroupRequest struct {
 	// 分组按次收费配置
 	PerRequestPrice       *float64           `json:"per_request_price"`
 	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices"`
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64 `json:"subscription_price"`
+	SubscriptionDisplayName string   `json:"subscription_display_name"`
+	SubscriptionVisible     bool     `json:"subscription_visible"`
+	SubscriptionFeatures    []string `json:"subscription_features"`
 }
 
 // UpdateGroupRequest represents update group request
@@ -146,6 +151,11 @@ type UpdateGroupRequest struct {
 	// 分组按次收费配置
 	PerRequestPrice       *float64           `json:"per_request_price"`
 	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices"`
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64  `json:"subscription_price"`
+	SubscriptionDisplayName *string   `json:"subscription_display_name"`
+	SubscriptionVisible     *bool     `json:"subscription_visible"`
+	SubscriptionFeatures    *[]string `json:"subscription_features"`
 }
 
 // List handles listing all groups with pagination
@@ -259,6 +269,10 @@ func (h *GroupHandler) Create(c *gin.Context) {
 		CopyAccountsFromGroupIDs:        req.CopyAccountsFromGroupIDs,
 		PerRequestPrice:                 req.PerRequestPrice,
 		ModelPerRequestPrices:           req.ModelPerRequestPrices,
+		SubscriptionPrice:               req.SubscriptionPrice,
+		SubscriptionDisplayName:         req.SubscriptionDisplayName,
+		SubscriptionVisible:             req.SubscriptionVisible,
+		SubscriptionFeatures:            req.SubscriptionFeatures,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -309,6 +323,10 @@ func (h *GroupHandler) Update(c *gin.Context) {
 		CopyAccountsFromGroupIDs:        req.CopyAccountsFromGroupIDs,
 		PerRequestPrice:                 req.PerRequestPrice,
 		ModelPerRequestPrices:           req.ModelPerRequestPrices,
+		SubscriptionPrice:               req.SubscriptionPrice,
+		SubscriptionDisplayName:         req.SubscriptionDisplayName,
+		SubscriptionVisible:             req.SubscriptionVisible,
+		SubscriptionFeatures:            req.SubscriptionFeatures,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

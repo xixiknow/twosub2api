@@ -41,6 +41,7 @@ export interface SystemSettings {
   availability_check_enabled: boolean
   purchase_subscription_enabled: boolean
   purchase_subscription_url: string
+  subscription_purchase_enabled: boolean
   custom_menu_items: CustomMenuItem[]
   vip_enabled: boolean
   vip_rules: string
@@ -139,6 +140,7 @@ export interface UpdateSettingsRequest {
   availability_check_enabled?: boolean
   purchase_subscription_enabled?: boolean
   purchase_subscription_url?: string
+  subscription_purchase_enabled?: boolean
   custom_menu_items?: CustomMenuItem[]
   vip_enabled?: boolean
   vip_rules?: string

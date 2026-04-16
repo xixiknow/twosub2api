@@ -130,6 +130,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyLinuxDoConnectEnabled,
 		SettingKeyReferralEnabled,
 		SettingKeyLoginIPAlertEnabled,
+		SettingKeySubscriptionPurchaseEnabled,
 	}
 
 	settings, err := s.settingRepo.GetMultiple(ctx, keys)
@@ -173,6 +174,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		AvailabilityCheckEnabled:         !isFalseSettingValue(settings[SettingKeyAvailabilityCheckEnabled]),
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		SubscriptionPurchaseEnabled:      settings[SettingKeySubscriptionPurchaseEnabled] == "true",
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		LinuxDoOAuthEnabled:              linuxDoEnabled,
 		ReferralEnabled:                  settings[SettingKeyReferralEnabled] == "true",
@@ -229,6 +231,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		AvailabilityCheckEnabled         bool            `json:"availability_check_enabled"`
 		PurchaseSubscriptionEnabled      bool            `json:"purchase_subscription_enabled"`
 		PurchaseSubscriptionURL          string          `json:"purchase_subscription_url,omitempty"`
+		SubscriptionPurchaseEnabled      bool            `json:"subscription_purchase_enabled"`
 		CustomMenuItems                  json.RawMessage `json:"custom_menu_items"`
 		LinuxDoOAuthEnabled              bool            `json:"linuxdo_oauth_enabled"`
 		ReferralEnabled                  bool            `json:"referral_enabled"`
@@ -258,6 +261,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		AvailabilityCheckEnabled:         settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
+		SubscriptionPurchaseEnabled:      settings.SubscriptionPurchaseEnabled,
 		CustomMenuItems:                  filterUserVisibleMenuItems(settings.CustomMenuItems),
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,
@@ -461,6 +465,7 @@ func (s *SettingService) UpdateSettings(ctx context.Context, settings *SystemSet
 	updates[SettingKeyAvailabilityCheckEnabled] = strconv.FormatBool(settings.AvailabilityCheckEnabled)
 	updates[SettingKeyPurchaseSubscriptionEnabled] = strconv.FormatBool(settings.PurchaseSubscriptionEnabled)
 	updates[SettingKeyPurchaseSubscriptionURL] = strings.TrimSpace(settings.PurchaseSubscriptionURL)
+	updates[SettingKeySubscriptionPurchaseEnabled] = strconv.FormatBool(settings.SubscriptionPurchaseEnabled)
 	updates[SettingKeyCustomMenuItems] = settings.CustomMenuItems
 	updates[SettingKeyVIPEnabled] = strconv.FormatBool(settings.VIPEnabled)
 	updates[SettingKeyVIPRules] = settings.VIPRules
@@ -822,6 +827,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		SettingKeyAvailabilityCheckEnabled:         "true",
 		SettingKeyPurchaseSubscriptionEnabled:      "false",
 		SettingKeyPurchaseSubscriptionURL:          "",
+		SettingKeySubscriptionPurchaseEnabled:      "false",
 		SettingKeyCustomMenuItems:                  "[]",
 		SettingKeyVIPEnabled:                       "false",
 		SettingKeyVIPRules:                         "[]",
@@ -888,6 +894,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		AvailabilityCheckEnabled:         !isFalseSettingValue(settings[SettingKeyAvailabilityCheckEnabled]),
 		PurchaseSubscriptionEnabled:      settings[SettingKeyPurchaseSubscriptionEnabled] == "true",
 		PurchaseSubscriptionURL:          strings.TrimSpace(settings[SettingKeyPurchaseSubscriptionURL]),
+		SubscriptionPurchaseEnabled:      settings[SettingKeySubscriptionPurchaseEnabled] == "true",
 		CustomMenuItems:                  settings[SettingKeyCustomMenuItems],
 		VIPEnabled:                       settings[SettingKeyVIPEnabled] == "true",
 		VIPRules:                         settings[SettingKeyVIPRules],

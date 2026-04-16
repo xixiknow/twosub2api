@@ -313,6 +313,7 @@ export const useAppStore = defineStore('app', () => {
         availability_check_enabled: true,
         purchase_subscription_enabled: false,
         purchase_subscription_url: '',
+        subscription_purchase_enabled: false,
         custom_menu_items: [],
         linuxdo_oauth_enabled: false,
         referral_enabled: false,

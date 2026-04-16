@@ -73,6 +73,14 @@ const (
 	FieldPerRequestPrice = "per_request_price"
 	// FieldModelPerRequestPrices holds the string denoting the model_per_request_prices field in the database.
 	FieldModelPerRequestPrices = "model_per_request_prices"
+	// FieldSubscriptionPrice holds the string denoting the subscription_price field in the database.
+	FieldSubscriptionPrice = "subscription_price"
+	// FieldSubscriptionDisplayName holds the string denoting the subscription_display_name field in the database.
+	FieldSubscriptionDisplayName = "subscription_display_name"
+	// FieldSubscriptionVisible holds the string denoting the subscription_visible field in the database.
+	FieldSubscriptionVisible = "subscription_visible"
+	// FieldSubscriptionFeatures holds the string denoting the subscription_features field in the database.
+	FieldSubscriptionFeatures = "subscription_features"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeRedeemCodes holds the string denoting the redeem_codes edge name in mutations.
@@ -85,6 +93,8 @@ const (
 	EdgeAccounts = "accounts"
 	// EdgeAllowedUsers holds the string denoting the allowed_users edge name in mutations.
 	EdgeAllowedUsers = "allowed_users"
+	// EdgeSubscriptionOrders holds the string denoting the subscription_orders edge name in mutations.
+	EdgeSubscriptionOrders = "subscription_orders"
 	// EdgeAccountGroups holds the string denoting the account_groups edge name in mutations.
 	EdgeAccountGroups = "account_groups"
 	// EdgeUserAllowedGroups holds the string denoting the user_allowed_groups edge name in mutations.
@@ -129,6 +139,13 @@ const (
 	// AllowedUsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	AllowedUsersInverseTable = "users"
+	// SubscriptionOrdersTable is the table that holds the subscription_orders relation/edge.
+	SubscriptionOrdersTable = "subscription_orders"
+	// SubscriptionOrdersInverseTable is the table name for the SubscriptionOrder entity.
+	// It exists in this package in order to avoid circular dependency with the "subscriptionorder" package.
+	SubscriptionOrdersInverseTable = "subscription_orders"
+	// SubscriptionOrdersColumn is the table column denoting the subscription_orders relation/edge.
+	SubscriptionOrdersColumn = "group_id"
 	// AccountGroupsTable is the table that holds the account_groups relation/edge.
 	AccountGroupsTable = "account_groups"
 	// AccountGroupsInverseTable is the table name for the AccountGroup entity.
@@ -177,6 +194,10 @@ var Columns = []string{
 	FieldDefaultMappedModel,
 	FieldPerRequestPrice,
 	FieldModelPerRequestPrices,
+	FieldSubscriptionPrice,
+	FieldSubscriptionDisplayName,
+	FieldSubscriptionVisible,
+	FieldSubscriptionFeatures,
 }
 
 var (
@@ -248,6 +269,14 @@ var (
 	DefaultDefaultMappedModel string
 	// DefaultMappedModelValidator is a validator for the "default_mapped_model" field. It is called by the builders before save.
 	DefaultMappedModelValidator func(string) error
+	// DefaultSubscriptionDisplayName holds the default value on creation for the "subscription_display_name" field.
+	DefaultSubscriptionDisplayName string
+	// SubscriptionDisplayNameValidator is a validator for the "subscription_display_name" field. It is called by the builders before save.
+	SubscriptionDisplayNameValidator func(string) error
+	// DefaultSubscriptionVisible holds the default value on creation for the "subscription_visible" field.
+	DefaultSubscriptionVisible bool
+	// DefaultSubscriptionFeatures holds the default value on creation for the "subscription_features" field.
+	DefaultSubscriptionFeatures []string
 )
 
 // OrderOption defines the ordering options for the Group queries.
@@ -388,6 +417,21 @@ func ByPerRequestPrice(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPerRequestPrice, opts...).ToFunc()
 }
 
+// BySubscriptionPrice orders the results by the subscription_price field.
+func BySubscriptionPrice(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionPrice, opts...).ToFunc()
+}
+
+// BySubscriptionDisplayName orders the results by the subscription_display_name field.
+func BySubscriptionDisplayName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionDisplayName, opts...).ToFunc()
+}
+
+// BySubscriptionVisible orders the results by the subscription_visible field.
+func BySubscriptionVisible(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionVisible, opts...).ToFunc()
+}
+
 // ByAPIKeysCount orders the results by api_keys count.
 func ByAPIKeysCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -472,6 +516,20 @@ func ByAllowedUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// BySubscriptionOrdersCount orders the results by subscription_orders count.
+func BySubscriptionOrdersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSubscriptionOrdersStep(), opts...)
+	}
+}
+
+// BySubscriptionOrders orders the results by subscription_orders terms.
+func BySubscriptionOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSubscriptionOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAccountGroupsCount orders the results by account_groups count.
 func ByAccountGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -539,6 +597,13 @@ func newAllowedUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AllowedUsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, AllowedUsersTable, AllowedUsersPrimaryKey...),
+	)
+}
+func newSubscriptionOrdersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SubscriptionOrdersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SubscriptionOrdersTable, SubscriptionOrdersColumn),
 	)
 }
 func newAccountGroupsStep() *sqlgraph.Step {

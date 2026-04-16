@@ -107,6 +107,7 @@ func (h *SettingHandler) GetSettings(c *gin.Context) {
 		AvailabilityCheckEnabled:             settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:          settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              settings.PurchaseSubscriptionURL,
+		SubscriptionPurchaseEnabled:          settings.SubscriptionPurchaseEnabled,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(settings.CustomMenuItems),
 		VIPEnabled:                           settings.VIPEnabled,
 		VIPRules:                             settings.VIPRules,
@@ -174,6 +175,7 @@ type UpdateSettingsRequest struct {
 	AvailabilityCheckEnabled    bool                  `json:"availability_check_enabled"`
 	PurchaseSubscriptionEnabled *bool                 `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     *string               `json:"purchase_subscription_url"`
+	SubscriptionPurchaseEnabled *bool                 `json:"subscription_purchase_enabled"`
 	CustomMenuItems             *[]dto.CustomMenuItem `json:"custom_menu_items"`
 	VIPEnabled                  bool                  `json:"vip_enabled"`
 	VIPRules                    string                `json:"vip_rules"`
@@ -310,6 +312,10 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	purchaseURL := previousSettings.PurchaseSubscriptionURL
 	if req.PurchaseSubscriptionURL != nil {
 		purchaseURL = strings.TrimSpace(*req.PurchaseSubscriptionURL)
+	}
+	subscriptionPurchaseEnabled := previousSettings.SubscriptionPurchaseEnabled
+	if req.SubscriptionPurchaseEnabled != nil {
+		subscriptionPurchaseEnabled = *req.SubscriptionPurchaseEnabled
 	}
 
 	// - 启用时要求 URL 合法且非空
@@ -469,6 +475,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AvailabilityCheckEnabled:         req.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      purchaseEnabled,
 		PurchaseSubscriptionURL:          purchaseURL,
+		SubscriptionPurchaseEnabled:      subscriptionPurchaseEnabled,
 		CustomMenuItems:                  customMenuJSON,
 		VIPEnabled:                       req.VIPEnabled,
 		VIPRules:                         strings.TrimSpace(req.VIPRules),
@@ -567,6 +574,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		AvailabilityCheckEnabled:             updatedSettings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:          updatedSettings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:              updatedSettings.PurchaseSubscriptionURL,
+		SubscriptionPurchaseEnabled:          updatedSettings.SubscriptionPurchaseEnabled,
 		CustomMenuItems:                      dto.ParseCustomMenuItems(updatedSettings.CustomMenuItems),
 		VIPEnabled:                           updatedSettings.VIPEnabled,
 		VIPRules:                             updatedSettings.VIPRules,
@@ -755,6 +763,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.PurchaseSubscriptionURL != after.PurchaseSubscriptionURL {
 		changed = append(changed, "purchase_subscription_url")
+	}
+	if before.SubscriptionPurchaseEnabled != after.SubscriptionPurchaseEnabled {
+		changed = append(changed, "subscription_purchase_enabled")
 	}
 	if before.CustomMenuItems != after.CustomMenuItems {
 		changed = append(changed, "custom_menu_items")

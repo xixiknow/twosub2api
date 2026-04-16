@@ -15,6 +15,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/apikey"
 	"github.com/Wei-Shaw/sub2api/ent/group"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionorder"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/usersubscription"
@@ -402,6 +403,54 @@ func (_c *GroupCreate) SetModelPerRequestPrices(v map[string]float64) *GroupCrea
 	return _c
 }
 
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (_c *GroupCreate) SetSubscriptionPrice(v float64) *GroupCreate {
+	_c.mutation.SetSubscriptionPrice(v)
+	return _c
+}
+
+// SetNillableSubscriptionPrice sets the "subscription_price" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableSubscriptionPrice(v *float64) *GroupCreate {
+	if v != nil {
+		_c.SetSubscriptionPrice(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (_c *GroupCreate) SetSubscriptionDisplayName(v string) *GroupCreate {
+	_c.mutation.SetSubscriptionDisplayName(v)
+	return _c
+}
+
+// SetNillableSubscriptionDisplayName sets the "subscription_display_name" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableSubscriptionDisplayName(v *string) *GroupCreate {
+	if v != nil {
+		_c.SetSubscriptionDisplayName(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (_c *GroupCreate) SetSubscriptionVisible(v bool) *GroupCreate {
+	_c.mutation.SetSubscriptionVisible(v)
+	return _c
+}
+
+// SetNillableSubscriptionVisible sets the "subscription_visible" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableSubscriptionVisible(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetSubscriptionVisible(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (_c *GroupCreate) SetSubscriptionFeatures(v []string) *GroupCreate {
+	_c.mutation.SetSubscriptionFeatures(v)
+	return _c
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
 func (_c *GroupCreate) AddAPIKeyIDs(ids ...int64) *GroupCreate {
 	_c.mutation.AddAPIKeyIDs(ids...)
@@ -490,6 +539,21 @@ func (_c *GroupCreate) AddAllowedUsers(v ...*User) *GroupCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddAllowedUserIDs(ids...)
+}
+
+// AddSubscriptionOrderIDs adds the "subscription_orders" edge to the SubscriptionOrder entity by IDs.
+func (_c *GroupCreate) AddSubscriptionOrderIDs(ids ...int64) *GroupCreate {
+	_c.mutation.AddSubscriptionOrderIDs(ids...)
+	return _c
+}
+
+// AddSubscriptionOrders adds the "subscription_orders" edges to the SubscriptionOrder entity.
+func (_c *GroupCreate) AddSubscriptionOrders(v ...*SubscriptionOrder) *GroupCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddSubscriptionOrderIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -595,6 +659,18 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultDefaultMappedModel
 		_c.mutation.SetDefaultMappedModel(v)
 	}
+	if _, ok := _c.mutation.SubscriptionDisplayName(); !ok {
+		v := group.DefaultSubscriptionDisplayName
+		_c.mutation.SetSubscriptionDisplayName(v)
+	}
+	if _, ok := _c.mutation.SubscriptionVisible(); !ok {
+		v := group.DefaultSubscriptionVisible
+		_c.mutation.SetSubscriptionVisible(v)
+	}
+	if _, ok := _c.mutation.SubscriptionFeatures(); !ok {
+		v := group.DefaultSubscriptionFeatures
+		_c.mutation.SetSubscriptionFeatures(v)
+	}
 	return nil
 }
 
@@ -672,6 +748,20 @@ func (_c *GroupCreate) check() error {
 		if err := group.DefaultMappedModelValidator(v); err != nil {
 			return &ValidationError{Name: "default_mapped_model", err: fmt.Errorf(`ent: validator failed for field "Group.default_mapped_model": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.SubscriptionDisplayName(); !ok {
+		return &ValidationError{Name: "subscription_display_name", err: errors.New(`ent: missing required field "Group.subscription_display_name"`)}
+	}
+	if v, ok := _c.mutation.SubscriptionDisplayName(); ok {
+		if err := group.SubscriptionDisplayNameValidator(v); err != nil {
+			return &ValidationError{Name: "subscription_display_name", err: fmt.Errorf(`ent: validator failed for field "Group.subscription_display_name": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.SubscriptionVisible(); !ok {
+		return &ValidationError{Name: "subscription_visible", err: errors.New(`ent: missing required field "Group.subscription_visible"`)}
+	}
+	if _, ok := _c.mutation.SubscriptionFeatures(); !ok {
+		return &ValidationError{Name: "subscription_features", err: errors.New(`ent: missing required field "Group.subscription_features"`)}
 	}
 	return nil
 }
@@ -816,6 +906,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		_spec.SetField(group.FieldModelPerRequestPrices, field.TypeJSON, value)
 		_node.ModelPerRequestPrices = value
 	}
+	if value, ok := _c.mutation.SubscriptionPrice(); ok {
+		_spec.SetField(group.FieldSubscriptionPrice, field.TypeFloat64, value)
+		_node.SubscriptionPrice = &value
+	}
+	if value, ok := _c.mutation.SubscriptionDisplayName(); ok {
+		_spec.SetField(group.FieldSubscriptionDisplayName, field.TypeString, value)
+		_node.SubscriptionDisplayName = value
+	}
+	if value, ok := _c.mutation.SubscriptionVisible(); ok {
+		_spec.SetField(group.FieldSubscriptionVisible, field.TypeBool, value)
+		_node.SubscriptionVisible = value
+	}
+	if value, ok := _c.mutation.SubscriptionFeatures(); ok {
+		_spec.SetField(group.FieldSubscriptionFeatures, field.TypeJSON, value)
+		_node.SubscriptionFeatures = value
+	}
 	if nodes := _c.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -918,6 +1024,22 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		createE.defaults()
 		_, specE := createE.createSpec()
 		edge.Target.Fields = specE.Fields
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.SubscriptionOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.SubscriptionOrdersTable,
+			Columns: []string{group.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -1455,6 +1577,66 @@ func (u *GroupUpsert) UpdateModelPerRequestPrices() *GroupUpsert {
 // ClearModelPerRequestPrices clears the value of the "model_per_request_prices" field.
 func (u *GroupUpsert) ClearModelPerRequestPrices() *GroupUpsert {
 	u.SetNull(group.FieldModelPerRequestPrices)
+	return u
+}
+
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (u *GroupUpsert) SetSubscriptionPrice(v float64) *GroupUpsert {
+	u.Set(group.FieldSubscriptionPrice, v)
+	return u
+}
+
+// UpdateSubscriptionPrice sets the "subscription_price" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSubscriptionPrice() *GroupUpsert {
+	u.SetExcluded(group.FieldSubscriptionPrice)
+	return u
+}
+
+// AddSubscriptionPrice adds v to the "subscription_price" field.
+func (u *GroupUpsert) AddSubscriptionPrice(v float64) *GroupUpsert {
+	u.Add(group.FieldSubscriptionPrice, v)
+	return u
+}
+
+// ClearSubscriptionPrice clears the value of the "subscription_price" field.
+func (u *GroupUpsert) ClearSubscriptionPrice() *GroupUpsert {
+	u.SetNull(group.FieldSubscriptionPrice)
+	return u
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (u *GroupUpsert) SetSubscriptionDisplayName(v string) *GroupUpsert {
+	u.Set(group.FieldSubscriptionDisplayName, v)
+	return u
+}
+
+// UpdateSubscriptionDisplayName sets the "subscription_display_name" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSubscriptionDisplayName() *GroupUpsert {
+	u.SetExcluded(group.FieldSubscriptionDisplayName)
+	return u
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (u *GroupUpsert) SetSubscriptionVisible(v bool) *GroupUpsert {
+	u.Set(group.FieldSubscriptionVisible, v)
+	return u
+}
+
+// UpdateSubscriptionVisible sets the "subscription_visible" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSubscriptionVisible() *GroupUpsert {
+	u.SetExcluded(group.FieldSubscriptionVisible)
+	return u
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (u *GroupUpsert) SetSubscriptionFeatures(v []string) *GroupUpsert {
+	u.Set(group.FieldSubscriptionFeatures, v)
+	return u
+}
+
+// UpdateSubscriptionFeatures sets the "subscription_features" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateSubscriptionFeatures() *GroupUpsert {
+	u.SetExcluded(group.FieldSubscriptionFeatures)
 	return u
 }
 
@@ -2067,6 +2249,76 @@ func (u *GroupUpsertOne) UpdateModelPerRequestPrices() *GroupUpsertOne {
 func (u *GroupUpsertOne) ClearModelPerRequestPrices() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearModelPerRequestPrices()
+	})
+}
+
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (u *GroupUpsertOne) SetSubscriptionPrice(v float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionPrice(v)
+	})
+}
+
+// AddSubscriptionPrice adds v to the "subscription_price" field.
+func (u *GroupUpsertOne) AddSubscriptionPrice(v float64) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddSubscriptionPrice(v)
+	})
+}
+
+// UpdateSubscriptionPrice sets the "subscription_price" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSubscriptionPrice() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionPrice()
+	})
+}
+
+// ClearSubscriptionPrice clears the value of the "subscription_price" field.
+func (u *GroupUpsertOne) ClearSubscriptionPrice() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearSubscriptionPrice()
+	})
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (u *GroupUpsertOne) SetSubscriptionDisplayName(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionDisplayName(v)
+	})
+}
+
+// UpdateSubscriptionDisplayName sets the "subscription_display_name" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSubscriptionDisplayName() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionDisplayName()
+	})
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (u *GroupUpsertOne) SetSubscriptionVisible(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionVisible(v)
+	})
+}
+
+// UpdateSubscriptionVisible sets the "subscription_visible" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSubscriptionVisible() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionVisible()
+	})
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (u *GroupUpsertOne) SetSubscriptionFeatures(v []string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionFeatures(v)
+	})
+}
+
+// UpdateSubscriptionFeatures sets the "subscription_features" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateSubscriptionFeatures() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionFeatures()
 	})
 }
 
@@ -2845,6 +3097,76 @@ func (u *GroupUpsertBulk) UpdateModelPerRequestPrices() *GroupUpsertBulk {
 func (u *GroupUpsertBulk) ClearModelPerRequestPrices() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.ClearModelPerRequestPrices()
+	})
+}
+
+// SetSubscriptionPrice sets the "subscription_price" field.
+func (u *GroupUpsertBulk) SetSubscriptionPrice(v float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionPrice(v)
+	})
+}
+
+// AddSubscriptionPrice adds v to the "subscription_price" field.
+func (u *GroupUpsertBulk) AddSubscriptionPrice(v float64) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddSubscriptionPrice(v)
+	})
+}
+
+// UpdateSubscriptionPrice sets the "subscription_price" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSubscriptionPrice() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionPrice()
+	})
+}
+
+// ClearSubscriptionPrice clears the value of the "subscription_price" field.
+func (u *GroupUpsertBulk) ClearSubscriptionPrice() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.ClearSubscriptionPrice()
+	})
+}
+
+// SetSubscriptionDisplayName sets the "subscription_display_name" field.
+func (u *GroupUpsertBulk) SetSubscriptionDisplayName(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionDisplayName(v)
+	})
+}
+
+// UpdateSubscriptionDisplayName sets the "subscription_display_name" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSubscriptionDisplayName() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionDisplayName()
+	})
+}
+
+// SetSubscriptionVisible sets the "subscription_visible" field.
+func (u *GroupUpsertBulk) SetSubscriptionVisible(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionVisible(v)
+	})
+}
+
+// UpdateSubscriptionVisible sets the "subscription_visible" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSubscriptionVisible() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionVisible()
+	})
+}
+
+// SetSubscriptionFeatures sets the "subscription_features" field.
+func (u *GroupUpsertBulk) SetSubscriptionFeatures(v []string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetSubscriptionFeatures(v)
+	})
+}
+
+// UpdateSubscriptionFeatures sets the "subscription_features" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateSubscriptionFeatures() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateSubscriptionFeatures()
 	})
 }
 

@@ -126,6 +126,9 @@ const (
 	SettingKeyVIPEnabled                  = "vip_enabled"                   // 是否启用 VIP 规则
 	SettingKeyVIPRules                    = "vip_rules"                     // VIP 规则 JSON
 
+	// 自助订阅购买
+	SettingKeySubscriptionPurchaseEnabled = "subscription_purchase_enabled" // 是否启用自助订阅购买功能
+
 	// 默认配置
 	SettingKeyDefaultConcurrency   = "default_concurrency"   // 新用户默认并发量
 	SettingKeyDefaultBalance       = "default_balance"       // 新用户默认余额

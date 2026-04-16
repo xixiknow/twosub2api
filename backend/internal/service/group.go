@@ -56,6 +56,12 @@ type Group struct {
 	PerRequestPrice       *float64           // 分组默认每次请求价格，非 nil 表示开启按次计费
 	ModelPerRequestPrices map[string]float64 // 模型级按次价格覆盖，支持通配符
 
+	// 套餐配置字段（自助订阅购买功能）
+	SubscriptionPrice       *float64 // 套餐价格，单位为系统配置货币
+	SubscriptionDisplayName string   // 套餐前端展示名称
+	SubscriptionVisible     bool     // 套餐是否对用户可见
+	SubscriptionFeatures    []string // 套餐特性描述列表
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

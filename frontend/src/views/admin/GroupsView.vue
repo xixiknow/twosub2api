@@ -445,6 +445,95 @@
               />
             </div>
           </div>
+
+          <!-- Plan Configuration (only show when subscription type is selected) -->
+          <div
+            v-if="createForm.subscription_type === 'subscription'"
+            class="mt-4 space-y-4 border-l-2 border-violet-200 pl-4 dark:border-violet-800"
+          >
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.subscription.planConfig') }}
+            </h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.groups.subscription.planConfigHint') }}
+            </p>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.price') }}</label>
+              <input
+                v-model.number="createForm.subscription_price"
+                type="number"
+                step="0.01"
+                min="0"
+                class="input"
+                placeholder="0.00"
+              />
+              <p class="input-hint">{{ t('admin.groups.subscription.priceHint') }}</p>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.displayName') }}</label>
+              <input
+                v-model="createForm.subscription_display_name"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.subscription.displayNameHint')"
+              />
+            </div>
+            <div>
+              <div class="mb-1.5">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.groups.subscription.visible') }}
+                </label>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  @click="createForm.subscription_visible = !createForm.subscription_visible"
+                  :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    createForm.subscription_visible ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                      createForm.subscription_visible ? 'translate-x-6' : 'translate-x-1'
+                    ]"
+                  />
+                </button>
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.subscription.visibleHint') }}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.features') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                {{ t('admin.groups.subscription.featuresHint') }}
+              </p>
+              <div v-for="(_, index) in createForm.subscription_features" :key="index" class="flex items-center gap-2 mb-2">
+                <input
+                  v-model="createForm.subscription_features[index]"
+                  type="text"
+                  class="input flex-1"
+                  :placeholder="t('admin.groups.subscription.featurePlaceholder')"
+                />
+                <button
+                  type="button"
+                  @click="createForm.subscription_features.splice(index, 1)"
+                  class="text-red-500 hover:text-red-700 p-1"
+                >
+                  <Icon name="trash" size="sm" />
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="createForm.subscription_features.push('')"
+                class="text-sm text-primary-500 hover:text-primary-700"
+              >
+                + {{ t('admin.groups.subscription.addFeature') }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- 图片生成计费配置（antigravity 和 gemini 平台） -->
@@ -1183,6 +1272,95 @@
                 class="input"
                 :placeholder="t('admin.groups.subscription.noLimit')"
               />
+            </div>
+          </div>
+
+          <!-- Plan Configuration (only show when subscription type is selected) -->
+          <div
+            v-if="editForm.subscription_type === 'subscription'"
+            class="mt-4 space-y-4 border-l-2 border-violet-200 pl-4 dark:border-violet-800"
+          >
+            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ t('admin.groups.subscription.planConfig') }}
+            </h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ t('admin.groups.subscription.planConfigHint') }}
+            </p>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.price') }}</label>
+              <input
+                v-model.number="editForm.subscription_price"
+                type="number"
+                step="0.01"
+                min="0"
+                class="input"
+                placeholder="0.00"
+              />
+              <p class="input-hint">{{ t('admin.groups.subscription.priceHint') }}</p>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.displayName') }}</label>
+              <input
+                v-model="editForm.subscription_display_name"
+                type="text"
+                class="input"
+                :placeholder="t('admin.groups.subscription.displayNameHint')"
+              />
+            </div>
+            <div>
+              <div class="mb-1.5">
+                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {{ t('admin.groups.subscription.visible') }}
+                </label>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  @click="editForm.subscription_visible = !editForm.subscription_visible"
+                  :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    editForm.subscription_visible ? 'bg-primary-500' : 'bg-gray-300 dark:bg-dark-600'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                      editForm.subscription_visible ? 'translate-x-6' : 'translate-x-1'
+                    ]"
+                  />
+                </button>
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('admin.groups.subscription.visibleHint') }}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="input-label">{{ t('admin.groups.subscription.features') }}</label>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                {{ t('admin.groups.subscription.featuresHint') }}
+              </p>
+              <div v-for="(_, index) in editForm.subscription_features" :key="index" class="flex items-center gap-2 mb-2">
+                <input
+                  v-model="editForm.subscription_features[index]"
+                  type="text"
+                  class="input flex-1"
+                  :placeholder="t('admin.groups.subscription.featurePlaceholder')"
+                />
+                <button
+                  type="button"
+                  @click="editForm.subscription_features.splice(index, 1)"
+                  class="text-red-500 hover:text-red-700 p-1"
+                >
+                  <Icon name="trash" size="sm" />
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="editForm.subscription_features.push('')"
+                class="text-sm text-primary-500 hover:text-primary-700"
+              >
+                + {{ t('admin.groups.subscription.addFeature') }}
+              </button>
             </div>
           </div>
         </div>
@@ -2039,7 +2217,12 @@ const createForm = reactive({
   // MCP XML 协议注入开关（仅 antigravity 平台）
   mcp_xml_inject: true,
   // 从分组复制账号
-  copy_accounts_from_group_ids: [] as number[]
+  copy_accounts_from_group_ids: [] as number[],
+  // 套餐配置（订阅类型分组）
+  subscription_price: null as number | null,
+  subscription_display_name: '',
+  subscription_visible: false,
+  subscription_features: [] as string[]
 })
 
 // 简单账号类型（用于模型路由选择）
@@ -2281,7 +2464,12 @@ const editForm = reactive({
   // MCP XML 协议注入开关（仅 antigravity 平台）
   mcp_xml_inject: true,
   // 从分组复制账号
-  copy_accounts_from_group_ids: [] as number[]
+  copy_accounts_from_group_ids: [] as number[],
+  // 套餐配置（订阅类型分组）
+  subscription_price: null as number | null,
+  subscription_display_name: '',
+  subscription_visible: false,
+  subscription_features: [] as string[]
 })
 
 // 根据分组类型返回不同的删除确认消息
@@ -2376,6 +2564,10 @@ const closeCreateModal = () => {
   createForm.supported_model_scopes = ['claude', 'gemini_text', 'gemini_image']
   createForm.mcp_xml_inject = true
   createForm.copy_accounts_from_group_ids = []
+  createForm.subscription_price = null
+  createForm.subscription_display_name = ''
+  createForm.subscription_visible = false
+  createForm.subscription_features = []
   createModelRoutingRules.value = []
 }
 
@@ -2445,6 +2637,11 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.supported_model_scopes = group.supported_model_scopes || ['claude', 'gemini_text', 'gemini_image']
   editForm.mcp_xml_inject = group.mcp_xml_inject ?? true
   editForm.copy_accounts_from_group_ids = [] // 复制账号字段每次编辑时重置为空
+  // 套餐配置字段
+  editForm.subscription_price = group.subscription_price ?? null
+  editForm.subscription_display_name = group.subscription_display_name || ''
+  editForm.subscription_visible = group.subscription_visible || false
+  editForm.subscription_features = group.subscription_features ? [...group.subscription_features] : []
   // 加载模型路由规则（异步加载账号名称）
   editModelRoutingRules.value = await convertApiFormatToRoutingRules(group.model_routing)
   showEditModal.value = true

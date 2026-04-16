@@ -17,6 +17,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/predicate"
 	"github.com/Wei-Shaw/sub2api/ent/promocodeusage"
 	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionorder"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
 	"github.com/Wei-Shaw/sub2api/ent/userattributevalue"
@@ -504,6 +505,21 @@ func (_u *UserUpdate) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 	return _u.AddPromoCodeUsageIDs(ids...)
 }
 
+// AddSubscriptionOrderIDs adds the "subscription_orders" edge to the SubscriptionOrder entity by IDs.
+func (_u *UserUpdate) AddSubscriptionOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.AddSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionOrders adds the "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *UserUpdate) AddSubscriptionOrders(v ...*SubscriptionOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionOrderIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -696,6 +712,27 @@ func (_u *UserUpdate) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoCodeUsageIDs(ids...)
+}
+
+// ClearSubscriptionOrders clears all "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *UserUpdate) ClearSubscriptionOrders() *UserUpdate {
+	_u.mutation.ClearSubscriptionOrders()
+	return _u
+}
+
+// RemoveSubscriptionOrderIDs removes the "subscription_orders" edge to SubscriptionOrder entities by IDs.
+func (_u *UserUpdate) RemoveSubscriptionOrderIDs(ids ...int64) *UserUpdate {
+	_u.mutation.RemoveSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionOrders removes "subscription_orders" edges to SubscriptionOrder entities.
+func (_u *UserUpdate) RemoveSubscriptionOrders(v ...*SubscriptionOrder) *UserUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionOrderIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -1307,6 +1344,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionOrdersIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1795,6 +1877,21 @@ func (_u *UserUpdateOne) AddPromoCodeUsages(v ...*PromoCodeUsage) *UserUpdateOne
 	return _u.AddPromoCodeUsageIDs(ids...)
 }
 
+// AddSubscriptionOrderIDs adds the "subscription_orders" edge to the SubscriptionOrder entity by IDs.
+func (_u *UserUpdateOne) AddSubscriptionOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.AddSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// AddSubscriptionOrders adds the "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *UserUpdateOne) AddSubscriptionOrders(v ...*SubscriptionOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddSubscriptionOrderIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -1987,6 +2084,27 @@ func (_u *UserUpdateOne) RemovePromoCodeUsages(v ...*PromoCodeUsage) *UserUpdate
 		ids[i] = v[i].ID
 	}
 	return _u.RemovePromoCodeUsageIDs(ids...)
+}
+
+// ClearSubscriptionOrders clears all "subscription_orders" edges to the SubscriptionOrder entity.
+func (_u *UserUpdateOne) ClearSubscriptionOrders() *UserUpdateOne {
+	_u.mutation.ClearSubscriptionOrders()
+	return _u
+}
+
+// RemoveSubscriptionOrderIDs removes the "subscription_orders" edge to SubscriptionOrder entities by IDs.
+func (_u *UserUpdateOne) RemoveSubscriptionOrderIDs(ids ...int64) *UserUpdateOne {
+	_u.mutation.RemoveSubscriptionOrderIDs(ids...)
+	return _u
+}
+
+// RemoveSubscriptionOrders removes "subscription_orders" edges to SubscriptionOrder entities.
+func (_u *UserUpdateOne) RemoveSubscriptionOrders(v ...*SubscriptionOrder) *UserUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveSubscriptionOrderIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -2621,6 +2739,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(promocodeusage.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedSubscriptionOrdersIDs(); len(nodes) > 0 && !_u.mutation.SubscriptionOrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.SubscriptionOrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SubscriptionOrdersTable,
+			Columns: []string{user.SubscriptionOrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(subscriptionorder.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

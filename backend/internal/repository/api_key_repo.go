@@ -655,6 +655,10 @@ func groupEntityToService(g *dbent.Group) *service.Group {
 		DefaultMappedModel:              g.DefaultMappedModel,
 		PerRequestPrice:                 g.PerRequestPrice,
 		ModelPerRequestPrices:           g.ModelPerRequestPrices,
+		SubscriptionPrice:               g.SubscriptionPrice,
+		SubscriptionDisplayName:         g.SubscriptionDisplayName,
+		SubscriptionVisible:             g.SubscriptionVisible,
+		SubscriptionFeatures:            g.SubscriptionFeatures,
 		CreatedAt:                       g.CreatedAt,
 		UpdatedAt:                       g.UpdatedAt,
 	}

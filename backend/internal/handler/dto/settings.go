@@ -55,6 +55,7 @@ type SystemSettings struct {
 	AvailabilityCheckEnabled    bool             `json:"availability_check_enabled"`
 	PurchaseSubscriptionEnabled bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL     string           `json:"purchase_subscription_url"`
+	SubscriptionPurchaseEnabled bool             `json:"subscription_purchase_enabled"`
 	CustomMenuItems             []CustomMenuItem `json:"custom_menu_items"`
 	VIPEnabled                  bool             `json:"vip_enabled"`
 	VIPRules                    string           `json:"vip_rules"`
@@ -116,6 +117,7 @@ type PublicSettings struct {
 	AvailabilityCheckEnabled         bool             `json:"availability_check_enabled"`
 	PurchaseSubscriptionEnabled      bool             `json:"purchase_subscription_enabled"`
 	PurchaseSubscriptionURL          string           `json:"purchase_subscription_url"`
+	SubscriptionPurchaseEnabled      bool             `json:"subscription_purchase_enabled"`
 	CustomMenuItems                  []CustomMenuItem `json:"custom_menu_items"`
 	LinuxDoOAuthEnabled              bool             `json:"linuxdo_oauth_enabled"`
 	ReferralEnabled                  bool             `json:"referral_enabled"`

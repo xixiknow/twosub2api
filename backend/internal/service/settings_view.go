@@ -42,6 +42,7 @@ type SystemSettings struct {
 	AvailabilityCheckEnabled    bool
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
+	SubscriptionPurchaseEnabled bool
 	CustomMenuItems             string // JSON array of custom menu items
 	VIPEnabled                  bool
 	VIPRules                    string // JSON array of vip rules
@@ -105,6 +106,7 @@ type PublicSettings struct {
 
 	PurchaseSubscriptionEnabled bool
 	PurchaseSubscriptionURL     string
+	SubscriptionPurchaseEnabled bool   // 自助订阅购买功能开关
 	CustomMenuItems             string // JSON array of custom menu items
 
 	LinuxDoOAuthEnabled bool

@@ -65,6 +65,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		AvailabilityCheckEnabled:         settings.AvailabilityCheckEnabled,
 		PurchaseSubscriptionEnabled:      settings.PurchaseSubscriptionEnabled,
 		PurchaseSubscriptionURL:          settings.PurchaseSubscriptionURL,
+		SubscriptionPurchaseEnabled:      settings.SubscriptionPurchaseEnabled,
 		CustomMenuItems:                  dto.ParseUserVisibleMenuItems(settings.CustomMenuItems),
 		LinuxDoOAuthEnabled:              settings.LinuxDoOAuthEnabled,
 		ReferralEnabled:                  settings.ReferralEnabled,

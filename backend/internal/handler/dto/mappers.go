@@ -250,6 +250,10 @@ func GroupFromServiceAdmin(g *service.Group) *AdminGroup {
 		ActiveAccountCount:      g.ActiveAccountCount,
 		RateLimitedAccountCount: g.RateLimitedAccountCount,
 		SortOrder:               g.SortOrder,
+		SubscriptionPrice:       g.SubscriptionPrice,
+		SubscriptionDisplayName: g.SubscriptionDisplayName,
+		SubscriptionVisible:     g.SubscriptionVisible,
+		SubscriptionFeatures:    g.SubscriptionFeatures,
 	}
 	if len(g.AccountGroups) > 0 {
 		out.AccountGroups = make([]AccountGroup, 0, len(g.AccountGroups))

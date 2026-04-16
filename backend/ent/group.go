@@ -76,6 +76,14 @@ type Group struct {
 	PerRequestPrice *float64 `json:"per_request_price,omitempty"`
 	// 模型级按次价格覆盖，支持通配符
 	ModelPerRequestPrices map[string]float64 `json:"model_per_request_prices,omitempty"`
+	// 套餐价格，单位为系统配置货币
+	SubscriptionPrice *float64 `json:"subscription_price,omitempty"`
+	// 套餐前端展示名称
+	SubscriptionDisplayName string `json:"subscription_display_name,omitempty"`
+	// 套餐是否对用户可见
+	SubscriptionVisible bool `json:"subscription_visible,omitempty"`
+	// 套餐特性描述列表
+	SubscriptionFeatures []string `json:"subscription_features,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupQuery when eager-loading is set.
 	Edges        GroupEdges `json:"edges"`
@@ -96,13 +104,15 @@ type GroupEdges struct {
 	Accounts []*Account `json:"accounts,omitempty"`
 	// AllowedUsers holds the value of the allowed_users edge.
 	AllowedUsers []*User `json:"allowed_users,omitempty"`
+	// SubscriptionOrders holds the value of the subscription_orders edge.
+	SubscriptionOrders []*SubscriptionOrder `json:"subscription_orders,omitempty"`
 	// AccountGroups holds the value of the account_groups edge.
 	AccountGroups []*AccountGroup `json:"account_groups,omitempty"`
 	// UserAllowedGroups holds the value of the user_allowed_groups edge.
 	UserAllowedGroups []*UserAllowedGroup `json:"user_allowed_groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
@@ -159,10 +169,19 @@ func (e GroupEdges) AllowedUsersOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "allowed_users"}
 }
 
+// SubscriptionOrdersOrErr returns the SubscriptionOrders value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) SubscriptionOrdersOrErr() ([]*SubscriptionOrder, error) {
+	if e.loadedTypes[6] {
+		return e.SubscriptionOrders, nil
+	}
+	return nil, &NotLoadedError{edge: "subscription_orders"}
+}
+
 // AccountGroupsOrErr returns the AccountGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) AccountGroupsOrErr() ([]*AccountGroup, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.AccountGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "account_groups"}
@@ -171,7 +190,7 @@ func (e GroupEdges) AccountGroupsOrErr() ([]*AccountGroup, error) {
 // UserAllowedGroupsOrErr returns the UserAllowedGroups value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) UserAllowedGroupsOrErr() ([]*UserAllowedGroup, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.UserAllowedGroups, nil
 	}
 	return nil, &NotLoadedError{edge: "user_allowed_groups"}
@@ -182,15 +201,15 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldModelRouting, group.FieldSupportedModelScopes, group.FieldModelPerRequestPrices:
+		case group.FieldModelRouting, group.FieldSupportedModelScopes, group.FieldModelPerRequestPrices, group.FieldSubscriptionFeatures:
 			values[i] = new([]byte)
-		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldMcpXMLInject, group.FieldAllowMessagesDispatch:
+		case group.FieldIsExclusive, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldMcpXMLInject, group.FieldAllowMessagesDispatch, group.FieldSubscriptionVisible:
 			values[i] = new(sql.NullBool)
-		case group.FieldRateMultiplier, group.FieldDailyLimitUsd, group.FieldWeeklyLimitUsd, group.FieldMonthlyLimitUsd, group.FieldImagePrice1k, group.FieldImagePrice2k, group.FieldImagePrice4k, group.FieldPerRequestPrice:
+		case group.FieldRateMultiplier, group.FieldDailyLimitUsd, group.FieldWeeklyLimitUsd, group.FieldMonthlyLimitUsd, group.FieldImagePrice1k, group.FieldImagePrice2k, group.FieldImagePrice4k, group.FieldPerRequestPrice, group.FieldSubscriptionPrice:
 			values[i] = new(sql.NullFloat64)
 		case group.FieldID, group.FieldDefaultValidityDays, group.FieldFallbackGroupID, group.FieldFallbackGroupIDOnInvalidRequest, group.FieldSortOrder:
 			values[i] = new(sql.NullInt64)
-		case group.FieldName, group.FieldDescription, group.FieldStatus, group.FieldPlatform, group.FieldSubscriptionType, group.FieldDefaultMappedModel:
+		case group.FieldName, group.FieldDescription, group.FieldStatus, group.FieldPlatform, group.FieldSubscriptionType, group.FieldDefaultMappedModel, group.FieldSubscriptionDisplayName:
 			values[i] = new(sql.NullString)
 		case group.FieldCreatedAt, group.FieldUpdatedAt, group.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -406,6 +425,33 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field model_per_request_prices: %w", err)
 				}
 			}
+		case group.FieldSubscriptionPrice:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_price", values[i])
+			} else if value.Valid {
+				_m.SubscriptionPrice = new(float64)
+				*_m.SubscriptionPrice = value.Float64
+			}
+		case group.FieldSubscriptionDisplayName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_display_name", values[i])
+			} else if value.Valid {
+				_m.SubscriptionDisplayName = value.String
+			}
+		case group.FieldSubscriptionVisible:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_visible", values[i])
+			} else if value.Valid {
+				_m.SubscriptionVisible = value.Bool
+			}
+		case group.FieldSubscriptionFeatures:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_features", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.SubscriptionFeatures); err != nil {
+					return fmt.Errorf("unmarshal field subscription_features: %w", err)
+				}
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -447,6 +493,11 @@ func (_m *Group) QueryAccounts() *AccountQuery {
 // QueryAllowedUsers queries the "allowed_users" edge of the Group entity.
 func (_m *Group) QueryAllowedUsers() *UserQuery {
 	return NewGroupClient(_m.config).QueryAllowedUsers(_m)
+}
+
+// QuerySubscriptionOrders queries the "subscription_orders" edge of the Group entity.
+func (_m *Group) QuerySubscriptionOrders() *SubscriptionOrderQuery {
+	return NewGroupClient(_m.config).QuerySubscriptionOrders(_m)
 }
 
 // QueryAccountGroups queries the "account_groups" edge of the Group entity.
@@ -590,6 +641,20 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("model_per_request_prices=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ModelPerRequestPrices))
+	builder.WriteString(", ")
+	if v := _m.SubscriptionPrice; v != nil {
+		builder.WriteString("subscription_price=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("subscription_display_name=")
+	builder.WriteString(_m.SubscriptionDisplayName)
+	builder.WriteString(", ")
+	builder.WriteString("subscription_visible=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SubscriptionVisible))
+	builder.WriteString(", ")
+	builder.WriteString("subscription_features=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SubscriptionFeatures))
 	builder.WriteByte(')')
 	return builder.String()
 }

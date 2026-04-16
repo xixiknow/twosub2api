@@ -20,6 +20,7 @@ import (
 	"github.com/Wei-Shaw/sub2api/ent/schema"
 	"github.com/Wei-Shaw/sub2api/ent/securitysecret"
 	"github.com/Wei-Shaw/sub2api/ent/setting"
+	"github.com/Wei-Shaw/sub2api/ent/subscriptionorder"
 	"github.com/Wei-Shaw/sub2api/ent/usagecleanuptask"
 	"github.com/Wei-Shaw/sub2api/ent/usagelog"
 	"github.com/Wei-Shaw/sub2api/ent/user"
@@ -459,6 +460,20 @@ func init() {
 	group.DefaultDefaultMappedModel = groupDescDefaultMappedModel.Default.(string)
 	// group.DefaultMappedModelValidator is a validator for the "default_mapped_model" field. It is called by the builders before save.
 	group.DefaultMappedModelValidator = groupDescDefaultMappedModel.Validators[0].(func(string) error)
+	// groupDescSubscriptionDisplayName is the schema descriptor for subscription_display_name field.
+	groupDescSubscriptionDisplayName := groupFields[27].Descriptor()
+	// group.DefaultSubscriptionDisplayName holds the default value on creation for the subscription_display_name field.
+	group.DefaultSubscriptionDisplayName = groupDescSubscriptionDisplayName.Default.(string)
+	// group.SubscriptionDisplayNameValidator is a validator for the "subscription_display_name" field. It is called by the builders before save.
+	group.SubscriptionDisplayNameValidator = groupDescSubscriptionDisplayName.Validators[0].(func(string) error)
+	// groupDescSubscriptionVisible is the schema descriptor for subscription_visible field.
+	groupDescSubscriptionVisible := groupFields[28].Descriptor()
+	// group.DefaultSubscriptionVisible holds the default value on creation for the subscription_visible field.
+	group.DefaultSubscriptionVisible = groupDescSubscriptionVisible.Default.(bool)
+	// groupDescSubscriptionFeatures is the schema descriptor for subscription_features field.
+	groupDescSubscriptionFeatures := groupFields[29].Descriptor()
+	// group.DefaultSubscriptionFeatures holds the default value on creation for the subscription_features field.
+	group.DefaultSubscriptionFeatures = groupDescSubscriptionFeatures.Default.([]string)
 	idempotencyrecordMixin := schema.IdempotencyRecord{}.Mixin()
 	idempotencyrecordMixinFields0 := idempotencyrecordMixin[0].Fields()
 	_ = idempotencyrecordMixinFields0
@@ -742,6 +757,62 @@ func init() {
 	setting.DefaultUpdatedAt = settingDescUpdatedAt.Default.(func() time.Time)
 	// setting.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	setting.UpdateDefaultUpdatedAt = settingDescUpdatedAt.UpdateDefault.(func() time.Time)
+	subscriptionorderFields := schema.SubscriptionOrder{}.Fields()
+	_ = subscriptionorderFields
+	// subscriptionorderDescOrderNo is the schema descriptor for order_no field.
+	subscriptionorderDescOrderNo := subscriptionorderFields[0].Descriptor()
+	// subscriptionorder.OrderNoValidator is a validator for the "order_no" field. It is called by the builders before save.
+	subscriptionorder.OrderNoValidator = func() func(string) error {
+		validators := subscriptionorderDescOrderNo.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(order_no string) error {
+			for _, fn := range fns {
+				if err := fn(order_no); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionorderDescTradeNo is the schema descriptor for trade_no field.
+	subscriptionorderDescTradeNo := subscriptionorderFields[1].Descriptor()
+	// subscriptionorder.TradeNoValidator is a validator for the "trade_no" field. It is called by the builders before save.
+	subscriptionorder.TradeNoValidator = subscriptionorderDescTradeNo.Validators[0].(func(string) error)
+	// subscriptionorderDescDiscountAmount is the schema descriptor for discount_amount field.
+	subscriptionorderDescDiscountAmount := subscriptionorderFields[6].Descriptor()
+	// subscriptionorder.DefaultDiscountAmount holds the default value on creation for the discount_amount field.
+	subscriptionorder.DefaultDiscountAmount = subscriptionorderDescDiscountAmount.Default.(float64)
+	// subscriptionorderDescPaymentMethod is the schema descriptor for payment_method field.
+	subscriptionorderDescPaymentMethod := subscriptionorderFields[7].Descriptor()
+	// subscriptionorder.PaymentMethodValidator is a validator for the "payment_method" field. It is called by the builders before save.
+	subscriptionorder.PaymentMethodValidator = func() func(string) error {
+		validators := subscriptionorderDescPaymentMethod.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(payment_method string) error {
+			for _, fn := range fns {
+				if err := fn(payment_method); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// subscriptionorderDescStatus is the schema descriptor for status field.
+	subscriptionorderDescStatus := subscriptionorderFields[8].Descriptor()
+	// subscriptionorder.DefaultStatus holds the default value on creation for the status field.
+	subscriptionorder.DefaultStatus = subscriptionorderDescStatus.Default.(string)
+	// subscriptionorder.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	subscriptionorder.StatusValidator = subscriptionorderDescStatus.Validators[0].(func(string) error)
+	// subscriptionorderDescCreatedAt is the schema descriptor for created_at field.
+	subscriptionorderDescCreatedAt := subscriptionorderFields[10].Descriptor()
+	// subscriptionorder.DefaultCreatedAt holds the default value on creation for the created_at field.
+	subscriptionorder.DefaultCreatedAt = subscriptionorderDescCreatedAt.Default.(func() time.Time)
 	usagecleanuptaskMixin := schema.UsageCleanupTask{}.Mixin()
 	usagecleanuptaskMixinFields0 := usagecleanuptaskMixin[0].Fields()
 	_ = usagecleanuptaskMixinFields0

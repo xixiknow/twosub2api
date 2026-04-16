@@ -146,6 +146,24 @@ func (Group) Fields() []ent.Field {
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
 			Comment("模型级按次价格覆盖，支持通配符"),
+
+		// 套餐配置字段（自助订阅购买功能）
+		field.Float("subscription_price").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "decimal(10,2)"}).
+			Comment("套餐价格，单位为系统配置货币"),
+		field.String("subscription_display_name").
+			MaxLen(255).
+			Default("").
+			Comment("套餐前端展示名称"),
+		field.Bool("subscription_visible").
+			Default(false).
+			Comment("套餐是否对用户可见"),
+		field.JSON("subscription_features", []string{}).
+			Default([]string{}).
+			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).
+			Comment("套餐特性描述列表"),
 	}
 }
 
@@ -163,6 +181,7 @@ func (Group) Edges() []ent.Edge {
 			Through("user_allowed_groups", UserAllowedGroup.Type),
 		// 注意：fallback_group_id 直接作为字段使用，不定义 edge
 		// 这样允许多个分组指向同一个降级分组（M2O 关系）
+		edge.To("subscription_orders", SubscriptionOrder.Type),
 	}
 }
 

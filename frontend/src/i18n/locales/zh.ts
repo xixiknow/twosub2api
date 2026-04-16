@@ -1412,7 +1412,19 @@ export default {
         monthlyLimit: '每月限额（USD）',
         defaultValidityDays: '默认有效期（天）',
         validityHint: '分配给用户时订阅的有效天数',
-        noLimit: '无限制'
+        noLimit: '无限制',
+        planConfig: '套餐配置',
+        planConfigHint: '配置用户自助购买时展示的套餐信息',
+        price: '套餐价格',
+        priceHint: '用户购买此套餐需支付的金额',
+        displayName: '展示名称',
+        displayNameHint: '用户端展示的套餐名称，留空则使用分组名称',
+        visible: '对用户可见',
+        visibleHint: '开启后用户可在套餐购买页面看到此套餐',
+        features: '特性描述',
+        featuresHint: '套餐卖点列表，展示在套餐卡片上',
+        addFeature: '添加特性',
+        featurePlaceholder: '例如：无限制 Claude 4 Sonnet 访问'
       },
       imagePricing: {
         title: '图片生成计费',
@@ -4003,7 +4015,12 @@ export default {
         iframeWarning:
           '⚠️ iframe 提示：部分网站会通过 X-Frame-Options 或 CSP（frame-ancestors）禁止被 iframe 嵌入，出现空白时可引导用户使用”新窗口打开”。',
         integrationDoc: '支付集成文档',
-        integrationDocHint: '包含接口说明、幂等语义及示例代码'
+        integrationDocHint: '包含接口说明、幂等语义及示例代码',
+        nativeTitle: '原生订阅套餐购买',
+        nativeDescription: '启用站内原生套餐购买页，用户可直接购买订阅套餐',
+        nativeEnabled: '启用原生订阅套餐购买',
+        nativeEnabledHint: '开启后，侧边栏“充值/订阅”入口可直接显示站内套餐购买页',
+        nativeCurrencyHint: '当前规则：套餐金额显示为 ¥，用户余额显示为 $，两者暂按 1:1 处理。'
       },
       payment: {
         title: '支付设置',

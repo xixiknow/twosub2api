@@ -1326,7 +1326,19 @@ export default {
         monthlyLimit: 'Monthly Limit (USD)',
         defaultValidityDays: 'Default Validity (Days)',
         validityHint: 'Number of days the subscription is valid when assigned to a user',
-        noLimit: 'No limit'
+        noLimit: 'No limit',
+        planConfig: 'Plan Configuration',
+        planConfigHint: 'Configure plan details shown to users for self-service purchase',
+        price: 'Plan Price',
+        priceHint: 'Amount users pay to purchase this plan',
+        displayName: 'Display Name',
+        displayNameHint: 'Name shown to users. Leave empty to use group name',
+        visible: 'Visible to Users',
+        visibleHint: 'When enabled, users can see and purchase this plan',
+        features: 'Features',
+        featuresHint: 'Feature highlights displayed on the plan card',
+        addFeature: 'Add Feature',
+        featurePlaceholder: 'e.g., Unlimited Claude 4 Sonnet access'
       },
       imagePricing: {
         title: 'Image Generation Pricing',
@@ -3829,7 +3841,12 @@ export default {
         iframeWarning:
           '⚠️ iframe note: Some websites block embedding via X-Frame-Options or CSP (frame-ancestors). If the page is blank, provide an "Open in new tab" alternative.',
         integrationDoc: 'Payment Integration Docs',
-        integrationDocHint: 'Covers endpoint specs, idempotency semantics, and code samples'
+        integrationDocHint: 'Covers endpoint specs, idempotency semantics, and code samples',
+        nativeTitle: 'Native Subscription Purchase',
+        nativeDescription: 'Enable the built-in subscription purchase page so users can buy plans directly in the site',
+        nativeEnabled: 'Enable Native Subscription Purchase',
+        nativeEnabledHint: 'When enabled, the sidebar Recharge / Subscription entry can open the built-in plan purchase page',
+        nativeCurrencyHint: 'Current rule: plan amounts are shown in ¥, user balance is shown in $, and they are currently treated as 1:1.'
       },
       payment: {
         title: 'Payment Settings',
