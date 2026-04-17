@@ -538,6 +538,7 @@ func TestAPIContracts(t *testing.T) {
 					"vip_enabled": false,
 					"vip_rules": "",
 					"purchase_subscription_enabled": false,
+					"subscription_purchase_enabled": false,
 					"purchase_subscription_url": "",
 					"min_claude_code_version": "",
 					"allow_ungrouped_key_scheduling": false,
